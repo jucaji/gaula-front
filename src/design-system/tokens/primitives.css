@@ -1,0 +1,103 @@
+/**
+ * Primitivos (docs/06 §3.2, §3.3, §3.5): escalas crudas. Ningún componente
+ * de features/ consume esto directamente -- sólo semantic.css lo hace.
+ */
+@theme {
+  /* Layout — de la skill UI/UX Pro Max (docs/06 §2 bis) */
+  --layout-sidebar-width: 240px;
+  --layout-header-height: 56px;
+  --layout-grid-columns: 12;
+  --layout-grid-gap: 8px;
+
+  /* Neutrales: slate frío, no gris puro (docs/06 §3.2) */
+  --color-slate-50: oklch(0.985 0.003 220);
+  --color-slate-100: oklch(0.967 0.004 220);
+  --color-slate-200: oklch(0.925 0.006 220);
+  --color-slate-300: oklch(0.868 0.008 220);
+  --color-slate-400: oklch(0.712 0.011 220);
+  --color-slate-500: oklch(0.573 0.013 220);
+  --color-slate-600: oklch(0.462 0.014 222);
+  --color-slate-700: oklch(0.376 0.015 224);
+  --color-slate-800: oklch(0.271 0.014 226);
+  --color-slate-900: oklch(0.203 0.013 228);
+  --color-slate-950: oklch(0.152 0.012 230);
+
+  /* Acento institucional: pino (docs/06 §3.3) */
+  --color-pine-50: oklch(0.965 0.020 174);
+  --color-pine-200: oklch(0.880 0.062 173);
+  --color-pine-400: oklch(0.700 0.116 172);
+  --color-pine-500: oklch(0.628 0.124 171);
+  --color-pine-600: oklch(0.545 0.110 171);
+  --color-pine-700: oklch(0.462 0.093 171);
+  --color-pine-900: oklch(0.312 0.061 172);
+
+  /* Estados operativos reservados (docs/06 §3.4) -- NUNCA color de serie */
+  --color-critical-light: #c62828;
+  --color-critical-dark: #ef5350;
+  --color-alert-light: #b45309;
+  --color-alert-dark: #f59e0b;
+  --color-active-light: #1d4ed8;
+  --color-active-dark: #60a5fa;
+  --color-stable-light: #15803d;
+  --color-stable-dark: #4ade80;
+
+  /* Paleta de series validada (docs/06 §3.5) -- orden fijo, nunca cíclico */
+  --viz-series-1-light: #00997f;
+  --viz-series-1-dark: #12a888;
+  --viz-series-2-light: #eb6834;
+  --viz-series-2-dark: #d95926;
+  --viz-series-3-light: #2a78d6;
+  --viz-series-3-dark: #3987e5;
+  --viz-series-4-light: #eda100;
+  --viz-series-4-dark: #c98500;
+  --viz-series-5-light: #e87ba4;
+  --viz-series-5-dark: #d55181;
+  --viz-series-6-light: #4a3aa7;
+  --viz-series-6-dark: #9085e9;
+
+  /* Tipografía (docs/06 §4) */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.5rem;
+
+  /* Espacio y forma (docs/06 §5) */
+  --spacing: 0.25rem;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Densidad: alto de fila (docs/06 §5) */
+  --density-compact-row: 32px;
+  --density-default-row: 36px;
+  --density-comfortable-row: 44px;
+
+  /* Alturas de control */
+  --control-height-sm: 28px;
+  --control-height-md: 34px;
+  --control-height-lg: 40px;
+  --control-height-touch: 44px;
+
+  /* Movimiento (docs/06 §6) */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-normal: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}

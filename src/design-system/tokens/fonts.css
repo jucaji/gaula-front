@@ -1,0 +1,15 @@
+/**
+ * S0.FE.04: Inter Variable + JetBrains Mono auto-hospedadas, subset latín.
+ * `@fontsource*` empaqueta los woff2 en node_modules; Vite los copia a los
+ * estáticos del build -- se sirven desde el propio origen, NUNCA desde un
+ * CDN (R1). `wght.css`/`400-600.css` declaran un `@font-face` por rango
+ * Unicode (latín, cirílico, griego…) con `unicode-range`; el navegador sólo
+ * descarga el woff2 del rango que de verdad usa la página (es-CO = latín),
+ * así que en la práctica el efecto es el mismo que un subset manual, sin
+ * depender de herramientas de subsetting fuera de este repo. Sólo los tres
+ * pesos que el sistema usa (docs/06 §4: 400/500/600).
+ */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';

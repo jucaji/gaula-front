@@ -1,0 +1,19 @@
+@import 'tailwindcss';
+@import './design-system/tokens/primitives.css';
+@import './design-system/tokens/semantic.css';
+@import './design-system/tokens/fonts.css';
+
+/* docs/06 §9: nunca outline: none -- foco visible siempre, anillo de 2px con 2px de desplazamiento. */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+/* docs/06 §4: cifras que se comparan en columna deben alinearse por dígito. */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

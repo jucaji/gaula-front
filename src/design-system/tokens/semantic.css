@@ -1,0 +1,89 @@
+/**
+ * Semánticos (docs/06 §3.1, §3.6): el ÚNICO nivel que un componente puede
+ * consumir. Declarados dentro de @theme para que Tailwind genere las
+ * utilidades (`bg-canvas`, `text-text-primary`…); los bloques de :root de
+ * más abajo SÓLO reasignan el valor de la custom property en tiempo de
+ * pintado -- la utilidad generada por Tailwind sigue apuntando al mismo
+ * nombre, así que cambiar de tema no toca ni una regla de componente.
+ */
+@theme {
+  --color-canvas: var(--color-slate-50);
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: var(--color-slate-100);
+  --color-border: var(--color-slate-200);
+  --color-border-strong: var(--color-slate-300);
+  --color-text-primary: var(--color-slate-900);
+  --color-text-secondary: var(--color-slate-600);
+  --color-text-muted: var(--color-slate-500);
+  --color-accent: var(--color-pine-600);
+  --color-accent-hover: var(--color-pine-700);
+  --color-accent-subtle: var(--color-pine-50);
+  --color-focus-ring: var(--color-pine-500);
+  --viz-surface: #f7f8f7;
+
+  --color-critical: var(--color-critical-light);
+  --color-alert: var(--color-alert-light);
+  --color-active: var(--color-active-light);
+  --color-stable: var(--color-stable-light);
+  --color-neutral: var(--color-slate-500);
+}
+
+:root {
+  color-scheme: light;
+}
+
+/* Oscuro explícito, o "sistema" cuando el SO ya está en oscuro (docs/06 §3.6: tres estados). */
+:root[data-theme='dark'],
+:root:not([data-theme='light']):where(.gaula-dark-media) {
+  color-scheme: dark;
+  --color-canvas: var(--color-slate-950);
+  --color-surface: var(--color-slate-900);
+  --color-surface-raised: var(--color-slate-800);
+  --color-surface-sunken: #101317;
+  --color-border: var(--color-slate-800);
+  --color-border-strong: var(--color-slate-700);
+  --color-text-primary: var(--color-slate-50);
+  --color-text-secondary: var(--color-slate-300);
+  --color-text-muted: var(--color-slate-400);
+  --color-accent: var(--color-pine-400);
+  --color-accent-hover: var(--color-pine-200);
+  --color-accent-subtle: oklch(0.312 0.061 172 / 0.35);
+  --viz-surface: #14171a;
+
+  --color-critical: var(--color-critical-dark);
+  --color-alert: var(--color-alert-dark);
+  --color-active: var(--color-active-dark);
+  --color-stable: var(--color-stable-dark);
+  --color-neutral: var(--color-slate-400);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']):not([data-theme='dark']) {
+    color-scheme: dark;
+    --color-canvas: var(--color-slate-950);
+    --color-surface: var(--color-slate-900);
+    --color-surface-raised: var(--color-slate-800);
+    --color-surface-sunken: #101317;
+    --color-border: var(--color-slate-800);
+    --color-border-strong: var(--color-slate-700);
+    --color-text-primary: var(--color-slate-50);
+    --color-text-secondary: var(--color-slate-300);
+    --color-text-muted: var(--color-slate-400);
+    --color-accent: var(--color-pine-400);
+    --color-accent-hover: var(--color-pine-200);
+    --color-accent-subtle: oklch(0.312 0.061 172 / 0.35);
+    --viz-surface: #14171a;
+
+    --color-critical: var(--color-critical-dark);
+    --color-alert: var(--color-alert-dark);
+    --color-active: var(--color-active-dark);
+    --color-stable: var(--color-stable-dark);
+    --color-neutral: var(--color-slate-400);
+  }
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-text-primary);
+}

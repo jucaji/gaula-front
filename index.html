@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Gaula Digital</title>
+    <!--
+      docs/06 §3.6: el tema se resuelve ANTES del primer pintado. Sin este
+      script bloqueante, alguien trabajando de noche ve un destello blanco
+      en cada recarga -- en una sala oscura eso no es un detalle estético.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('gaula-theme');
+          if (stored === 'light' || stored === 'dark') {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (e) {
+          /* localStorage inaccesible (modo privado estricto) -- se sigue el sistema */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

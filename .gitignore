@@ -1,0 +1,36 @@
+# Dependencias
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Vite/TanStack Router cache local
+.tanstack/
+*.tsbuildinfo
+
+# IDE
+.idea/
+*.iml
+.vscode/
+!.vscode/extensions.json
+
+# OS (repo vive en disco externo -- AppleDouble real, no hipotético)
+.DS_Store
+._*
+Thumbs.db
+
+# Editor swap files
+*~
+*.swp
+*.swo
+
+# Env locales con secretos (si aparecen)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
