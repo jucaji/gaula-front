@@ -19,6 +19,7 @@
   --color-accent: var(--color-pine-600);
   --color-accent-hover: var(--color-pine-700);
   --color-accent-subtle: var(--color-pine-50);
+  --color-on-accent: white;
   --color-focus-ring: var(--color-pine-500);
   --viz-surface: #f7f8f7;
 
@@ -27,6 +28,13 @@
   --color-active: var(--color-active-light);
   --color-stable: var(--color-stable-light);
   --color-neutral: var(--color-slate-500);
+
+  /* docs/06 §7.1 Button "danger" -- misma semántica de "acción destructiva"
+     que los estados reservados, pero como relleno sólido necesita su
+     propio par fondo/texto para mantener contraste en ambos temas. */
+  --color-danger: var(--color-critical-light);
+  --color-danger-hover: #a92121;
+  --color-on-danger: white;
 }
 
 :root {
@@ -49,6 +57,7 @@
   --color-accent: var(--color-pine-400);
   --color-accent-hover: var(--color-pine-200);
   --color-accent-subtle: oklch(0.312 0.061 172 / 0.35);
+  --color-on-accent: var(--color-slate-950);
   --viz-surface: #14171a;
 
   --color-critical: var(--color-critical-dark);
@@ -56,6 +65,10 @@
   --color-active: var(--color-active-dark);
   --color-stable: var(--color-stable-dark);
   --color-neutral: var(--color-slate-400);
+
+  --color-danger: var(--color-critical-dark);
+  --color-danger-hover: #f28b88;
+  --color-on-danger: var(--color-slate-950);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -73,6 +86,7 @@
     --color-accent: var(--color-pine-400);
     --color-accent-hover: var(--color-pine-200);
     --color-accent-subtle: oklch(0.312 0.061 172 / 0.35);
+    --color-on-accent: var(--color-slate-950);
     --viz-surface: #14171a;
 
     --color-critical: var(--color-critical-dark);
@@ -80,6 +94,10 @@
     --color-active: var(--color-active-dark);
     --color-stable: var(--color-stable-dark);
     --color-neutral: var(--color-slate-400);
+
+    --color-danger: var(--color-critical-dark);
+    --color-danger-hover: #f28b88;
+    --color-on-danger: var(--color-slate-950);
   }
 }
 

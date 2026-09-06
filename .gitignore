@@ -9,6 +9,15 @@ dist-ssr/
 .tanstack/
 *.tsbuildinfo
 
+# Reportes de Lighthouse CI y artefactos de Playwright
+.lighthouseci/
+playwright-report/
+test-results/
+blob-report/
+
+# Build de Storybook
+storybook-static/
+
 # IDE
 .idea/
 *.iml

@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import { fileURLToPath, URL } from 'node:url'
+import { configDefaults } from 'vitest/config'
 
 // docs/01 §4: SPA compilada a estáticos, servidos por nginx en la sede —
 // nunca un proceso Node en producción. El proxy de abajo sólo existe para
@@ -44,6 +45,16 @@ export default defineConfig({
   build: {
     // docs/07 §7: bundle inicial < 180 KB comprimido -- el CI real falla el
     // build si crece > 10 %; aquí sólo se deja el warning visible temprano.
+    // El presupuesto real se hace cumplir con `pnpm check:bundle-budget`
+    // (scripts/check-bundle-budget.mjs), sobre el tamaño gzip -- este límite
+    // de Vite mide bytes crudos, sólo sirve de aviso temprano en consola.
     chunkSizeWarningLimit: 200,
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
+    // e2e/ son specs de Playwright (su propio `test`, ver playwright.config.ts)
+    // -- Vitest no debe intentar correrlas como si fueran unitarias.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
   },
 })

@@ -29,7 +29,7 @@ export function ThemeToggle() {
           className={
             'flex h-7 w-7 items-center justify-center rounded-xs transition-colors duration-instant ' +
             (preference === value
-              ? 'bg-accent-subtle text-accent'
+              ? 'bg-accent-subtle text-accent-hover'
               : 'text-text-muted hover:text-text-primary')
           }
         >
