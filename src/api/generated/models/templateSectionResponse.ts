@@ -5,11 +5,10 @@
  * Sistema de información operacional del GAULA, Ejército Nacional de Colombia.
  * OpenAPI spec version: v1
  */
+import type { TemplateFieldResponse } from './templateFieldResponse';
 
-export interface MeResponse {
-  userId?: string;
-  displayName?: string;
-  roles?: string[];
-  territorialUnitId?: string;
-  operationalUnitId?: string;
+export interface TemplateSectionResponse {
+  code?: string;
+  title?: string;
+  fields?: TemplateFieldResponse[];
 }

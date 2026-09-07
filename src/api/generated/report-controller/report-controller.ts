@@ -30,6 +30,7 @@ import type {
   ImportExcelBody,
   ImportExcelParams,
   ImportJobAcceptedResponse,
+  ImportJobStatusResponse,
   OperationalReportResponse,
   PageResponseOperationalReportResponse,
   RejectReportRequest,
@@ -734,7 +735,113 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type currentTemplateResponse200 = {
+    export type templateByIdResponse200 = {
+  data: ReportTemplateResponse
+  status: 200
+}
+    
+export type templateByIdResponseSuccess = (templateByIdResponse200) & {
+  headers: Headers;
+};
+;
+
+export type templateByIdResponse = (templateByIdResponseSuccess)
+
+export const getTemplateByIdUrl = (templateId: string,) => {
+
+
+  
+
+  return `/api/v1/report-templates/${templateId}`
+}
+
+export const templateById = async (templateId: string, options?: RequestInit): Promise<templateByIdResponse> => {
+  
+  return customFetch<templateByIdResponse>(getTemplateByIdUrl(templateId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getTemplateByIdQueryKey = (templateId?: string,) => {
+    return [
+    `/api/v1/report-templates/${templateId}`
+    ] as const;
+    }
+
+    
+export const getTemplateByIdQueryOptions = <TData = Awaited<ReturnType<typeof templateById>>, TError = unknown>(templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof templateById>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getTemplateByIdQueryKey(templateId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof templateById>>> = () => templateById(templateId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(templateId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof templateById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type TemplateByIdQueryResult = NonNullable<Awaited<ReturnType<typeof templateById>>>
+export type TemplateByIdQueryError = unknown
+
+
+export function useTemplateById<TData = Awaited<ReturnType<typeof templateById>>, TError = unknown>(
+ templateId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof templateById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof templateById>>,
+          TError,
+          Awaited<ReturnType<typeof templateById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTemplateById<TData = Awaited<ReturnType<typeof templateById>>, TError = unknown>(
+ templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof templateById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof templateById>>,
+          TError,
+          Awaited<ReturnType<typeof templateById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useTemplateById<TData = Awaited<ReturnType<typeof templateById>>, TError = unknown>(
+ templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof templateById>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useTemplateById<TData = Awaited<ReturnType<typeof templateById>>, TError = unknown>(
+ templateId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof templateById>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getTemplateByIdQueryOptions(templateId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type currentTemplateResponse200 = {
   data: ReportTemplateResponse
   status: 200
 }
@@ -942,6 +1049,112 @@ export function useExportToPdf<TData = Awaited<ReturnType<typeof exportToPdf>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getExportToPdfQueryOptions(reportId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type importStatusResponse200 = {
+  data: ImportJobStatusResponse
+  status: 200
+}
+    
+export type importStatusResponseSuccess = (importStatusResponse200) & {
+  headers: Headers;
+};
+;
+
+export type importStatusResponse = (importStatusResponseSuccess)
+
+export const getImportStatusUrl = (jobId: string,) => {
+
+
+  
+
+  return `/api/v1/operational-reports/import/${jobId}`
+}
+
+export const importStatus = async (jobId: string, options?: RequestInit): Promise<importStatusResponse> => {
+  
+  return customFetch<importStatusResponse>(getImportStatusUrl(jobId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getImportStatusQueryKey = (jobId?: string,) => {
+    return [
+    `/api/v1/operational-reports/import/${jobId}`
+    ] as const;
+    }
+
+    
+export const getImportStatusQueryOptions = <TData = Awaited<ReturnType<typeof importStatus>>, TError = unknown>(jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof importStatus>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getImportStatusQueryKey(jobId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof importStatus>>> = () => importStatus(jobId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(jobId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof importStatus>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ImportStatusQueryResult = NonNullable<Awaited<ReturnType<typeof importStatus>>>
+export type ImportStatusQueryError = unknown
+
+
+export function useImportStatus<TData = Awaited<ReturnType<typeof importStatus>>, TError = unknown>(
+ jobId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof importStatus>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof importStatus>>,
+          TError,
+          Awaited<ReturnType<typeof importStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useImportStatus<TData = Awaited<ReturnType<typeof importStatus>>, TError = unknown>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof importStatus>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof importStatus>>,
+          TError,
+          Awaited<ReturnType<typeof importStatus>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useImportStatus<TData = Awaited<ReturnType<typeof importStatus>>, TError = unknown>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof importStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useImportStatus<TData = Awaited<ReturnType<typeof importStatus>>, TError = unknown>(
+ jobId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof importStatus>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getImportStatusQueryOptions(jobId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

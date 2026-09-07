@@ -19,6 +19,9 @@ import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackin
 import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
 import { Route as RecepcionIndexRouteImport } from './routes/recepcion/index'
 import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamadas'
+import { Route as ReportesIndexRouteImport } from './routes/reportes/index'
+import { Route as ReportesReportIdRouteImport } from './routes/reportes/$reportId'
+import { Route as ReportesNuevoRouteImport } from './routes/reportes/nuevo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -70,6 +73,21 @@ const RecepcionLlamadasRoute = RecepcionLlamadasRouteImport.update({
   path: '/recepcion/llamadas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportesIndexRoute = ReportesIndexRouteImport.update({
+  id: '/reportes/',
+  path: '/reportes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportesReportIdRoute = ReportesReportIdRouteImport.update({
+  id: '/reportes/$reportId',
+  path: '/reportes/$reportId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportesNuevoRoute = ReportesNuevoRouteImport.update({
+  id: '/reportes/nuevo',
+  path: '/reportes/nuevo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,8 +98,11 @@ export interface FileRoutesByFullPath {
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
+  '/reportes/$reportId': typeof ReportesReportIdRoute
+  '/reportes/nuevo': typeof ReportesNuevoRoute
   '/casos/': typeof CasosIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
+  '/reportes/': typeof ReportesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,8 +113,11 @@ export interface FileRoutesByTo {
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
+  '/reportes/$reportId': typeof ReportesReportIdRoute
+  '/reportes/nuevo': typeof ReportesNuevoRoute
   '/casos': typeof CasosIndexRoute
   '/recepcion': typeof RecepcionIndexRoute
+  '/reportes': typeof ReportesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,8 +129,11 @@ export interface FileRoutesById {
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
+  '/reportes/$reportId': typeof ReportesReportIdRoute
+  '/reportes/nuevo': typeof ReportesNuevoRoute
   '/casos/': typeof CasosIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
+  '/reportes/': typeof ReportesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,8 +146,11 @@ export interface FileRouteTypes {
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/recepcion/llamadas'
+    | '/reportes/$reportId'
+    | '/reportes/nuevo'
     | '/casos/'
     | '/recepcion/'
+    | '/reportes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,8 +161,11 @@ export interface FileRouteTypes {
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/recepcion/llamadas'
+    | '/reportes/$reportId'
+    | '/reportes/nuevo'
     | '/casos'
     | '/recepcion'
+    | '/reportes'
   id:
     | '__root__'
     | '/'
@@ -143,8 +176,11 @@ export interface FileRouteTypes {
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/recepcion/llamadas'
+    | '/reportes/$reportId'
+    | '/reportes/nuevo'
     | '/casos/'
     | '/recepcion/'
+    | '/reportes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -156,8 +192,11 @@ export interface RootRouteChildren {
   CasosTrackingNumberRoute: typeof CasosTrackingNumberRoute
   CasosNuevoRoute: typeof CasosNuevoRoute
   RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
+  ReportesReportIdRoute: typeof ReportesReportIdRoute
+  ReportesNuevoRoute: typeof ReportesNuevoRoute
   CasosIndexRoute: typeof CasosIndexRoute
   RecepcionIndexRoute: typeof RecepcionIndexRoute
+  ReportesIndexRoute: typeof ReportesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +271,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecepcionLlamadasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reportes/': {
+      id: '/reportes/'
+      path: '/reportes'
+      fullPath: '/reportes/'
+      preLoaderRoute: typeof ReportesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reportes/$reportId': {
+      id: '/reportes/$reportId'
+      path: '/reportes/$reportId'
+      fullPath: '/reportes/$reportId'
+      preLoaderRoute: typeof ReportesReportIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reportes/nuevo': {
+      id: '/reportes/nuevo'
+      path: '/reportes/nuevo'
+      fullPath: '/reportes/nuevo'
+      preLoaderRoute: typeof ReportesNuevoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -244,8 +304,11 @@ const rootRouteChildren: RootRouteChildren = {
   CasosTrackingNumberRoute: CasosTrackingNumberRoute,
   CasosNuevoRoute: CasosNuevoRoute,
   RecepcionLlamadasRoute: RecepcionLlamadasRoute,
+  ReportesReportIdRoute: ReportesReportIdRoute,
+  ReportesNuevoRoute: ReportesNuevoRoute,
   CasosIndexRoute: CasosIndexRoute,
   RecepcionIndexRoute: RecepcionIndexRoute,
+  ReportesIndexRoute: ReportesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -6,10 +6,7 @@
  * OpenAPI spec version: v1
  */
 
-export interface MeResponse {
-  userId?: string;
-  displayName?: string;
-  roles?: string[];
-  territorialUnitId?: string;
-  operationalUnitId?: string;
+export interface RowFailureResponse {
+  rowNumber?: number;
+  reason?: string;
 }

@@ -6,6 +6,7 @@ export interface Session {
   displayName: string
   roles: RoleCode[]
   territorialUnitId: string
+  operationalUnitId?: string
 }
 
 /**

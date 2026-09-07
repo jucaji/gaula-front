@@ -35,7 +35,14 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
     EXPORT: ['HOTLINE_OPERATOR', 'INTELLIGENCE_ANALYST', 'UNIT_COMMANDER'],
   },
   CALL: ['HOTLINE_OPERATOR', 'SYSTEM_ADMIN'],
+  // S6.FE.*: verificado contra el `ReportController` real -- `create`/`update`
+  // (borrador) sólo exigen `isAuthenticated()`, cualquiera de estos 4 roles
+  // puede capturar y editar su propio borrador. `validate`/`reject` sí
+  // llevan `@PreAuthorize("hasRole('UNIT_COMMANDER')")` explícito en el
+  // backend -- de ahí el recurso aparte OPERATIONAL_REPORT_REVIEW en vez de
+  // forzarlo dentro de UPDATE.
   OPERATIONAL_REPORT: ['HOTLINE_OPERATOR', 'INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'SYSTEM_ADMIN'],
+  OPERATIONAL_REPORT_REVIEW: ['UNIT_COMMANDER'],
   ANALYTICS: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'PREVENTION_STAFF', 'SYSTEM_ADMIN'],
   FLEET: ['ADMIN_STAFF', 'SYSTEM_ADMIN'],
   ADMIN: ['SYSTEM_ADMIN'],
