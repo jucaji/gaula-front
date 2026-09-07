@@ -74,6 +74,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.4.0
+      dexie:
+        specifier: ^4.4.5
+        version: 4.4.5
       echarts:
         specifier: ^5.6.0
         version: 5.6.0
@@ -2669,6 +2672,9 @@ packages:
 
   devtools-protocol@0.0.1608973:
     resolution: {integrity: sha512-Tpm17fxYzt+J7VrGdc1k8YdRqS3YV7se/M6KeemEqvUbq/n7At1rWVuXMxQgpWkdwSdIEKYbU//Bve+Shm4YNQ==}
+
+  dexie@4.4.5:
+    resolution: {integrity: sha512-wWCHdihT3dmlUSuNhn5mMZDWSpG0suxjAni7YjjiZdzabZcKmy3uNZGZ7AeYYXBoLbpSXX35fikPLkPC44Osiw==}
 
   diff@8.0.4:
     resolution: {integrity: sha512-DPi0FmjiSU5EvQV0++GFDOJ9ASQUVFh5kD+OzOnYdi7n3Wpm9hWWGfB/O2blfHcMVTL5WkQXSnRiK9makhrcnw==}
@@ -7706,6 +7712,8 @@ snapshots:
   devtools-protocol@0.0.1467305: {}
 
   devtools-protocol@0.0.1608973: {}
+
+  dexie@4.4.5: {}
 
   diff@8.0.4: {}
 

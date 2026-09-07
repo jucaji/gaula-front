@@ -27,7 +27,12 @@ type ResourcePolicy = RoleCode[] | Partial<Record<PermissionAction, RoleCode[]>>
  */
 const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
   CASE_FILE: {
-    CREATE: ['HOTLINE_OPERATOR'],
+    // S8.FE.02, verificado contra el backend real: `CaseActionController`/
+    // `EvidenceController` sólo exigen `isAuthenticated()`, sin restricción
+    // de rol -- FIELD_OFFICER (el único usuario real de `/campo`) SÍ puede
+    // registrar actuaciones y adjuntar evidencia; el CREATE original sólo
+    // cubría la apertura de un caso nuevo (HOTLINE_OPERATOR), no estas dos.
+    CREATE: ['HOTLINE_OPERATOR', 'FIELD_OFFICER'],
     READ: ['HOTLINE_OPERATOR', 'INTELLIGENCE_ANALYST', 'FIELD_OFFICER', 'UNIT_COMMANDER'],
     UPDATE: ['INTELLIGENCE_ANALYST'],
     // S3.APP.05, V20: mismos alcances que cada rol ya tiene para las demás
@@ -44,7 +49,11 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
   OPERATIONAL_REPORT: ['HOTLINE_OPERATOR', 'INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'SYSTEM_ADMIN'],
   OPERATIONAL_REPORT_REVIEW: ['UNIT_COMMANDER'],
   ANALYTICS: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'PREVENTION_STAFF', 'SYSTEM_ADMIN'],
-  FLEET: ['ADMIN_STAFF', 'SYSTEM_ADMIN'],
+  // S8.FE.01, verificado contra el backend real: `VehicleController`/
+  // `MaintenanceController` sólo exigen `isAuthenticated()`, sin restricción
+  // de rol -- se amplía a los roles con uso operativo real de la flota
+  // (FIELD_OFFICER la consulta/asigna en campo, UNIT_COMMANDER la supervisa).
+  FLEET: ['ADMIN_STAFF', 'SYSTEM_ADMIN', 'FIELD_OFFICER', 'UNIT_COMMANDER'],
   ADMIN: ['SYSTEM_ADMIN'],
 }
 

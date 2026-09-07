@@ -17,6 +17,8 @@ import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as AnaliticaIndexRouteImport } from './routes/analitica/index'
 import { Route as AnaliticaCarga147RouteImport } from './routes/analitica/carga-147'
 import { Route as AnaliticaMapaRouteImport } from './routes/analitica/mapa'
+import { Route as CampoIndexRouteImport } from './routes/campo/index'
+import { Route as CampoTrackingNumberRouteImport } from './routes/campo/$trackingNumber'
 import { Route as CasosIndexRouteImport } from './routes/casos/index'
 import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackingNumber'
 import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
@@ -25,6 +27,8 @@ import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamad
 import { Route as ReportesIndexRouteImport } from './routes/reportes/index'
 import { Route as ReportesReportIdRouteImport } from './routes/reportes/$reportId'
 import { Route as ReportesNuevoRouteImport } from './routes/reportes/nuevo'
+import { Route as RecursosFlotaIndexRouteImport } from './routes/recursos/flota/index'
+import { Route as RecursosFlotaVehicleIdRouteImport } from './routes/recursos/flota/$vehicleId'
 import { Route as ReportesRevisionIndexRouteImport } from './routes/reportes/revision/index'
 import { Route as ReportesRevisionEmailIngestionIdRouteImport } from './routes/reportes/revision/$emailIngestionId'
 
@@ -68,6 +72,16 @@ const AnaliticaMapaRoute = AnaliticaMapaRouteImport.update({
   path: '/analitica/mapa',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampoIndexRoute = CampoIndexRouteImport.update({
+  id: '/campo/',
+  path: '/campo/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampoTrackingNumberRoute = CampoTrackingNumberRouteImport.update({
+  id: '/campo/$trackingNumber',
+  path: '/campo/$trackingNumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CasosIndexRoute = CasosIndexRouteImport.update({
   id: '/casos/',
   path: '/casos/',
@@ -108,6 +122,16 @@ const ReportesNuevoRoute = ReportesNuevoRouteImport.update({
   path: '/reportes/nuevo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecursosFlotaIndexRoute = RecursosFlotaIndexRouteImport.update({
+  id: '/recursos/flota/',
+  path: '/recursos/flota/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecursosFlotaVehicleIdRoute = RecursosFlotaVehicleIdRouteImport.update({
+  id: '/recursos/flota/$vehicleId',
+  path: '/recursos/flota/$vehicleId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportesRevisionIndexRoute = ReportesRevisionIndexRouteImport.update({
   id: '/reportes/revision/',
   path: '/reportes/revision/',
@@ -128,16 +152,20 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/analitica/carga-147': typeof AnaliticaCarga147Route
   '/analitica/mapa': typeof AnaliticaMapaRoute
+  '/campo/$trackingNumber': typeof CampoTrackingNumberRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
   '/analitica/': typeof AnaliticaIndexRoute
+  '/campo/': typeof CampoIndexRoute
   '/casos/': typeof CasosIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
   '/reportes/': typeof ReportesIndexRoute
+  '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/recursos/flota/': typeof RecursosFlotaIndexRoute
   '/reportes/revision/': typeof ReportesRevisionIndexRoute
 }
 export interface FileRoutesByTo {
@@ -148,16 +176,20 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/analitica/carga-147': typeof AnaliticaCarga147Route
   '/analitica/mapa': typeof AnaliticaMapaRoute
+  '/campo/$trackingNumber': typeof CampoTrackingNumberRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
   '/analitica': typeof AnaliticaIndexRoute
+  '/campo': typeof CampoIndexRoute
   '/casos': typeof CasosIndexRoute
   '/recepcion': typeof RecepcionIndexRoute
   '/reportes': typeof ReportesIndexRoute
+  '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/recursos/flota': typeof RecursosFlotaIndexRoute
   '/reportes/revision': typeof ReportesRevisionIndexRoute
 }
 export interface FileRoutesById {
@@ -169,16 +201,20 @@ export interface FileRoutesById {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/analitica/carga-147': typeof AnaliticaCarga147Route
   '/analitica/mapa': typeof AnaliticaMapaRoute
+  '/campo/$trackingNumber': typeof CampoTrackingNumberRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
   '/analitica/': typeof AnaliticaIndexRoute
+  '/campo/': typeof CampoIndexRoute
   '/casos/': typeof CasosIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
   '/reportes/': typeof ReportesIndexRoute
+  '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/recursos/flota/': typeof RecursosFlotaIndexRoute
   '/reportes/revision/': typeof ReportesRevisionIndexRoute
 }
 export interface FileRouteTypes {
@@ -191,16 +227,20 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/analitica/carga-147'
     | '/analitica/mapa'
+    | '/campo/$trackingNumber'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
     | '/analitica/'
+    | '/campo/'
     | '/casos/'
     | '/recepcion/'
     | '/reportes/'
+    | '/recursos/flota/$vehicleId'
     | '/reportes/revision/$emailIngestionId'
+    | '/recursos/flota/'
     | '/reportes/revision/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -211,16 +251,20 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/analitica/carga-147'
     | '/analitica/mapa'
+    | '/campo/$trackingNumber'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
     | '/analitica'
+    | '/campo'
     | '/casos'
     | '/recepcion'
     | '/reportes'
+    | '/recursos/flota/$vehicleId'
     | '/reportes/revision/$emailIngestionId'
+    | '/recursos/flota'
     | '/reportes/revision'
   id:
     | '__root__'
@@ -231,16 +275,20 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/analitica/carga-147'
     | '/analitica/mapa'
+    | '/campo/$trackingNumber'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
     | '/analitica/'
+    | '/campo/'
     | '/casos/'
     | '/recepcion/'
     | '/reportes/'
+    | '/recursos/flota/$vehicleId'
     | '/reportes/revision/$emailIngestionId'
+    | '/recursos/flota/'
     | '/reportes/revision/'
   fileRoutesById: FileRoutesById
 }
@@ -252,16 +300,20 @@ export interface RootRouteChildren {
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AnaliticaCarga147Route: typeof AnaliticaCarga147Route
   AnaliticaMapaRoute: typeof AnaliticaMapaRoute
+  CampoTrackingNumberRoute: typeof CampoTrackingNumberRoute
   CasosTrackingNumberRoute: typeof CasosTrackingNumberRoute
   CasosNuevoRoute: typeof CasosNuevoRoute
   RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
   ReportesReportIdRoute: typeof ReportesReportIdRoute
   ReportesNuevoRoute: typeof ReportesNuevoRoute
   AnaliticaIndexRoute: typeof AnaliticaIndexRoute
+  CampoIndexRoute: typeof CampoIndexRoute
   CasosIndexRoute: typeof CasosIndexRoute
   RecepcionIndexRoute: typeof RecepcionIndexRoute
   ReportesIndexRoute: typeof ReportesIndexRoute
+  RecursosFlotaVehicleIdRoute: typeof RecursosFlotaVehicleIdRoute
   ReportesRevisionEmailIngestionIdRoute: typeof ReportesRevisionEmailIngestionIdRoute
+  RecursosFlotaIndexRoute: typeof RecursosFlotaIndexRoute
   ReportesRevisionIndexRoute: typeof ReportesRevisionIndexRoute
 }
 
@@ -323,6 +375,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnaliticaMapaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campo/': {
+      id: '/campo/'
+      path: '/campo'
+      fullPath: '/campo/'
+      preLoaderRoute: typeof CampoIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campo/$trackingNumber': {
+      id: '/campo/$trackingNumber'
+      path: '/campo/$trackingNumber'
+      fullPath: '/campo/$trackingNumber'
+      preLoaderRoute: typeof CampoTrackingNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/casos/': {
       id: '/casos/'
       path: '/casos'
@@ -379,6 +445,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportesNuevoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recursos/flota/': {
+      id: '/recursos/flota/'
+      path: '/recursos/flota'
+      fullPath: '/recursos/flota/'
+      preLoaderRoute: typeof RecursosFlotaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recursos/flota/$vehicleId': {
+      id: '/recursos/flota/$vehicleId'
+      path: '/recursos/flota/$vehicleId'
+      fullPath: '/recursos/flota/$vehicleId'
+      preLoaderRoute: typeof RecursosFlotaVehicleIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reportes/revision/': {
       id: '/reportes/revision/'
       path: '/reportes/revision'
@@ -404,16 +484,20 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsuariosRoute: AdminUsuariosRoute,
   AnaliticaCarga147Route: AnaliticaCarga147Route,
   AnaliticaMapaRoute: AnaliticaMapaRoute,
+  CampoTrackingNumberRoute: CampoTrackingNumberRoute,
   CasosTrackingNumberRoute: CasosTrackingNumberRoute,
   CasosNuevoRoute: CasosNuevoRoute,
   RecepcionLlamadasRoute: RecepcionLlamadasRoute,
   ReportesReportIdRoute: ReportesReportIdRoute,
   ReportesNuevoRoute: ReportesNuevoRoute,
   AnaliticaIndexRoute: AnaliticaIndexRoute,
+  CampoIndexRoute: CampoIndexRoute,
   CasosIndexRoute: CasosIndexRoute,
   RecepcionIndexRoute: RecepcionIndexRoute,
   ReportesIndexRoute: ReportesIndexRoute,
+  RecursosFlotaVehicleIdRoute: RecursosFlotaVehicleIdRoute,
   ReportesRevisionEmailIngestionIdRoute: ReportesRevisionEmailIngestionIdRoute,
+  RecursosFlotaIndexRoute: RecursosFlotaIndexRoute,
   ReportesRevisionIndexRoute: ReportesRevisionIndexRoute,
 }
 export const routeTree = rootRouteImport
