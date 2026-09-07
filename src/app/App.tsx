@@ -5,6 +5,7 @@ import { router } from './router'
 import { useSessionQuery } from '@/lib/auth/useSession'
 import { redirectToLogin } from '@/lib/auth/session'
 import { can } from '@/lib/permissions'
+import { useCaseFileRealtime } from '@/lib/realtime/useCaseFileRealtime'
 import { Spinner } from '@/design-system/primitives/Spinner'
 
 // docs/07 §3: política de caché por tipo de dato -- el default aquí es el
@@ -50,6 +51,11 @@ function SessionGate() {
   useEffect(() => {
     if (isError) redirectToLogin()
   }, [isError])
+
+  // docs/07 §4: "un solo WebSocket por sesión" -- se monta aquí, no por
+  // página (evita una conexión por ruta), y sólo conecta una vez la sesión
+  // está confirmada (el handshake exige la misma autenticación que /api/**).
+  useCaseFileRealtime(queryClient, Boolean(session))
 
   if (isPending) {
     return (

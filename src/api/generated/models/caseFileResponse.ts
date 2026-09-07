@@ -25,4 +25,5 @@ export interface CaseFileResponse {
   openedAt?: string;
   closedAt?: string;
   legalHold?: boolean;
+  version?: number;
 }

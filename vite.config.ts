@@ -50,6 +50,10 @@ export default defineConfig({
       // ocurre en producción (nginx sirve todo desde un único origen,
       // docs/01 §4). Ver memoria `gaula-sprint1-frontend-login.md`.
       '/logout': { target: 'http://localhost:8080', changeOrigin: true },
+      // S2.FE.06: mismo origen relativo (`location.host`) que el resto de
+      // la app en producción (nginx, docs/01 §4) -- aquí Vite reenvía el
+      // upgrade de WebSocket en vez de nginx.
+      '/ws': { target: 'ws://localhost:8080', ws: true },
     },
   },
   build: {

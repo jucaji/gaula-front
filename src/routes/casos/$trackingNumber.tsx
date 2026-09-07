@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { customFetch } from '@/api/client'
+import { ApiError } from '@/api/problem'
 import type { CaseFileResponse } from '@/api/generated/models'
 import { TrackingNumberBadge } from '@/design-system/domain/TrackingNumberBadge'
 import { CaseStatusChip } from '@/design-system/domain/CaseStatusChip'
@@ -56,29 +57,42 @@ function CaseDetailPage() {
   const [reason, setReason] = useState('')
   const [changingStatus, setChangingStatus] = useState(false)
   const [statusError, setStatusError] = useState<string | null>(null)
+  const [statusConflict, setStatusConflict] = useState(false)
 
   const [responsibleUserId, setResponsibleUserId] = useState('')
   const [assigning, setAssigning] = useState(false)
   const [assignError, setAssignError] = useState<string | null>(null)
+  const [assignConflict, setAssignConflict] = useState(false)
 
   async function invalidate() {
     await queryClient.invalidateQueries({ queryKey: ['case-files', 'detail', trackingNumber] })
     await queryClient.invalidateQueries({ queryKey: ['case-files', 'search'] })
   }
 
+  /** S2.ADI.02: cada PATCH exige `If-Match` con la versión que este actor tiene en pantalla, no una recién leída del servidor. */
+  function ifMatchHeader() {
+    return { 'If-Match': `"${caseFile?.version ?? 0}"` }
+  }
+
   async function handleChangeStatus() {
     if (!targetStatus || !reason.trim()) return
     setChangingStatus(true)
     setStatusError(null)
+    setStatusConflict(false)
     try {
       await customFetch(`/api/v1/case-files/${trackingNumber}/status`, {
         method: 'PATCH',
+        headers: ifMatchHeader(),
         body: JSON.stringify({ targetStatus, reason }),
       })
       setTargetStatus('')
       setReason('')
       await invalidate()
     } catch (err) {
+      // S2.FE.07: otro usuario cambió el caso mientras este formulario estaba
+      // abierto -- el mensaje del backend ya dice "recargue e intente de
+      // nuevo" (messages_es.properties), el botón sólo hace exactamente eso.
+      setStatusConflict(err instanceof ApiError && err.problem.code === 'OPTIMISTIC_LOCK_CONFLICT')
       setStatusError(err instanceof Error ? err.message : 'No se pudo cambiar el estado.')
     } finally {
       setChangingStatus(false)
@@ -89,18 +103,32 @@ function CaseDetailPage() {
     if (!responsibleUserId.trim()) return
     setAssigning(true)
     setAssignError(null)
+    setAssignConflict(false)
     try {
       await customFetch(`/api/v1/case-files/${trackingNumber}/assignment`, {
         method: 'PATCH',
+        headers: ifMatchHeader(),
         body: JSON.stringify({ responsibleUserId }),
       })
       setResponsibleUserId('')
       await invalidate()
     } catch (err) {
+      setAssignConflict(err instanceof ApiError && err.problem.code === 'OPTIMISTIC_LOCK_CONFLICT')
       setAssignError(err instanceof Error ? err.message : 'No se pudo asignar el responsable.')
     } finally {
       setAssigning(false)
     }
+  }
+
+  async function handleReloadAfterConflict() {
+    setStatusError(null)
+    setStatusConflict(false)
+    setAssignError(null)
+    setAssignConflict(false)
+    setTargetStatus('')
+    setReason('')
+    setResponsibleUserId('')
+    await invalidate()
   }
 
   if (isLoading) return <p className="text-sm text-text-secondary">Cargando…</p>
@@ -166,15 +194,21 @@ function CaseDetailPage() {
                 </select>
                 <Input placeholder="Motivo" value={reason} onChange={(event) => setReason(event.target.value)} />
                 {statusError && <p className="text-sm text-critical">{statusError}</p>}
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!targetStatus || !reason.trim()}
-                  loading={changingStatus}
-                  onClick={handleChangeStatus}
-                >
-                  Aplicar cambio
-                </Button>
+                {statusConflict ? (
+                  <Button variant="secondary" size="sm" onClick={handleReloadAfterConflict}>
+                    Recargar caso
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    disabled={!targetStatus || !reason.trim()}
+                    loading={changingStatus}
+                    onClick={handleChangeStatus}
+                  >
+                    Aplicar cambio
+                  </Button>
+                )}
               </div>
             )}
           </section>
@@ -188,15 +222,21 @@ function CaseDetailPage() {
                 onChange={(event) => setResponsibleUserId(event.target.value)}
               />
               {assignError && <p className="text-sm text-critical">{assignError}</p>}
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={!responsibleUserId.trim()}
-                loading={assigning}
-                onClick={handleAssign}
-              >
-                Asignar
-              </Button>
+              {assignConflict ? (
+                <Button variant="secondary" size="sm" onClick={handleReloadAfterConflict}>
+                  Recargar caso
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={!responsibleUserId.trim()}
+                  loading={assigning}
+                  onClick={handleAssign}
+                >
+                  Asignar
+                </Button>
+              )}
             </div>
           </section>
         </div>

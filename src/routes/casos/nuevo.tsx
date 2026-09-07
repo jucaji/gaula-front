@@ -28,6 +28,10 @@ function NewCasePage() {
   const [involvesMinor, setInvolvesMinor] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // S2.ADI.03: estable durante toda la vida de este formulario -- un
+  // reintento (doble clic, timeout de red) reusa la MISMA clave, así el
+  // backend devuelve el caso ya abierto en vez de crear un duplicado.
+  const [idempotencyKey] = useState(() => crypto.randomUUID())
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
@@ -36,6 +40,7 @@ function NewCasePage() {
     try {
       const created = await customFetch<CaseFileResponse>('/api/v1/case-files', {
         method: 'POST',
+        headers: { 'Idempotency-Key': idempotencyKey },
         body: JSON.stringify({
           crimeTypeCode,
           municipalityCode,
