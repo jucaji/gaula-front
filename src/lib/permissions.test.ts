@@ -21,4 +21,16 @@ describe('can', () => {
   it('niega el acceso cuando el usuario no tiene roles', () => {
     expect(can('READ', 'CASE_FILE', [])).toBe(false)
   })
+
+  it('niega UPDATE de CASE_FILE a HOTLINE_OPERATOR -- sólo abre y lee sus propios casos', () => {
+    expect(can('UPDATE', 'CASE_FILE', ['HOTLINE_OPERATOR'])).toBe(false)
+  })
+
+  it('permite UPDATE de CASE_FILE a INTELLIGENCE_ANALYST, único rol con esa fila en iam.access_policy', () => {
+    expect(can('UPDATE', 'CASE_FILE', ['INTELLIGENCE_ANALYST'])).toBe(true)
+  })
+
+  it('niega CASE_FILE a SYSTEM_ADMIN -- docs/04 §3, gestiona la matriz pero no ve contenido de casos', () => {
+    expect(can('READ', 'CASE_FILE', ['SYSTEM_ADMIN'])).toBe(false)
+  })
 })

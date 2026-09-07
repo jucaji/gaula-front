@@ -74,3 +74,35 @@ test('el tema oscuro se aplica y persiste tras recargar', async ({ page }) => {
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
 })
+
+/**
+ * Sprint 2, hallazgo en vivo contra el backend real: HOTLINE_OPERATOR abre
+ * y lee sus propios casos pero `iam.access_policy` no tiene fila UPDATE
+ * para ese rol -- cambiar estado o asignar es exclusivo de
+ * INTELLIGENCE_ANALYST. Antes del fix, la vista de detalle mostraba ambos
+ * formularios a cualquiera y el backend los rechazaba con 403 al enviar.
+ */
+test('detalle de caso: HOTLINE_OPERATOR no ve formularios de cambio de estado ni asignación', async ({ page }) => {
+  await mockSession(page)
+  await page.route('**/api/v1/case-files/GAULA-BOG-2026-000001', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        trackingNumber: 'GAULA-BOG-2026-000001',
+        status: 'RECEIVED',
+        priority: 'NORMAL',
+        classificationLevel: 'PUBLIC',
+        crimeTypeCode: 'EXTORTION',
+        municipalityCode: '11001',
+        summary: 'Caso de prueba.',
+        involvesMinor: false,
+      }),
+    }),
+  )
+
+  await page.goto('/casos/GAULA-BOG-2026-000001')
+  await expect(page.getByText('Caso de prueba.')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Cambiar estado' })).not.toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Asignar responsable' })).not.toBeVisible()
+})

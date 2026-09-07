@@ -15,6 +15,8 @@ import { Route as AdminCatalogosRouteImport } from './routes/admin/catalogos'
 import { Route as AdminRolesRouteImport } from './routes/admin/roles'
 import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as CasosIndexRouteImport } from './routes/casos/index'
+import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackingNumber'
+import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +48,16 @@ const CasosIndexRoute = CasosIndexRouteImport.update({
   path: '/casos/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CasosTrackingNumberRoute = CasosTrackingNumberRouteImport.update({
+  id: '/casos/$trackingNumber',
+  path: '/casos/$trackingNumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CasosNuevoRoute = CasosNuevoRouteImport.update({
+  id: '/casos/nuevo',
+  path: '/casos/nuevo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -53,6 +65,8 @@ export interface FileRoutesByFullPath {
   '/admin/catalogos': typeof AdminCatalogosRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
+  '/casos/nuevo': typeof CasosNuevoRoute
   '/casos/': typeof CasosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +75,8 @@ export interface FileRoutesByTo {
   '/admin/catalogos': typeof AdminCatalogosRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
+  '/casos/nuevo': typeof CasosNuevoRoute
   '/casos': typeof CasosIndexRoute
 }
 export interface FileRoutesById {
@@ -70,6 +86,8 @@ export interface FileRoutesById {
   '/admin/catalogos': typeof AdminCatalogosRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
+  '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
+  '/casos/nuevo': typeof CasosNuevoRoute
   '/casos/': typeof CasosIndexRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +98,8 @@ export interface FileRouteTypes {
     | '/admin/catalogos'
     | '/admin/roles'
     | '/admin/usuarios'
+    | '/casos/$trackingNumber'
+    | '/casos/nuevo'
     | '/casos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +108,8 @@ export interface FileRouteTypes {
     | '/admin/catalogos'
     | '/admin/roles'
     | '/admin/usuarios'
+    | '/casos/$trackingNumber'
+    | '/casos/nuevo'
     | '/casos'
   id:
     | '__root__'
@@ -96,6 +118,8 @@ export interface FileRouteTypes {
     | '/admin/catalogos'
     | '/admin/roles'
     | '/admin/usuarios'
+    | '/casos/$trackingNumber'
+    | '/casos/nuevo'
     | '/casos/'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +129,8 @@ export interface RootRouteChildren {
   AdminCatalogosRoute: typeof AdminCatalogosRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
+  CasosTrackingNumberRoute: typeof CasosTrackingNumberRoute
+  CasosNuevoRoute: typeof CasosNuevoRoute
   CasosIndexRoute: typeof CasosIndexRoute
 }
 
@@ -152,6 +178,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/casos/$trackingNumber': {
+      id: '/casos/$trackingNumber'
+      path: '/casos/$trackingNumber'
+      fullPath: '/casos/$trackingNumber'
+      preLoaderRoute: typeof CasosTrackingNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/casos/nuevo': {
+      id: '/casos/nuevo'
+      path: '/casos/nuevo'
+      fullPath: '/casos/nuevo'
+      preLoaderRoute: typeof CasosNuevoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -161,6 +201,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCatalogosRoute: AdminCatalogosRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
+  CasosTrackingNumberRoute: CasosTrackingNumberRoute,
+  CasosNuevoRoute: CasosNuevoRoute,
   CasosIndexRoute: CasosIndexRoute,
 }
 export const routeTree = rootRouteImport
