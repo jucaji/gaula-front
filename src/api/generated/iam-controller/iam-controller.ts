@@ -225,4 +225,109 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
+    export type matrixResponse200 = {
+  data: AccessPolicyResponse[]
+  status: 200
+}
     
+export type matrixResponseSuccess = (matrixResponse200) & {
+  headers: Headers;
+};
+;
+
+export type matrixResponse = (matrixResponseSuccess)
+
+export const getMatrixUrl = () => {
+
+
+  
+
+  return `/api/v1/admin/access-policies/matrix`
+}
+
+export const matrix = async ( options?: RequestInit): Promise<matrixResponse> => {
+  
+  return customFetch<matrixResponse>(getMatrixUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getMatrixQueryKey = () => {
+    return [
+    `/api/v1/admin/access-policies/matrix`
+    ] as const;
+    }
+
+    
+export const getMatrixQueryOptions = <TData = Awaited<ReturnType<typeof matrix>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof matrix>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMatrixQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof matrix>>> = () => matrix();
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof matrix>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MatrixQueryResult = NonNullable<Awaited<ReturnType<typeof matrix>>>
+export type MatrixQueryError = unknown
+
+
+export function useMatrix<TData = Awaited<ReturnType<typeof matrix>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof matrix>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof matrix>>,
+          TError,
+          Awaited<ReturnType<typeof matrix>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMatrix<TData = Awaited<ReturnType<typeof matrix>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof matrix>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof matrix>>,
+          TError,
+          Awaited<ReturnType<typeof matrix>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMatrix<TData = Awaited<ReturnType<typeof matrix>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof matrix>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMatrix<TData = Awaited<ReturnType<typeof matrix>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof matrix>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMatrixQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+

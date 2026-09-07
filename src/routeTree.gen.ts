@@ -10,11 +10,35 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminAuditoriaRouteImport } from './routes/admin/auditoria'
+import { Route as AdminCatalogosRouteImport } from './routes/admin/catalogos'
+import { Route as AdminRolesRouteImport } from './routes/admin/roles'
+import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as CasosIndexRouteImport } from './routes/casos/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAuditoriaRoute = AdminAuditoriaRouteImport.update({
+  id: '/admin/auditoria',
+  path: '/admin/auditoria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCatalogosRoute = AdminCatalogosRouteImport.update({
+  id: '/admin/catalogos',
+  path: '/admin/catalogos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/admin/roles',
+  path: '/admin/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/admin/usuarios',
+  path: '/admin/usuarios',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CasosIndexRoute = CasosIndexRouteImport.update({
@@ -25,27 +49,62 @@ const CasosIndexRoute = CasosIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/catalogos': typeof AdminCatalogosRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/casos/': typeof CasosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/catalogos': typeof AdminCatalogosRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/casos': typeof CasosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/auditoria': typeof AdminAuditoriaRoute
+  '/admin/catalogos': typeof AdminCatalogosRoute
+  '/admin/roles': typeof AdminRolesRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
   '/casos/': typeof CasosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/casos/'
+  fullPaths:
+    | '/'
+    | '/admin/auditoria'
+    | '/admin/catalogos'
+    | '/admin/roles'
+    | '/admin/usuarios'
+    | '/casos/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/casos'
-  id: '__root__' | '/' | '/casos/'
+  to:
+    | '/'
+    | '/admin/auditoria'
+    | '/admin/catalogos'
+    | '/admin/roles'
+    | '/admin/usuarios'
+    | '/casos'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin/auditoria'
+    | '/admin/catalogos'
+    | '/admin/roles'
+    | '/admin/usuarios'
+    | '/casos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminAuditoriaRoute: typeof AdminAuditoriaRoute
+  AdminCatalogosRoute: typeof AdminCatalogosRoute
+  AdminRolesRoute: typeof AdminRolesRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
   CasosIndexRoute: typeof CasosIndexRoute
 }
 
@@ -56,6 +115,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/auditoria': {
+      id: '/admin/auditoria'
+      path: '/admin/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AdminAuditoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/catalogos': {
+      id: '/admin/catalogos'
+      path: '/admin/catalogos'
+      fullPath: '/admin/catalogos'
+      preLoaderRoute: typeof AdminCatalogosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/admin/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/admin/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/casos/': {
@@ -70,6 +157,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminAuditoriaRoute: AdminAuditoriaRoute,
+  AdminCatalogosRoute: AdminCatalogosRoute,
+  AdminRolesRoute: AdminRolesRoute,
+  AdminUsuariosRoute: AdminUsuariosRoute,
   CasosIndexRoute: CasosIndexRoute,
 }
 export const routeTree = rootRouteImport

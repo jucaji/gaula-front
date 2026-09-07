@@ -25,7 +25,11 @@ export async function customFetch<T>(url: string, options: RequestInit = {}): Pr
     const csrfToken = readCookie(CSRF_COOKIE_NAME)
     if (csrfToken) headers.set(CSRF_HEADER_NAME, csrfToken)
   }
-  if (options.body !== undefined && !headers.has('Content-Type')) {
+  // FormData (S1.FE.06, subida de CSV) fija su propio Content-Type con el
+  // boundary del multipart -- si lo pisamos con application/json, el
+  // backend nunca puede parsear el cuerpo. El navegador lo agrega solo
+  // cuando el header queda ausente.
+  if (options.body !== undefined && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
