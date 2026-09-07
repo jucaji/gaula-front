@@ -1,29 +1,26 @@
+import { customFetch } from '@/api/client'
 import type { RoleCode } from './roles'
 
 export interface Session {
   userId: string
   displayName: string
   roles: RoleCode[]
-  territorialUnitId: string | null
+  territorialUnitId: string
 }
 
 /**
- * INSUMO PENDIENTE (2026-09-06): el backend no expone todavía un endpoint
- * `GET /api/v1/me` (ni equivalente) que devuelva la sesión OIDC resuelta a
- * `iam.app_user` -- `IamController` sólo tiene hoy administración de
- * política de acceso, nada de "quién soy". Mientras ese insumo llega, la
- * sesión se simula aquí con un usuario fijo. Cuando el endpoint real
- * exista, esta función es el ÚNICO lugar que cambia: todo lo demás
- * (guardas de ruta, `usePermissions`, la cabecera) consume `useSession()`,
- * nunca este mock directamente.
+ * `GET /api/v1/me` (backend, iam módulo): la sesión OIDC ya resuelta a
+ * `iam.app_user`. Sin sesión válida, Spring Security redirige a Keycloak
+ * (origen distinto, puerto 8081) -- ese redirect cross-origin lo bloquea
+ * CORS y `fetch` lo ve como `TypeError: Failed to fetch`, nunca como un
+ * 401 limpio. `useSessionQuery` en useSession.ts trata cualquier fallo
+ * aquí como "no autenticado" y manda a `redirectToLogin`.
  */
-const MOCK_SESSION: Session = {
-  userId: '00000000-0000-0000-0000-000000000001',
-  displayName: 'Operador de prueba',
-  roles: ['HOTLINE_OPERATOR', 'SYSTEM_ADMIN'],
-  territorialUnitId: null,
+export async function fetchSession(): Promise<Session> {
+  return customFetch<Session>('/api/v1/me')
 }
 
-export function getMockSession(): Session {
-  return MOCK_SESSION
+/** Navegación de página completa -- el flujo OAuth2 necesita salir de la SPA, nunca un fetch. */
+export function redirectToLogin(): void {
+  window.location.href = '/oauth2/authorization/keycloak'
 }

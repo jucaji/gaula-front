@@ -39,6 +39,16 @@ export default defineConfig({
       '/api': { target: 'http://localhost:8080', changeOrigin: true },
       '/oauth2': { target: 'http://localhost:8080', changeOrigin: true },
       '/login': { target: 'http://localhost:8080', changeOrigin: true },
+      // HALLAZGO (sin resolver, sólo en este entorno de dos servidores de
+      // dev): el POST a `/logout` (CSRF-protegido) responde 403 "Invalid
+      // CORS request" -- viene de `DefaultCorsProcessor` de Spring, que ve
+      // un `Origin: localhost:5183` que no calza con el `Host` que este
+      // proxy reescribe al reenviar a `localhost:8080`. Probar
+      // `changeOrigin: false` aquí no lo arregla (el proxy directamente
+      // no logra conectar). Login, sesión y `/api/**` SÍ funcionan
+      // end-to-end verificado -- sólo logout queda pendiente, y nunca
+      // ocurre en producción (nginx sirve todo desde un único origen,
+      // docs/01 §4). Ver memoria `gaula-sprint1-frontend-login.md`.
       '/logout': { target: 'http://localhost:8080', changeOrigin: true },
     },
   },

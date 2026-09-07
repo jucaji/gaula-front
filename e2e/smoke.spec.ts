@@ -1,30 +1,71 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
-// S0.FE.09: smoke E2E + escaneo de accesibilidad. Corre sin backend real --
-// la sesión está mockeada (docs/07, mientras no exista /api/v1/me) -- así
-// que sólo valida que la app carga, navega y no introduce violaciones de
-// accesibilidad nuevas. No sustituye a los E2E de negocio de cada sprint
-// (esos necesitan el backend real levantado).
+/**
+ * S0.FE.09: smoke E2E + escaneo de accesibilidad, self-contained (sin
+ * backend real). `useSessionQuery` (src/lib/auth/useSession.ts) exige una
+ * sesión real de `GET /api/v1/me` -- sin backend, mockeamos esa ÚNICA
+ * frontera de red con `page.route`, y dejamos que corra el código real de
+ * la app (App.tsx, AppShell, permissions.ts) contra esa respuesta. No
+ * sustituye a los E2E de negocio de cada sprint (esos sí necesitan el
+ * backend real levantado).
+ */
+const MOCK_SESSION = {
+  userId: '00000000-0000-0000-0000-000000000201',
+  displayName: 'Soldado Ramírez Gómez',
+  roles: ['HOTLINE_OPERATOR'],
+  territorialUnitId: '00000000-0000-0000-0000-000000000001',
+}
+
+async function mockSession(page: Page) {
+  await page.route('**/api/v1/me', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SESSION) }),
+  )
+}
+
 test('la página de inicio carga sin violaciones de accesibilidad', async ({ page }) => {
+  await mockSession(page)
   await page.goto('/')
   await expect(page.getByRole('navigation')).toBeVisible()
+  await expect(page.getByText(MOCK_SESSION.displayName)).toBeVisible()
 
   const results = await new AxeBuilder({ page }).analyze()
   expect(results.violations).toEqual([])
 })
 
 test('/casos respeta el permiso de lectura y muestra un estado -- nunca pantalla en blanco', async ({ page }) => {
+  await mockSession(page)
+  await page.route('**/api/v1/case-files**', (route) => route.abort('failed'))
+
   await page.goto('/casos')
   await expect(page.getByRole('heading', { name: 'Casos' })).toBeVisible()
 
-  // Sin backend real disponible en este entorno, el fetch falla de forma
-  // determinista -- lo que importa es que SIEMPRE se pinte un estado
-  // (nunca el "fetchStatus: paused" que motivó el hallazgo de retry:false).
+  // El fetch de casos falla a propósito (ruta abortada) -- lo que importa
+  // es que SIEMPRE se pinte un estado (nunca el "fetchStatus: paused" que
+  // motivó el hallazgo de retry:false en useCaseFileSearch).
   await expect(page.getByText(/No se pudo cargar|Failed to fetch/)).toBeVisible()
 })
 
+test('sin sesión válida, la SPA nunca renderiza contenido protegido -- redirige a login', async ({ page }) => {
+  await page.route('**/api/v1/me', (route) => route.abort('failed'))
+
+  // Corta la navegación justo al salir de la SPA -- este entorno puede
+  // tener un backend/Keycloak real corriendo detrás (vite preview también
+  // respeta `server.proxy`, hallazgo real), y sin este intercept la cadena
+  // de redirects real seguiría hasta Keycloak antes de que `waitForURL`
+  // alcance a ver la URL intermedia.
+  await page.route('**/oauth2/authorization/keycloak**', (route) =>
+    route.fulfill({ status: 200, contentType: 'text/plain', body: 'login stub' }),
+  )
+
+  await page.goto('/')
+
+  await expect(page).toHaveURL(/\/oauth2\/authorization\/keycloak/, { timeout: 5000 })
+  await expect(page.getByRole('navigation')).not.toBeVisible()
+})
+
 test('el tema oscuro se aplica y persiste tras recargar', async ({ page }) => {
+  await mockSession(page)
   await page.goto('/')
   const toggle = page.getByRole('radio', { name: 'Oscuro' })
   await toggle.click()

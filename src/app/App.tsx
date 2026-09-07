@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { router } from './router'
-import { useSession } from '@/lib/auth/useSession'
+import { useSessionQuery } from '@/lib/auth/useSession'
+import { redirectToLogin } from '@/lib/auth/session'
 import { can } from '@/lib/permissions'
+import { Spinner } from '@/design-system/primitives/Spinner'
 
 // docs/07 §3: política de caché por tipo de dato -- el default aquí es el
 // de "estado del servidor operativo" (caseDetail); cada query concreta
@@ -26,18 +29,48 @@ const queryClient = new QueryClient({
 })
 
 export function App() {
-  const session = useSession()
-
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider
-        router={router}
-        context={{
-          queryClient,
-          session,
-          can: (action, resource) => can(action, resource, session.roles),
-        }}
-      />
+      <SessionGate />
     </QueryClientProvider>
+  )
+}
+
+/**
+ * El router necesita la sesión en su `context` desde el primer render --
+ * pero resolverla es una llamada de red real (`GET /api/v1/me`), así que
+ * la app entera espera aquí antes de montar las rutas. Sin sesión válida,
+ * `useSessionQuery` falla (ver session.ts) y esto saca al usuario de la
+ * SPA por completo hacia el login de Keycloak -- nunca se llega a
+ * renderizar una ruta sin sesión.
+ */
+function SessionGate() {
+  const { data: session, isPending, isError } = useSessionQuery()
+
+  useEffect(() => {
+    if (isError) redirectToLogin()
+  }, [isError])
+
+  if (isPending) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-canvas">
+        <Spinner size={28} label="Cargando sesión" />
+      </div>
+    )
+  }
+
+  if (isError || !session) {
+    return null // redirectToLogin ya está navegando fuera de la SPA
+  }
+
+  return (
+    <RouterProvider
+      router={router}
+      context={{
+        queryClient,
+        session,
+        can: (action, resource) => can(action, resource, session.roles),
+      }}
+    />
   )
 }

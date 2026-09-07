@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   UserCircle,
 } from 'lucide-react'
-import { useSession } from '@/lib/auth/useSession'
+import type { Session } from '@/lib/auth/session'
 import { can } from '@/lib/permissions'
 import { ThemeToggle } from './ThemeToggle'
 
@@ -32,8 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/admin/usuarios', label: 'Administración', icon: ShieldCheck, resource: 'ADMIN' },
 ]
 
-export function AppShell({ children }: { children: ReactNode }) {
-  const session = useSession()
+export function AppShell({ children, session }: { children: ReactNode; session: Session }) {
   const visibleItems = NAV_ITEMS.filter((item) => can('READ', item.resource, session.roles))
 
   return (

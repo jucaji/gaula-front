@@ -7,8 +7,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 })
 
 function RootComponent() {
+  const { session } = Route.useRouteContext()
+
   return (
-    <AppShell>
+    <AppShell session={session}>
       <Outlet />
     </AppShell>
   )
