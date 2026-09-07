@@ -209,12 +209,25 @@ function RecepcionConsole() {
   }
 
   function handleSelectMunicipality(match: MunicipalityResponse) {
-    if (!match.code) return
+    if (!match.code || match.code === municipalityCode) return
     setMunicipalityCode(match.code)
     setMunicipalityQuery(`${match.name ?? ''}, ${match.departmentName ?? ''}`)
     setResolvedTerritorial(match.territorialUnitName ?? null)
     void enrich({ municipalityCode: match.code })
   }
+
+  // S4.QA.01 (criterio A1, ≤3 interacciones): si al escribir sólo queda una
+  // coincidencia, se selecciona sola -- el operador no gasta una interacción
+  // aparte en hacer clic sobre la única sugerencia posible.
+  useEffect(() => {
+    if (municipalityCode) return
+    const onlyMatch = municipalityMatches.data?.length === 1 ? municipalityMatches.data[0] : undefined
+    if (!onlyMatch) return
+    // `queueMicrotask` -- el resultado ya es asíncrono (react-query); esto sólo
+    // evita el `setState` síncrono dentro del cuerpo del efecto.
+    queueMicrotask(() => handleSelectMunicipality(onlyMatch))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [municipalityMatches.data, municipalityCode])
 
   function handleSelectCrimeType(code: string) {
     setCrimeTypeCode(code)
