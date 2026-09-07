@@ -12,12 +12,14 @@ export function ChartWithTable<TRow>({
   rows,
   columns,
   getRowKey,
+  actions,
 }: {
   title: string
   chart: ReactNode
   rows: TRow[]
   columns: { header: string; cell: (row: TRow) => ReactNode }[]
   getRowKey: (row: TRow, index: number) => string
+  actions?: ReactNode
 }) {
   const [showTable, setShowTable] = useState(false)
 
@@ -25,13 +27,16 @@ export function ChartWithTable<TRow>({
     <div className="rounded-sm border border-border-strong bg-surface p-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
-        <button
-          type="button"
-          onClick={() => setShowTable((value) => !value)}
-          className="text-2xs font-medium text-accent hover:text-accent-hover"
-        >
-          {showTable ? 'Ver gráfica' : 'Ver tabla'}
-        </button>
+        <div className="flex items-center gap-3">
+          {actions}
+          <button
+            type="button"
+            onClick={() => setShowTable((value) => !value)}
+            className="text-2xs font-medium text-accent hover:text-accent-hover"
+          >
+            {showTable ? 'Ver gráfica' : 'Ver tabla'}
+          </button>
+        </div>
       </div>
 
       <div className="mt-2">

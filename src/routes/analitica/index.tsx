@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { z } from 'zod'
 import type { EChartsOption } from 'echarts'
 import { customFetch } from '@/api/client'
@@ -118,9 +118,50 @@ function useSeries(params: DashboardSearch) {
   })
 }
 
+/** S11.ADI.03/E2.6: mismo patrón de descarga que `ExportReferralPdfButton` (Sprint 5) -- Blob + <a download> temporal. */
+function ExportComparisonButton(props: { currentFrom: string; currentTo: string; previousFrom: string; previousTo: string; territorialUnitId?: string | undefined }) {
+  const [exporting, setExporting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleExport() {
+    setExporting(true)
+    setError(null)
+    try {
+      const search = new URLSearchParams({
+        currentFrom: props.currentFrom,
+        currentTo: props.currentTo,
+        previousFrom: props.previousFrom,
+        previousTo: props.previousTo,
+      })
+      if (props.territorialUnitId) search.set('territorialUnitId', props.territorialUnitId)
+      const blob = await customFetch<Blob>(`/api/v1/analytics/kpi/compare/export?${search.toString()}`)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `comparativo-${props.currentFrom}-a-${props.currentTo}.xlsx`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo exportar el comparativo.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      {error && <span className="text-2xs text-critical">{error}</span>}
+      <button type="button" onClick={handleExport} disabled={exporting} className="text-2xs font-medium text-accent hover:text-accent-hover disabled:opacity-50">
+        {exporting ? 'Exportando…' : 'Exportar comparativo'}
+      </button>
+    </span>
+  )
+}
+
 function AnalyticsDashboardPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
+  const { can } = Route.useRouteContext()
   const theme = useResolvedTheme()
   const crimeTypes = useCrimeTypes()
 
@@ -306,6 +347,17 @@ function AnalyticsDashboardPage() {
           { header: 'Período anterior', cell: (row) => row.previous.toLocaleString('es-CO') },
         ]}
         getRowKey={(row) => row.crimeTypeCode}
+        actions={
+          can('EXPORT', 'ANALYTICS') && (
+            <ExportComparisonButton
+              currentFrom={search.from}
+              currentTo={search.to}
+              previousFrom={previous.from}
+              previousTo={previous.to}
+              territorialUnitId={search.territorialUnitId}
+            />
+          )
+        }
       />
     </div>
   )
