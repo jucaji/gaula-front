@@ -13,6 +13,7 @@ import {
 import type { Session } from '@/lib/auth/session'
 import { can } from '@/lib/permissions'
 import { ThemeToggle } from './ThemeToggle'
+import { DensityToggle } from './DensityToggle'
 
 interface NavItem {
   to: string
@@ -40,6 +41,7 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
       <header className="col-span-2 flex items-center justify-between border-b border-border bg-surface px-4">
         <span className="font-mono text-sm font-medium text-text-primary">GAULA DIGITAL</span>
         <div className="flex items-center gap-3">
+          <DensityToggle />
           <ThemeToggle />
           <div className="flex items-center gap-2 text-sm text-text-secondary">
             <UserCircle size={20} strokeWidth={1.5} />

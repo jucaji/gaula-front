@@ -1,11 +1,13 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
+import type { ColumnDef } from '@tanstack/react-table'
 import { customFetch } from '@/api/client'
-import type { PageResponseCaseFileResponse } from '@/api/generated/models'
+import type { CaseFileResponse, PageResponseCaseFileResponse } from '@/api/generated/models'
 import { TrackingNumberBadge } from '@/design-system/domain/TrackingNumberBadge'
 import { CaseStatusChip } from '@/design-system/domain/CaseStatusChip'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
+import { DataTable } from '@/design-system/primitives/DataTable'
 
 // docs/07 §2: los filtros viven en la URL, tipados y validados con Zod.
 const caseSearchSchema = z.object({
@@ -52,6 +54,29 @@ function useCaseFileSearch(page: number, size: number) {
   })
 }
 
+const columns: ColumnDef<CaseFileResponse, unknown>[] = [
+  {
+    id: 'trackingNumber',
+    accessorKey: 'trackingNumber',
+    header: 'Radicado',
+    cell: ({ getValue }) => {
+      const value = getValue<string | undefined>()
+      return value ? <TrackingNumberBadge value={value} /> : '—'
+    },
+  },
+  {
+    id: 'status',
+    accessorKey: 'status',
+    header: 'Estado',
+    cell: ({ getValue }) => {
+      const value = getValue<string | undefined>()
+      return value ? <CaseStatusChip status={value} /> : '—'
+    },
+  },
+  { id: 'crimeTypeCode', accessorKey: 'crimeTypeCode', header: 'Tipología', cell: ({ getValue }) => getValue<string>() ?? '—' },
+  { id: 'municipalityCode', accessorKey: 'municipalityCode', header: 'Municipio', cell: ({ getValue }) => getValue<string>() ?? '—' },
+]
+
 function CaseListPage() {
   const { page, size } = Route.useSearch()
   const { data, isLoading, isError, error } = useCaseFileSearch(page, size)
@@ -76,28 +101,9 @@ function CaseListPage() {
       )}
 
       {data && data.content && data.content.length > 0 && (
-        <table className="mt-4 w-full border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-xs text-text-muted">
-              <th className="py-2 pr-4 font-medium">Radicado</th>
-              <th className="py-2 pr-4 font-medium">Estado</th>
-              <th className="py-2 pr-4 font-medium">Tipología</th>
-              <th className="py-2 pr-4 font-medium">Municipio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.content.map((caseFile) => (
-              <tr key={caseFile.id} className="border-b border-border" style={{ height: 'var(--density-default-row)' }}>
-                <td className="pr-4">
-                  {caseFile.trackingNumber && <TrackingNumberBadge value={caseFile.trackingNumber} />}
-                </td>
-                <td className="pr-4">{caseFile.status && <CaseStatusChip status={caseFile.status} />}</td>
-                <td className="pr-4 text-text-secondary">{caseFile.crimeTypeCode ?? '—'}</td>
-                <td className="pr-4 text-text-secondary">{caseFile.municipalityCode ?? '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="mt-4 h-[600px]">
+          <DataTable data={data.content} columns={columns} getRowId={(row) => row.id ?? row.trackingNumber ?? ''} />
+        </div>
       )}
     </div>
   )

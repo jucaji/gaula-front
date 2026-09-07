@@ -1,34 +1,49 @@
 #!/usr/bin/env node
 // S0.FE.09 / docs/07 §7: presupuesto de bundle. Corre después de `vite build`.
-// Dos reglas, ambas sobre el tamaño COMPRIMIDO (gzip) de dist/assets/*.{js,css}:
+// Dos reglas, ambas sobre el tamaño COMPRIMIDO (gzip) del bundle INICIAL:
 //   1. Techo absoluto: 180 KB (docs/07 §7 "Bundle inicial < 180 KB comprimido").
 //   2. Trinquete: no crecer más de 10% respecto al último build que pasó
 //      ("si el bundle inicial crece más de un 10 %, el build falla").
 // El estado del trinquete vive en .bundle-budget.json, versionado en git --
 // así el "10% respecto a qué" es reproducible y no depende de quién corrió
 // el build antes.
-import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from 'node:fs'
+//
+// HALLAZGO real (Sprint 1, al agregar DataTable a /casos): sumar TODO
+// dist/assets/*.{js,css} sin distinción estaba MAL desde que
+// `autoCodeSplitting` empezó a generar chunks de verdad por ruta -- un
+// chunk cargado sólo al entrar a /casos (TanStack Table + Virtual) no es
+// "bundle inicial", y sumarlo igual disparaba un FALLO falso. La única
+// fuente confiable de qué SÍ es inicial es lo que `dist/index.html`
+// referencia directamente (`<script type="module">` y
+// `<link rel="stylesheet">`) -- cualquier otro chunk es, por definición,
+// código dividido por ruta que carga después, bajo demanda.
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
-const DIST_ASSETS = join(ROOT, 'dist', 'assets')
+const DIST_DIR = join(ROOT, 'dist')
+const INDEX_HTML = join(DIST_DIR, 'index.html')
 const BUDGET_FILE = join(ROOT, '.bundle-budget.json')
 const HARD_CEILING_BYTES = 180 * 1024
 const GROWTH_TOLERANCE = 0.10
 
-function currentGzipSize() {
-  if (!existsSync(DIST_ASSETS)) {
-    console.error(`No existe ${DIST_ASSETS} -- corre "pnpm build" antes de este script.`)
+function initialLoadAssetPaths() {
+  if (!existsSync(INDEX_HTML)) {
+    console.error(`No existe ${INDEX_HTML} -- corre "pnpm build" antes de este script.`)
     process.exit(1)
   }
-  const files = readdirSync(DIST_ASSETS).filter((f) => f.endsWith('.js') || f.endsWith('.css'))
+  const html = readFileSync(INDEX_HTML, 'utf8')
+  const matches = html.matchAll(/(?:src|href)="(\/assets\/[^"]+\.(?:js|css))"/g)
+  return [...matches].map((m) => m[1])
+}
+
+function currentGzipSize() {
+  const paths = initialLoadAssetPaths()
   let total = 0
-  for (const file of files) {
-    const path = join(DIST_ASSETS, file)
-    if (!statSync(path).isFile()) continue
-    total += gzipSync(readFileSync(path)).length
+  for (const assetPath of paths) {
+    total += gzipSync(readFileSync(join(DIST_DIR, assetPath.replace(/^\//, '')))).length
   }
   return total
 }

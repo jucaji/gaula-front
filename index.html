@@ -9,16 +9,27 @@
       docs/06 §3.6: el tema se resuelve ANTES del primer pintado. Sin este
       script bloqueante, alguien trabajando de noche ve un destello blanco
       en cada recarga -- en una sala oscura eso no es un detalle estético.
+      La densidad (docs/06 §5) se aplica en el mismo script para evitar un
+      salto de layout (filas/controles cambiando de alto) justo después
+      del primer pintado.
     -->
     <script>
       (function () {
         try {
-          var stored = localStorage.getItem('gaula-theme');
-          if (stored === 'light' || stored === 'dark') {
-            document.documentElement.setAttribute('data-theme', stored);
+          var theme = localStorage.getItem('gaula-theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', theme);
           }
         } catch (e) {
           /* localStorage inaccesible (modo privado estricto) -- se sigue el sistema */
+        }
+        try {
+          var density = localStorage.getItem('gaula-density');
+          if (density === 'compact' || density === 'default' || density === 'comfortable') {
+            document.documentElement.setAttribute('data-density', density);
+          }
+        } catch (e) {
+          /* localStorage inaccesible -- se usa el default */
         }
       })();
     </script>

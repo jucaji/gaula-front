@@ -15,7 +15,10 @@
   --color-slate-200: oklch(0.925 0.006 220);
   --color-slate-300: oklch(0.868 0.008 220);
   --color-slate-400: oklch(0.712 0.011 220);
-  --color-slate-500: oklch(0.573 0.013 220);
+  /* Hallazgo real (axe-core, DataTable): 0.573 de luminosidad da 4.39:1
+     sobre blanco -- falla AA (4.5:1) por poco en texto pequeño (encabezados
+     de tabla, 12px). 0.55 pasa con margen (4.83:1) sin cambio perceptible. */
+  --color-slate-500: oklch(0.55 0.013 220);
   --color-slate-600: oklch(0.462 0.014 222);
   --color-slate-700: oklch(0.376 0.015 224);
   --color-slate-800: oklch(0.271 0.014 226);

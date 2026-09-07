@@ -35,10 +35,23 @@
   --color-danger: var(--color-critical-light);
   --color-danger-hover: #a92121;
   --color-on-danger: white;
+
+  /* docs/06 §5: alto de fila por densidad -- `default` es el valor base;
+     `[data-density]` en :root lo reasigna (ver bloques de abajo). */
+  --density-row: var(--density-default-row);
 }
 
 :root {
   color-scheme: light;
+}
+
+/* Densidad (docs/06 §5): elegible por el usuario, aplicada por density.ts. */
+:root[data-density='compact'] {
+  --density-row: var(--density-compact-row);
+}
+
+:root[data-density='comfortable'] {
+  --density-row: var(--density-comfortable-row);
 }
 
 /* Oscuro explícito, o "sistema" cuando el SO ya está en oscuro (docs/06 §3.6: tres estados). */
