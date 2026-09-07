@@ -29,6 +29,16 @@ export function formatDuration(fromIso: string, toIso: string): string {
   return 'menos de un minuto'
 }
 
+const CURRENCY_COP = new Intl.NumberFormat('es-CO', {
+  style: 'currency',
+  currency: 'COP',
+  maximumFractionDigits: 0,
+})
+
+export function formatCurrencyCOP(value: number): string {
+  return CURRENCY_COP.format(value)
+}
+
 export function formatBytes(bytes: number | undefined): string {
   if (bytes === undefined) return '—'
   if (bytes < 1024) return `${bytes} B`

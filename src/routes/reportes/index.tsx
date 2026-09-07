@@ -99,6 +99,11 @@ function ReportsInboxPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-text-primary">Reportes operacionales</h1>
         <div className="flex items-center gap-2">
+          <Button asChild variant="secondary" size="md">
+            <Link to="/reportes/revision" search={{ status: 'NEEDS_REVIEW', page: 0, size: 20 }}>
+              Cola de revisión
+            </Link>
+          </Button>
           <Button variant="secondary" size="md" onClick={() => setShowImport((value) => !value)}>
             Importar Excel
           </Button>
