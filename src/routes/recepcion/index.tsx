@@ -10,6 +10,8 @@ import type {
   ReferralGuidelineResponse,
   ReporterHistoryResponse,
 } from '@/api/generated/models'
+import { ModusOperandiPanel } from '@/design-system/domain/ModusOperandiPanel'
+import { ReferralGuide } from '@/design-system/domain/ReferralGuide'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/storage/callDraftStore'
@@ -133,7 +135,7 @@ function RecepcionConsole() {
   const reporterLookup = useReporterLookup(phone)
   const municipalityMatches = useMunicipalitySearch(municipalityQuery)
   const modusOperandi = useModusOperandi(crimeTypeCode)
-  const referralGuidelines = useReferralGuidelines(crimeTypeCode, exitFlow === 'referral')
+  const referralGuidelines = useReferralGuidelines(crimeTypeCode, exitFlow === 'referral' && jurisdiction !== 'GAULA')
 
   const selectedCrimeType = crimeTypes.data?.find((ct) => ct.code === crimeTypeCode)
 
@@ -363,27 +365,12 @@ function RecepcionConsole() {
                 <p className="text-sm text-text-secondary">Sin guía de derivación para esta tipología todavía.</p>
               )}
               {referralGuidelines.data?.map((guideline) => (
-                <label
+                <ReferralGuide
                   key={guideline.authorityId}
-                  className="flex items-start gap-2 rounded-sm border border-border-strong p-2 text-sm has-[:checked]:border-accent"
-                >
-                  <input
-                    type="radio"
-                    name="referral-authority"
-                    checked={selectedGuideline?.authorityId === guideline.authorityId}
-                    onChange={() => setSelectedGuideline(guideline)}
-                    className="mt-1"
-                  />
-                  <span>
-                    <span className="font-medium text-text-primary">
-                      {guideline.authorityName} {guideline.authorityHotline && `· ${guideline.authorityHotline}`}
-                    </span>
-                    <p className="text-text-secondary">{guideline.instructions}</p>
-                    {(guideline.requiredEvidence?.length ?? 0) > 0 && (
-                      <p className="text-2xs text-text-muted">Evidencia: {guideline.requiredEvidence?.join(', ')}</p>
-                    )}
-                  </span>
-                </label>
+                  guideline={guideline}
+                  selected={selectedGuideline?.authorityId === guideline.authorityId}
+                  onSelect={() => setSelectedGuideline(guideline)}
+                />
               ))}
               {selectedGuideline && (
                 <>
@@ -534,33 +521,7 @@ function RecepcionConsole() {
           <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">Apoyo al operador</h2>
           {!crimeTypeCode && <p className="text-sm text-text-secondary">Seleccione una tipología para ver señales y recomendaciones.</p>}
           {selectedCrimeType && modusOperandi.data && modusOperandi.data.length > 0 && (
-            <div className="flex flex-col gap-3">
-              {modusOperandi.data.map((mo) => (
-                <div key={mo.id} className="rounded-sm border border-border-strong p-2 text-sm">
-                  <p className="font-medium text-text-primary">{mo.name}</p>
-                  {(mo.warningSigns?.length ?? 0) > 0 && (
-                    <div className="mt-1">
-                      <p className="text-2xs font-semibold uppercase text-alert">⚠ Señales de alerta</p>
-                      <ul className="list-inside list-disc text-text-secondary">
-                        {mo.warningSigns?.map((sign) => (
-                          <li key={sign}>{sign}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {(mo.recommendations?.length ?? 0) > 0 && (
-                    <div className="mt-1">
-                      <p className="text-2xs font-semibold uppercase text-text-muted">Qué indicarle</p>
-                      <ul className="list-inside list-disc text-text-secondary">
-                        {mo.recommendations?.map((rec) => (
-                          <li key={rec}>{rec}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <ModusOperandiPanel items={modusOperandi.data} />
           )}
         </section>
       </div>
