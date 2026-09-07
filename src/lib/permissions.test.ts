@@ -33,4 +33,14 @@ describe('can', () => {
   it('niega CASE_FILE a SYSTEM_ADMIN -- docs/04 §3, gestiona la matriz pero no ve contenido de casos', () => {
     expect(can('READ', 'CASE_FILE', ['SYSTEM_ADMIN'])).toBe(false)
   })
+
+  it('permite EXPORT de CASE_FILE a los tres roles con fila en V20', () => {
+    expect(can('EXPORT', 'CASE_FILE', ['HOTLINE_OPERATOR'])).toBe(true)
+    expect(can('EXPORT', 'CASE_FILE', ['INTELLIGENCE_ANALYST'])).toBe(true)
+    expect(can('EXPORT', 'CASE_FILE', ['UNIT_COMMANDER'])).toBe(true)
+  })
+
+  it('niega EXPORT de CASE_FILE a FIELD_OFFICER -- sólo tiene READ:ASSIGNED', () => {
+    expect(can('EXPORT', 'CASE_FILE', ['FIELD_OFFICER'])).toBe(false)
+  })
 })

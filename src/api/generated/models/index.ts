@@ -23,6 +23,7 @@ export * from './callResponse';
 export * from './caseActionResponse';
 export * from './caseFileResponse';
 export * from './caseFileResponseClassificationLevel';
+export * from './chainOfCustodyResponse';
 export * from './chainVerificationResponse';
 export * from './changeCaseStatusRequest';
 export * from './changeCaseStatusRequestTargetStatus';

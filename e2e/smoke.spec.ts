@@ -166,3 +166,50 @@ test('detalle de caso: un 409 de versión concurrente muestra "Recargar caso" en
   await expect(page.getByRole('button', { name: 'Recargar caso' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Aplicar cambio' })).not.toBeVisible()
 })
+
+/**
+ * DoD del Sprint 3: "ningún camino permite exportar un caso con menor
+ * involucrado". El backend rechaza con 403 MINOR_PROTECTED_EXPORT_DENIED
+ * (SPEC-0208) -- este test verifica que el frontend traduce ese código a un
+ * mensaje explícito, no al genérico "Ocurrió un error inesperado".
+ */
+test('exportar PDF de un caso con menor involucrado muestra el bloqueo explícito, no un error genérico', async ({
+  page,
+}) => {
+  await mockSession(page)
+  await page.route('**/api/v1/case-files/GAULA-BOG-2026-000001', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        trackingNumber: 'GAULA-BOG-2026-000001',
+        status: 'RECEIVED',
+        priority: 'NORMAL',
+        classificationLevel: 'PUBLIC',
+        crimeTypeCode: 'EXTORTION',
+        municipalityCode: '11001',
+        summary: 'Caso de prueba.',
+        involvesMinor: true,
+        version: 0,
+      }),
+    }),
+  )
+  await page.route('**/api/v1/case-files/GAULA-BOG-2026-000001/export.pdf', (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: 'application/problem+json',
+      body: JSON.stringify({
+        title: 'Acceso denegado',
+        detail: 'Este caso involucra un menor de edad.',
+        status: 403,
+        code: 'MINOR_PROTECTED_EXPORT_DENIED',
+      }),
+    }),
+  )
+
+  await page.goto('/casos/GAULA-BOG-2026-000001')
+  await page.getByRole('button', { name: 'Exportar PDF' }).click()
+
+  await expect(page.getByText(/involucra un menor de edad/i)).toBeVisible()
+  await expect(page.getByText('Ocurrió un error inesperado')).not.toBeVisible()
+})

@@ -27,10 +27,117 @@ import type {
 import type {
   AttachBody,
   AttachParams,
+  ChainOfCustodyResponse,
   EvidenceResponse
 } from '.././models';
 
 import { customFetch } from '../../client';
+
+
+
+
+export type list1Response200 = {
+  data: EvidenceResponse[]
+  status: 200
+}
+    
+export type list1ResponseSuccess = (list1Response200) & {
+  headers: Headers;
+};
+;
+
+export type list1Response = (list1ResponseSuccess)
+
+export const getList1Url = (trackingNumber: string,) => {
+
+
+  
+
+  return `/api/v1/case-files/${trackingNumber}/evidence`
+}
+
+export const list1 = async (trackingNumber: string, options?: RequestInit): Promise<list1Response> => {
+  
+  return customFetch<list1Response>(getList1Url(trackingNumber),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getList1QueryKey = (trackingNumber?: string,) => {
+    return [
+    `/api/v1/case-files/${trackingNumber}/evidence`
+    ] as const;
+    }
+
+    
+export const getList1QueryOptions = <TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getList1QueryKey(trackingNumber);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list1>>> = () => list1(trackingNumber, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type List1QueryResult = NonNullable<Awaited<ReturnType<typeof list1>>>
+export type List1QueryError = unknown
+
+
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof list1>>,
+          TError,
+          Awaited<ReturnType<typeof list1>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof list1>>,
+          TError,
+          Awaited<ReturnType<typeof list1>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getList1QueryOptions(trackingNumber,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
 
 
 
@@ -219,6 +326,112 @@ export function useDownload<TData = Awaited<ReturnType<typeof download>>, TError
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getDownloadQueryOptions(evidenceId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type custodyResponse200 = {
+  data: ChainOfCustodyResponse[]
+  status: 200
+}
+    
+export type custodyResponseSuccess = (custodyResponse200) & {
+  headers: Headers;
+};
+;
+
+export type custodyResponse = (custodyResponseSuccess)
+
+export const getCustodyUrl = (evidenceId: string,) => {
+
+
+  
+
+  return `/api/v1/evidence/${evidenceId}/custody`
+}
+
+export const custody = async (evidenceId: string, options?: RequestInit): Promise<custodyResponse> => {
+  
+  return customFetch<custodyResponse>(getCustodyUrl(evidenceId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getCustodyQueryKey = (evidenceId?: string,) => {
+    return [
+    `/api/v1/evidence/${evidenceId}/custody`
+    ] as const;
+    }
+
+    
+export const getCustodyQueryOptions = <TData = Awaited<ReturnType<typeof custody>>, TError = unknown>(evidenceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof custody>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCustodyQueryKey(evidenceId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof custody>>> = () => custody(evidenceId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(evidenceId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof custody>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type CustodyQueryResult = NonNullable<Awaited<ReturnType<typeof custody>>>
+export type CustodyQueryError = unknown
+
+
+export function useCustody<TData = Awaited<ReturnType<typeof custody>>, TError = unknown>(
+ evidenceId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof custody>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof custody>>,
+          TError,
+          Awaited<ReturnType<typeof custody>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCustody<TData = Awaited<ReturnType<typeof custody>>, TError = unknown>(
+ evidenceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof custody>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof custody>>,
+          TError,
+          Awaited<ReturnType<typeof custody>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useCustody<TData = Awaited<ReturnType<typeof custody>>, TError = unknown>(
+ evidenceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof custody>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useCustody<TData = Awaited<ReturnType<typeof custody>>, TError = unknown>(
+ evidenceId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof custody>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getCustodyQueryOptions(evidenceId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

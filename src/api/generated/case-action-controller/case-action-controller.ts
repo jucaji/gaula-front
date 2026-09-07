@@ -6,13 +6,22 @@
  * OpenAPI spec version: v1
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -21,6 +30,112 @@ import type {
 } from '.././models';
 
 import { customFetch } from '../../client';
+
+
+
+
+export type list2Response200 = {
+  data: CaseActionResponse[]
+  status: 200
+}
+    
+export type list2ResponseSuccess = (list2Response200) & {
+  headers: Headers;
+};
+;
+
+export type list2Response = (list2ResponseSuccess)
+
+export const getList2Url = (trackingNumber: string,) => {
+
+
+  
+
+  return `/api/v1/case-files/${trackingNumber}/actions`
+}
+
+export const list2 = async (trackingNumber: string, options?: RequestInit): Promise<list2Response> => {
+  
+  return customFetch<list2Response>(getList2Url(trackingNumber),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getList2QueryKey = (trackingNumber?: string,) => {
+    return [
+    `/api/v1/case-files/${trackingNumber}/actions`
+    ] as const;
+    }
+
+    
+export const getList2QueryOptions = <TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getList2QueryKey(trackingNumber);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list2>>> = () => list2(trackingNumber, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type List2QueryResult = NonNullable<Awaited<ReturnType<typeof list2>>>
+export type List2QueryError = unknown
+
+
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+ trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof list2>>,
+          TError,
+          Awaited<ReturnType<typeof list2>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof list2>>,
+          TError,
+          Awaited<ReturnType<typeof list2>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getList2QueryOptions(trackingNumber,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
 
 
 

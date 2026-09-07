@@ -6,13 +6,22 @@
  * OpenAPI spec version: v1
  */
 import {
-  useMutation
+  useMutation,
+  useQuery
 } from '@tanstack/react-query';
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
-  UseMutationResult
+  UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult
 } from '@tanstack/react-query';
 
 import type {
@@ -21,6 +30,112 @@ import type {
 } from '.././models';
 
 import { customFetch } from '../../client';
+
+
+
+
+export type listResponse200 = {
+  data: PersonOfInterestResponse[]
+  status: 200
+}
+    
+export type listResponseSuccess = (listResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listResponse = (listResponseSuccess)
+
+export const getListUrl = (trackingNumber: string,) => {
+
+
+  
+
+  return `/api/v1/case-files/${trackingNumber}/persons`
+}
+
+export const list = async (trackingNumber: string, options?: RequestInit): Promise<listResponse> => {
+  
+  return customFetch<listResponse>(getListUrl(trackingNumber),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListQueryKey = (trackingNumber?: string,) => {
+    return [
+    `/api/v1/case-files/${trackingNumber}/persons`
+    ] as const;
+    }
+
+    
+export const getListQueryOptions = <TData = Awaited<ReturnType<typeof list>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListQueryKey(trackingNumber);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list>>> = () => list(trackingNumber, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListQueryResult = NonNullable<Awaited<ReturnType<typeof list>>>
+export type ListQueryError = unknown
+
+
+export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
+ trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof list>>,
+          TError,
+          Awaited<ReturnType<typeof list>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof list>>,
+          TError,
+          Awaited<ReturnType<typeof list>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListQueryOptions(trackingNumber,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
 
 
 
