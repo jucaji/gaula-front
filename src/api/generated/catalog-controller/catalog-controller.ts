@@ -21,10 +21,13 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CrimeTypeResponse,
   GetReferralGuidelinesParams,
   ModusOperandiResponse,
+  MunicipalityResponse,
   ReferralGuidelineResponse,
-  SearchModusOperandiParams
+  SearchModusOperandiParams,
+  SearchMunicipalitiesParams
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -145,6 +148,119 @@ export function useGetReferralGuidelines<TData = Awaited<ReturnType<typeof getRe
 
 
 
+export type searchMunicipalitiesResponse200 = {
+  data: MunicipalityResponse[]
+  status: 200
+}
+    
+export type searchMunicipalitiesResponseSuccess = (searchMunicipalitiesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type searchMunicipalitiesResponse = (searchMunicipalitiesResponseSuccess)
+
+export const getSearchMunicipalitiesUrl = (params: SearchMunicipalitiesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/catalog/municipalities?${stringifiedParams}` : `/api/v1/catalog/municipalities`
+}
+
+export const searchMunicipalities = async (params: SearchMunicipalitiesParams, options?: RequestInit): Promise<searchMunicipalitiesResponse> => {
+  
+  return customFetch<searchMunicipalitiesResponse>(getSearchMunicipalitiesUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getSearchMunicipalitiesQueryKey = (params?: SearchMunicipalitiesParams,) => {
+    return [
+    `/api/v1/catalog/municipalities`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getSearchMunicipalitiesQueryOptions = <TData = Awaited<ReturnType<typeof searchMunicipalities>>, TError = unknown>(params: SearchMunicipalitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchMunicipalities>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchMunicipalitiesQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchMunicipalities>>> = () => searchMunicipalities(params, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchMunicipalities>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SearchMunicipalitiesQueryResult = NonNullable<Awaited<ReturnType<typeof searchMunicipalities>>>
+export type SearchMunicipalitiesQueryError = unknown
+
+
+export function useSearchMunicipalities<TData = Awaited<ReturnType<typeof searchMunicipalities>>, TError = unknown>(
+ params: SearchMunicipalitiesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchMunicipalities>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchMunicipalities>>,
+          TError,
+          Awaited<ReturnType<typeof searchMunicipalities>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchMunicipalities<TData = Awaited<ReturnType<typeof searchMunicipalities>>, TError = unknown>(
+ params: SearchMunicipalitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchMunicipalities>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof searchMunicipalities>>,
+          TError,
+          Awaited<ReturnType<typeof searchMunicipalities>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSearchMunicipalities<TData = Awaited<ReturnType<typeof searchMunicipalities>>, TError = unknown>(
+ params: SearchMunicipalitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchMunicipalities>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSearchMunicipalities<TData = Awaited<ReturnType<typeof searchMunicipalities>>, TError = unknown>(
+ params: SearchMunicipalitiesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof searchMunicipalities>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSearchMunicipalitiesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
 export type searchModusOperandiResponse200 = {
   data: ModusOperandiResponse[]
   status: 200
@@ -247,6 +363,112 @@ export function useSearchModusOperandi<TData = Awaited<ReturnType<typeof searchM
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSearchModusOperandiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type listCrimeTypesResponse200 = {
+  data: CrimeTypeResponse[]
+  status: 200
+}
+    
+export type listCrimeTypesResponseSuccess = (listCrimeTypesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type listCrimeTypesResponse = (listCrimeTypesResponseSuccess)
+
+export const getListCrimeTypesUrl = () => {
+
+
+  
+
+  return `/api/v1/catalog/crime-types`
+}
+
+export const listCrimeTypes = async ( options?: RequestInit): Promise<listCrimeTypesResponse> => {
+  
+  return customFetch<listCrimeTypesResponse>(getListCrimeTypesUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListCrimeTypesQueryKey = () => {
+    return [
+    `/api/v1/catalog/crime-types`
+    ] as const;
+    }
+
+    
+export const getListCrimeTypesQueryOptions = <TData = Awaited<ReturnType<typeof listCrimeTypes>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrimeTypes>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCrimeTypesQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCrimeTypes>>> = () => listCrimeTypes();
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCrimeTypes>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCrimeTypesQueryResult = NonNullable<Awaited<ReturnType<typeof listCrimeTypes>>>
+export type ListCrimeTypesQueryError = unknown
+
+
+export function useListCrimeTypes<TData = Awaited<ReturnType<typeof listCrimeTypes>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrimeTypes>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCrimeTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listCrimeTypes>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCrimeTypes<TData = Awaited<ReturnType<typeof listCrimeTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrimeTypes>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCrimeTypes>>,
+          TError,
+          Awaited<ReturnType<typeof listCrimeTypes>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCrimeTypes<TData = Awaited<ReturnType<typeof listCrimeTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrimeTypes>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListCrimeTypes<TData = Awaited<ReturnType<typeof listCrimeTypes>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCrimeTypes>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCrimeTypesQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

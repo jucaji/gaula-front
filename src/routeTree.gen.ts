@@ -17,6 +17,8 @@ import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as CasosIndexRouteImport } from './routes/casos/index'
 import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackingNumber'
 import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
+import { Route as RecepcionIndexRouteImport } from './routes/recepcion/index'
+import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamadas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +60,16 @@ const CasosNuevoRoute = CasosNuevoRouteImport.update({
   path: '/casos/nuevo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecepcionIndexRoute = RecepcionIndexRouteImport.update({
+  id: '/recepcion/',
+  path: '/recepcion/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecepcionLlamadasRoute = RecepcionLlamadasRouteImport.update({
+  id: '/recepcion/llamadas',
+  path: '/recepcion/llamadas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -67,7 +79,9 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
+  '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/casos/': typeof CasosIndexRoute
+  '/recepcion/': typeof RecepcionIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,7 +91,9 @@ export interface FileRoutesByTo {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
+  '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/casos': typeof CasosIndexRoute
+  '/recepcion': typeof RecepcionIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,7 +104,9 @@ export interface FileRoutesById {
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
+  '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/casos/': typeof CasosIndexRoute
+  '/recepcion/': typeof RecepcionIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,7 +118,9 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
+    | '/recepcion/llamadas'
     | '/casos/'
+    | '/recepcion/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -110,7 +130,9 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
+    | '/recepcion/llamadas'
     | '/casos'
+    | '/recepcion'
   id:
     | '__root__'
     | '/'
@@ -120,7 +142,9 @@ export interface FileRouteTypes {
     | '/admin/usuarios'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
+    | '/recepcion/llamadas'
     | '/casos/'
+    | '/recepcion/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -131,7 +155,9 @@ export interface RootRouteChildren {
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   CasosTrackingNumberRoute: typeof CasosTrackingNumberRoute
   CasosNuevoRoute: typeof CasosNuevoRoute
+  RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
   CasosIndexRoute: typeof CasosIndexRoute
+  RecepcionIndexRoute: typeof RecepcionIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +218,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosNuevoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recepcion/': {
+      id: '/recepcion/'
+      path: '/recepcion'
+      fullPath: '/recepcion/'
+      preLoaderRoute: typeof RecepcionIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recepcion/llamadas': {
+      id: '/recepcion/llamadas'
+      path: '/recepcion/llamadas'
+      fullPath: '/recepcion/llamadas'
+      preLoaderRoute: typeof RecepcionLlamadasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -203,7 +243,9 @@ const rootRouteChildren: RootRouteChildren = {
   AdminUsuariosRoute: AdminUsuariosRoute,
   CasosTrackingNumberRoute: CasosTrackingNumberRoute,
   CasosNuevoRoute: CasosNuevoRoute,
+  RecepcionLlamadasRoute: RecepcionLlamadasRoute,
   CasosIndexRoute: CasosIndexRoute,
+  RecepcionIndexRoute: RecepcionIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

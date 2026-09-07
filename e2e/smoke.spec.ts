@@ -213,3 +213,115 @@ test('exportar PDF de un caso con menor involucrado muestra el bloqueo explícit
   await expect(page.getByText(/involucra un menor de edad/i)).toBeVisible()
   await expect(page.getByText('Ocurrió un error inesperado')).not.toBeVisible()
 })
+
+/**
+ * S4.FE.02: docs/06 §8.1 exige que el registro de la llamada arranque solo
+ * -- ningún botón "iniciar llamada" existe en el wireframe. Este test
+ * verifica que `POST /api/v1/calls` se dispare con sólo cargar la página.
+ */
+test('/recepcion arranca el registro de la llamada sola, sin botón "iniciar"', async ({ page }) => {
+  await mockSession(page)
+  await page.route('**/api/v1/catalog/crime-types', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
+  )
+  let openCallCalls = 0
+  await page.route('**/api/v1/calls', (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    openCallCalls += 1
+    return route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: '11111111-1111-1111-1111-111111111111',
+        sequenceNumber: 42,
+        startedAt: new Date().toISOString(),
+        status: 'IN_PROGRESS',
+      }),
+    })
+  })
+
+  await page.goto('/recepcion')
+
+  await expect(page.getByText(/GRABANDO/)).toBeVisible()
+  await expect(page.getByText('Llamada #42 · Línea 147')).toBeVisible()
+  expect(openCallCalls).toBe(1)
+  await expect(page.getByRole('button', { name: /iniciar/i })).toHaveCount(0)
+})
+
+/**
+ * SPEC-0104 (reingreso): un denunciante que ya llamó antes debe verse
+ * reflejado apenas el operador termina de escribir el teléfono -- sin que
+ * exista (ni haga falta) un botón "buscar" separado.
+ */
+test('/recepcion muestra "Contacto previo" al perder el foco del teléfono, sin botón de búsqueda', async ({ page }) => {
+  await mockSession(page)
+  await page.route('**/api/v1/catalog/crime-types', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
+  )
+  await page.route('**/api/v1/calls', (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    return route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: '11111111-1111-1111-1111-111111111111',
+        sequenceNumber: 42,
+        startedAt: new Date().toISOString(),
+        status: 'IN_PROGRESS',
+      }),
+    })
+  })
+  await page.route('**/api/v1/reporters/lookup**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        reporterId: '22222222-2222-2222-2222-222222222222',
+        contactCount: 3,
+        previousCalls: [{ startedAt: '2026-01-15T10:00:00Z', jurisdiction: 'GAULA' }],
+      }),
+    }),
+  )
+
+  await page.goto('/recepcion')
+  await expect(page.getByText(/GRABANDO/)).toBeVisible()
+
+  await expect(page.getByRole('button', { name: /buscar/i })).toHaveCount(0)
+  await page.getByPlaceholder('Búsqueda automática').fill('3001234567')
+  await page.getByPlaceholder('Búsqueda automática').blur()
+
+  await expect(page.getByText('ⓘ Contacto previo')).toBeVisible()
+  await expect(page.getByText('3 contacto(s) registrado(s)')).toBeVisible()
+  await expect(page.getByRole('button', { name: /buscar/i })).toHaveCount(0)
+})
+
+/**
+ * docs/06 §8.1: las dos únicas salidas de la llamada ("Derivar" y "Crear
+ * caso") deben estar siempre visibles desde que arranca el registro --
+ * nunca detrás de un menú o de un paso previo.
+ */
+test('/recepcion siempre muestra los dos botones de salida ("Derivar" y "Crear caso")', async ({ page }) => {
+  await mockSession(page)
+  await page.route('**/api/v1/catalog/crime-types', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([]) }),
+  )
+  await page.route('**/api/v1/calls', (route) => {
+    if (route.request().method() !== 'POST') return route.fallback()
+    return route.fulfill({
+      status: 201,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: '11111111-1111-1111-1111-111111111111',
+        sequenceNumber: 42,
+        startedAt: new Date().toISOString(),
+        status: 'IN_PROGRESS',
+      }),
+    })
+  })
+
+  await page.goto('/recepcion')
+
+  await expect(page.getByRole('button', { name: 'Derivar' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Crear caso' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sin acción' })).toBeVisible()
+})
