@@ -7,9 +7,11 @@ import type {
   CaseActionResponse,
   CaseFileResponse,
   EvidenceResponse,
+  ExternalDataRequestResponse,
   PersonOfInterestResponse,
   TimelineEntryResponse,
 } from '@/api/generated/models'
+import { RespondExternalDataRequestRequestOutcome } from '@/api/generated/models'
 import { TrackingNumberBadge } from '@/design-system/domain/TrackingNumberBadge'
 import { CaseStatusChip } from '@/design-system/domain/CaseStatusChip'
 import { PriorityIndicator } from '@/design-system/domain/PriorityIndicator'
@@ -19,7 +21,7 @@ import { EvidenceCard } from '@/design-system/domain/EvidenceCard'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { uploadFileWithProgress, type UploadHandle } from '@/lib/upload/uploadWithProgress'
-import { formatDateTime } from '@/lib/format/formatDateTime'
+import { formatDateTime, formatDuration } from '@/lib/format/formatDateTime'
 
 export const Route = createFileRoute('/casos/$trackingNumber')({
   beforeLoad: ({ context }) => {
@@ -50,13 +52,14 @@ const EVIDENCE_TYPES = ['PHOTO', 'VIDEO', 'AUDIO', 'DOCUMENT', 'SCREENSHOT', 'CD
 const ACTION_TYPES = ['VERIFICATION', 'FIELD_OPERATION', 'INTERVIEW', 'EXTERNAL_REQUEST', 'LEGAL_NOTIFICATION', 'NOTE'] as const
 const PARTY_ROLES = ['VICTIM', 'SUSPECT', 'WITNESS', 'RELATIVE'] as const
 
-type Tab = 'resumen' | 'timeline' | 'evidencia' | 'personas' | 'actuaciones'
+type Tab = 'resumen' | 'timeline' | 'evidencia' | 'personas' | 'actuaciones' | 'terceros'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'resumen', label: 'Resumen' },
   { id: 'timeline', label: 'Línea de tiempo' },
   { id: 'evidencia', label: 'Evidencia' },
   { id: 'personas', label: 'Personas' },
   { id: 'actuaciones', label: 'Actuaciones' },
+  { id: 'terceros', label: 'Solicitudes a terceros' },
 ]
 
 function useCaseFile(trackingNumber: string) {
@@ -113,6 +116,22 @@ function useActions(trackingNumber: string, enabled: boolean) {
   })
 }
 
+/**
+ * S12.FE.01/SPEC-0301: `ExternalDataRequestController` recibe el `id` (UUID)
+ * del caso, no el radicado -- el único endpoint del backend que rompe esa
+ * convención (todo lo demás en `casefile` usa `trackingNumber` en la ruta).
+ */
+function useExternalDataRequests(caseFileId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: ['case-files', 'external-data-requests', caseFileId],
+    queryFn: () => customFetch<ExternalDataRequestResponse[]>(`/api/v1/case-files/${caseFileId}/external-data-requests`),
+    enabled: enabled && !!caseFileId,
+    staleTime: 10_000,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
 function CaseDetailPage() {
   const { trackingNumber } = Route.useParams()
   const { can } = Route.useRouteContext()
@@ -143,6 +162,8 @@ function CaseDetailPage() {
   const evidenceList = useEvidenceList(trackingNumber, activeTab === 'evidencia')
   const persons = usePersons(trackingNumber, activeTab === 'personas')
   const actions = useActions(trackingNumber, activeTab === 'actuaciones')
+  const externalDataRequests = useExternalDataRequests(caseFile?.id, activeTab === 'terceros')
+  const canUseExternalDataRequests = can('READ', 'EXTERNAL_DATA_REQUEST')
 
   async function invalidate() {
     await queryClient.invalidateQueries({ queryKey: ['case-files', 'detail', trackingNumber] })
@@ -241,7 +262,7 @@ function CaseDetailPage() {
       </div>
 
       <nav className="mt-4 flex gap-1 border-b border-border" aria-label="Secciones del caso">
-        {TABS.map((tab) => (
+        {TABS.filter((tab) => tab.id !== 'terceros' || canUseExternalDataRequests).map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -395,6 +416,18 @@ function CaseDetailPage() {
           onRecorded={async () => {
             await queryClient.invalidateQueries({ queryKey: ['case-files', 'actions', trackingNumber] })
             await queryClient.invalidateQueries({ queryKey: ['case-files', 'timeline', trackingNumber] })
+          }}
+        />
+      )}
+
+      {activeTab === 'terceros' && canUseExternalDataRequests && caseFile.id && (
+        <ExternalDataRequestsTab
+          caseFileId={caseFile.id}
+          requests={externalDataRequests.data}
+          isLoading={externalDataRequests.isLoading}
+          isError={externalDataRequests.isError}
+          onChanged={async () => {
+            await queryClient.invalidateQueries({ queryKey: ['case-files', 'external-data-requests', caseFile.id] })
           }}
         />
       )}
@@ -760,6 +793,192 @@ function ActionsTab({
                 <span className="ml-auto text-2xs text-text-muted">{formatDateTime(action.performedAt)}</span>
               </div>
               <p className="mt-1 text-text-secondary">{action.description}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+const OUTCOME_LABEL: Record<string, string> = {
+  GRANTED: 'Concedida',
+  DENIED: 'Denegada',
+  PARTIAL: 'Parcial',
+}
+
+/** S12.FE.01/SPEC-0301: descarga síncrona del oficio, mismo patrón que ExportPdfButton. */
+function DownloadOficioButton({ externalDataRequestId }: { externalDataRequestId: string }) {
+  const [downloading, setDownloading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleDownload() {
+    setDownloading(true)
+    setError(null)
+    try {
+      const blob = await customFetch<Blob>(`/api/v1/external-data-requests/${externalDataRequestId}/oficio`)
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `oficio-${externalDataRequestId}.pdf`
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo descargar el oficio.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      {error && <span className="text-2xs text-critical">{error}</span>}
+      <button type="button" onClick={handleDownload} disabled={downloading} className="text-2xs font-medium text-accent hover:text-accent-hover disabled:opacity-50">
+        {downloading ? 'Descargando…' : 'Descargar oficio'}
+      </button>
+    </span>
+  )
+}
+
+/** El radicado real se resuelve de nuevo en cada descarga del oficio (CA-2, S12.APP.01) -- nunca congelado en el envío. */
+function RespondExternalDataRequestForm({ externalDataRequestId, onResponded }: { externalDataRequestId: string; onResponded: () => Promise<void> }) {
+  const [outcome, setOutcome] = useState<string>('')
+  const [responseNotes, setResponseNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!outcome) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await customFetch(`/api/v1/external-data-requests/${externalDataRequestId}/respond`, {
+        method: 'POST',
+        body: JSON.stringify({ outcome, responseNotes: responseNotes || undefined }),
+      })
+      await onResponded()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo registrar la respuesta.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-2 flex flex-wrap items-end gap-2 border-t border-border pt-2">
+      <select
+        value={outcome}
+        onChange={(event) => setOutcome(event.target.value)}
+        className="h-[var(--control-height-sm)] rounded-sm border border-border-strong bg-surface px-2 text-xs text-text-primary"
+      >
+        <option value="">Resultado</option>
+        {Object.values(RespondExternalDataRequestRequestOutcome).map((value) => (
+          <option key={value} value={value}>
+            {OUTCOME_LABEL[value]}
+          </option>
+        ))}
+      </select>
+      <Input size="sm" placeholder="Notas (opcional)" value={responseNotes} onChange={(event) => setResponseNotes(event.target.value)} className="flex-1" />
+      {error && <p className="w-full text-sm text-critical">{error}</p>}
+      <Button type="submit" variant="secondary" size="sm" loading={submitting} disabled={!outcome}>
+        Registrar respuesta
+      </Button>
+    </form>
+  )
+}
+
+/**
+ * S12.FE.01/SPEC-0301: `ExternalDataRequestController` no distingue rol
+ * entre enviar y responder (sólo `isAuthenticated()`) -- una sola guarda
+ * `canUseExternalDataRequests` (lib/permissions.ts) cubre ambas acciones,
+ * mismo criterio que ANALYTICS/FLEET.
+ */
+function ExternalDataRequestsTab({
+  caseFileId,
+  requests,
+  isLoading,
+  isError,
+  onChanged,
+}: {
+  caseFileId: string
+  requests: ExternalDataRequestResponse[] | undefined
+  isLoading: boolean
+  isError: boolean
+  onChanged: () => Promise<void>
+}) {
+  const [thirdPartyName, setThirdPartyName] = useState('')
+  const [dataRequested, setDataRequested] = useState('')
+  const [legalBasis, setLegalBasis] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!thirdPartyName.trim() || !dataRequested.trim()) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      await customFetch('/api/v1/external-data-requests', {
+        method: 'POST',
+        body: JSON.stringify({ caseFileId, thirdPartyName, dataRequested, legalBasis: legalBasis || undefined }),
+      })
+      setThirdPartyName('')
+      setDataRequested('')
+      setLegalBasis('')
+      await onChanged()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar la solicitud.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="mt-4">
+      <form onSubmit={handleSubmit} className="mb-6 flex max-w-2xl flex-col gap-3 border-b border-border pb-4">
+        <div className="flex flex-wrap gap-3">
+          <Input size="sm" placeholder="Tercero (entidad/operador) *" value={thirdPartyName} onChange={(event) => setThirdPartyName(event.target.value)} className="flex-1" />
+          <Input size="sm" placeholder="Base legal (opcional)" value={legalBasis} onChange={(event) => setLegalBasis(event.target.value)} className="w-56" />
+        </div>
+        <Input size="sm" placeholder="Dato solicitado *" value={dataRequested} onChange={(event) => setDataRequested(event.target.value)} />
+        {error && <p className="text-sm text-critical">{error}</p>}
+        <div>
+          <Button type="submit" variant="primary" size="sm" loading={submitting} disabled={!thirdPartyName.trim() || !dataRequested.trim()}>
+            Enviar solicitud
+          </Button>
+        </div>
+      </form>
+
+      {isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+      {isError && <p className="text-sm text-critical">No se pudo cargar las solicitudes a terceros.</p>}
+      {requests && requests.length === 0 && <p className="text-sm text-text-secondary">Sin solicitudes a terceros todavía.</p>}
+      {requests && requests.length > 0 && (
+        <ul className="flex flex-col gap-3">
+          {requests.map((request) => (
+            <li key={request.id} className="rounded-sm border border-border-strong p-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium text-text-primary">{request.thirdPartyName}</span>
+                <span className={'text-2xs font-medium ' + (request.status === 'RESPONDED' ? 'text-stable' : 'text-text-secondary')}>
+                  {request.status === 'RESPONDED' ? '● Respondida' : '○ Enviada'}
+                </span>
+                <span className="ml-auto text-2xs text-text-muted">{formatDateTime(request.requestedAt)}</span>
+                {request.id && <DownloadOficioButton externalDataRequestId={request.id} />}
+              </div>
+              <p className="mt-1 text-text-secondary">{request.dataRequested}</p>
+              {request.legalBasis && <p className="mt-0.5 text-2xs text-text-muted">Base legal: {request.legalBasis}</p>}
+
+              {request.status === 'RESPONDED' ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border pt-2 text-2xs">
+                  <span className="font-medium text-text-primary">{request.outcome ? OUTCOME_LABEL[request.outcome] : '—'}</span>
+                  {request.responseNotes && <span className="text-text-secondary">{request.responseNotes}</span>}
+                  {request.requestedAt && request.respondedAt && (
+                    <span className="ml-auto text-text-muted">SLA: {formatDuration(request.requestedAt, request.respondedAt)}</span>
+                  )}
+                </div>
+              ) : (
+                request.id && <RespondExternalDataRequestForm externalDataRequestId={request.id} onResponded={onChanged} />
+              )}
             </li>
           ))}
         </ul>

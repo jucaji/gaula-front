@@ -43,4 +43,10 @@ describe('can', () => {
   it('niega EXPORT de CASE_FILE a FIELD_OFFICER -- sólo tiene READ:ASSIGNED', () => {
     expect(can('EXPORT', 'CASE_FILE', ['FIELD_OFFICER'])).toBe(false)
   })
+
+  it('permite EXTERNAL_DATA_REQUEST a INTELLIGENCE_ANALYST y UNIT_COMMANDER, niega a HOTLINE_OPERATOR', () => {
+    expect(can('CREATE', 'EXTERNAL_DATA_REQUEST', ['INTELLIGENCE_ANALYST'])).toBe(true)
+    expect(can('READ', 'EXTERNAL_DATA_REQUEST', ['UNIT_COMMANDER'])).toBe(true)
+    expect(can('READ', 'EXTERNAL_DATA_REQUEST', ['HOTLINE_OPERATOR'])).toBe(false)
+  })
 })

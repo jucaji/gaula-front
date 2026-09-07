@@ -54,6 +54,11 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
   // de rol -- se amplía a los roles con uso operativo real de la flota
   // (FIELD_OFFICER la consulta/asigna en campo, UNIT_COMMANDER la supervisa).
   FLEET: ['ADMIN_STAFF', 'SYSTEM_ADMIN', 'FIELD_OFFICER', 'UNIT_COMMANDER'],
+  // S12.FE.01, verificado contra el backend real: `ExternalDataRequestController`
+  // sólo exige `isAuthenticated()`, sin restricción de rol -- se limita a los
+  // roles con uso real de inteligencia (INTELLIGENCE_ANALYST envía/recibe,
+  // UNIT_COMMANDER supervisa), mismo criterio que ANALYTICS/FLEET.
+  EXTERNAL_DATA_REQUEST: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER'],
   ADMIN: ['SYSTEM_ADMIN'],
 }
 
