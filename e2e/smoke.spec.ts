@@ -33,6 +33,34 @@ test('la página de inicio carga sin violaciones de accesibilidad', async ({ pag
   expect(results.violations).toEqual([])
 })
 
+test('cerrar sesión es un formulario POST hacia /logout, no un fetch', async ({ page }) => {
+  await mockSession(page)
+  await page.context().addCookies([{ name: 'XSRF-TOKEN', value: 'token-de-prueba', url: 'http://localhost' }])
+
+  await page.goto('/')
+
+  const boton = page.getByRole('button', { name: 'Cerrar sesión' })
+  await expect(boton).toBeVisible()
+
+  // Lo que se prueba NO es que exista el botón: es CÓMO envía.
+  // `POST /logout` responde con una redirección al `end_session_endpoint` de
+  // Keycloak que el navegador tiene que seguir. Hecho con `fetch`, la respuesta
+  // llega como `opaqueredirect`, el navegador no la sigue, y queda un logout a
+  // medias: sesión local muerta y sesión de Keycloak VIVA -- el siguiente login
+  // entraría sin pedir credenciales (docs/04 §2.5).
+  const formulario = page.locator('form[action="/logout"]')
+  await expect(formulario).toHaveAttribute('method', 'post')
+
+  // El `_csrf` se rellena AL ENVIAR, no al pintar: Spring emite la cookie
+  // `XSRF-TOKEN` en su primera respuesta y el encabezado se pinta antes de que
+  // llegue. Leerla durante el render dejaba el campo vacío y el logout habría
+  // fallado con 403 -- un botón visible que no cierra la sesión es peor que no
+  // tener botón. Se comprueba el valor DESPUÉS del envío.
+  await expect(formulario.locator('input[name="_csrf"]')).toHaveValue('')
+  await formulario.dispatchEvent('submit')
+  await expect(formulario.locator('input[name="_csrf"]')).toHaveValue('token-de-prueba')
+})
+
 test('/casos respeta el permiso de lectura y muestra un estado -- nunca pantalla en blanco', async ({ page }) => {
   await mockSession(page)
   await page.route('**/api/v1/case-files**', (route) => route.abort('failed'))

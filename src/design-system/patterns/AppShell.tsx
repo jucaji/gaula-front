@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import type { Session } from '@/lib/auth/session'
 import { can } from '@/lib/permissions'
+import { LogoutButton } from './LogoutButton'
 import { ThemeToggle } from './ThemeToggle'
 import { DensityToggle } from './DensityToggle'
 
@@ -49,6 +50,7 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
             <UserCircle size={20} strokeWidth={1.5} />
             <span>{session.displayName}</span>
           </div>
+          <LogoutButton />
         </div>
       </header>
 
