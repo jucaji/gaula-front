@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
-import { getCategoricalPalette, getVizSurface } from '@/design-system/charts/palette'
+import { getCategoricalPalette, getSequentialPalette, getVizSurface } from '@/design-system/charts/palette'
+import { useDepartmentGeometry } from '@/lib/catalog/useDepartmentGeometry'
 import { useResolvedTheme } from '@/lib/theme/useResolvedTheme'
 import type { MapPoint } from '@/lib/observatory/types'
 
@@ -25,6 +26,9 @@ export function IncidentMap({
   anomalyMunicipalities,
   selectedMunicipalityCode,
   onSelect,
+  byDepartment,
+  selectedDepartment,
+  onSelectDepartment,
 }: {
   points: MapPoint[]
   total: number
@@ -34,8 +38,18 @@ export function IncidentMap({
   anomalyMunicipalities: string[]
   selectedMunicipalityCode?: string | undefined
   onSelect: (municipalityCode: string | undefined) => void
+  /** Conteo por departamento, para la coropleta. Viene con el nombre del archivo. */
+  byDepartment: { key: string; count: number }[]
+  selectedDepartment?: string | undefined
+  onSelectDepartment: (department: string | undefined) => void
 }) {
   const theme = useResolvedTheme()
+  // Puntos por defecto: es la vista que no exagera. La coropleta pinta el
+  // departamento ENTERO del color de su conteo, y eso hace ver un hecho en
+  // Leticia como si cubriera todo el Amazonas -- útil para comparar territorios,
+  // engañoso para localizar. Por eso se elige, no se impone.
+  const [view, setView] = useState<'puntos' | 'departamentos'>('puntos')
+  const geometry = useDepartmentGeometry(view === 'departamentos')
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   // El manejador y el municipio elegido cambian en cada render (cierran sobre los
@@ -43,13 +57,17 @@ export function IncidentMap({
   // dan a ese manejador ya registrado la versión vigente, y se actualizan dentro
   // de un efecto: escribir un ref durante el render no está permitido.
   const onSelectRef = useRef(onSelect)
+  const onSelectDepartmentRef = useRef(onSelectDepartment)
   const selectedMunicipalityCodeRef = useRef(selectedMunicipalityCode)
+  const selectedDepartmentRef = useRef(selectedDepartment)
   // El último GeoJSON conocido, para que la fuente nazca ya con él.
   const pendingDataRef = useRef<FeatureCollection>(emptyCollection())
   useEffect(() => {
     onSelectRef.current = onSelect
+    onSelectDepartmentRef.current = onSelectDepartment
     selectedMunicipalityCodeRef.current = selectedMunicipalityCode
-  }, [onSelect, selectedMunicipalityCode])
+    selectedDepartmentRef.current = selectedDepartment
+  }, [onSelect, onSelectDepartment, selectedMunicipalityCode, selectedDepartment])
 
   // La leyenda tiene que usar EXACTAMENTE los colores del mapa: son de la paleta
   // en JS, no tokens CSS, porque MapLibre no entiende `oklch()` (hallazgo del
@@ -64,6 +82,65 @@ export function IncidentMap({
     [points, hotspotMunicipalities, anomalyMunicipalities],
   )
   const maxCount = useMemo(() => points.reduce((max, point) => Math.max(max, point.count), 0), [points])
+
+  /**
+   * La coropleta une la figura con el conteo por NOMBRE porque es lo único que
+   * comparten: el archivo de la Fiscalía trae «ANTIOQUIA» y el catálogo
+   * «Antioquia». Se comparan normalizados, sin acentos ni mayúsculas — la misma
+   * regla que ya usa el importador para resolver municipios.
+   */
+  const departmentCollection = useMemo<FeatureCollection>(() => {
+    const geometrias = geometry.data ?? []
+    if (geometrias.length === 0) return emptyCollection()
+
+    const conteos = new Map(byDepartment.map((item) => [normalize(item.key), item]))
+    const escala = getSequentialPalette(theme)
+    const maximo = byDepartment.reduce((max, item) => Math.max(max, item.count), 0)
+
+    return {
+      type: 'FeatureCollection',
+      features: geometrias.map((departamento) => {
+        const conteo = conteos.get(normalize(departamento.name))
+        const count = conteo?.count ?? -1
+        const proporcion = maximo > 0 && count > 0 ? count / maximo : 0
+        const paso = count <= 0 ? 0 : Math.min(escala.length - 1, 1 + Math.floor(proporcion * (escala.length - 2)))
+        return {
+          type: 'Feature',
+          geometry: departamento.geometry as FeatureCollection['features'][number]['geometry'],
+          properties: {
+            code: departamento.code,
+            name: departamento.name,
+            // El nombre TAL COMO viene en los hechos: es lo que hay que poner en
+            // el filtro, no el del catálogo.
+            departmentText: conteo?.key ?? departamento.name,
+            count,
+            color: escala[paso] ?? escala[0],
+            selected: selectedDepartment != null && normalize(selectedDepartment) === normalize(departamento.name),
+          },
+        }
+      }),
+    }
+  }, [geometry.data, byDepartment, theme, selectedDepartment])
+
+  useEffect(() => {
+    const map = mapRef.current
+    const source = map?.getSource('departamentos') as maplibregl.GeoJSONSource | undefined
+    source?.setData(departmentCollection)
+  }, [departmentCollection])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !map.getLayer('departamentos-relleno')) return
+    // Las dos vistas son excluyentes: superponerlas convierte un mapa en un
+    // adorno del que ya no se puede leer ninguna de las dos cosas.
+    const visible = (id: string, mostrar: boolean) =>
+      map.setLayoutProperty(id, 'visibility', mostrar ? 'visible' : 'none')
+    visible('departamentos-relleno', view === 'departamentos')
+    visible('departamentos-borde', view === 'departamentos')
+    visible('municipios', view === 'puntos')
+    visible('focos', view === 'puntos')
+    visible('seleccionado', view === 'puntos')
+  }, [view, geometry.data])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -87,6 +164,28 @@ export function IncidentMap({
     mapRef.current = map
 
     map.on('load', () => {
+      // La coropleta va DEBAJO de los puntos: son dos lecturas del mismo dato y
+      // la de abajo no puede tapar la de arriba.
+      map.addSource('departamentos', { type: 'geojson', data: emptyCollection() })
+      map.addLayer({
+        id: 'departamentos-relleno',
+        type: 'fill',
+        source: 'departamentos',
+        paint: {
+          'fill-color': ['case', ['==', ['get', 'count'], -1], 'transparent', ['get', 'color']],
+          'fill-opacity': 0.75,
+        },
+      })
+      map.addLayer({
+        id: 'departamentos-borde',
+        type: 'line',
+        source: 'departamentos',
+        paint: {
+          'line-color': theme === 'dark' ? '#475569' : '#94a3b8',
+          'line-width': ['case', ['get', 'selected'], 2.5, 0.6],
+        },
+      })
+
       map.addSource('hechos', { type: 'geojson', data: pendingDataRef.current })
 
       // El halo del foco va DEBAJO del punto: marca la zona sin taparla.
@@ -157,6 +256,34 @@ export function IncidentMap({
         map.getCanvas().style.cursor = ''
         popup.remove()
       })
+      map.on('mousemove', 'departamentos-relleno', (event) => {
+        const feature = event.features?.[0]
+        if (!feature) return
+        const props = feature.properties as Record<string, unknown>
+        const count = Number(props.count)
+        map.getCanvas().style.cursor = 'pointer'
+        popup
+          .setLngLat(event.lngLat)
+          .setHTML(
+            `<strong>${escapeHtml(String(props.name ?? ''))}</strong><br/>${
+              // -1 marca "el corte no trae hechos de este departamento", que NO es
+              // lo mismo que cero: el archivo puede sencillamente no cubrirlo.
+              count < 0 ? 'sin hechos en este corte' : `${count} ${count === 1 ? 'hecho' : 'hechos'}`
+            }`,
+          )
+          .addTo(map)
+      })
+      map.on('mouseleave', 'departamentos-relleno', () => {
+        map.getCanvas().style.cursor = ''
+        popup.remove()
+      })
+      map.on('click', 'departamentos-relleno', (event) => {
+        const feature = event.features?.[0]
+        if (!feature) return
+        const nombre = String((feature.properties as Record<string, unknown>).departmentText ?? '')
+        onSelectDepartmentRef.current(nombre === selectedDepartmentRef.current ? undefined : nombre)
+      })
+
       map.on('click', 'municipios', (event) => {
         const feature = event.features?.[0]
         if (!feature) return
@@ -200,10 +327,30 @@ export function IncidentMap({
     <section aria-label="Mapa del registro nacional" className="mt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold text-text-primary">Dónde están los hechos</h2>
-        <p className="text-2xs text-text-muted">
-          El tamaño del círculo es proporcional al número de hechos. Haga clic en un municipio para filtrar el tablero.
-        </p>
+        <div className="flex items-center gap-1" role="group" aria-label="Vista del mapa">
+          {(['puntos', 'departamentos'] as const).map((opcion) => (
+            <button
+              key={opcion}
+              type="button"
+              aria-pressed={view === opcion}
+              onClick={() => setView(opcion)}
+              className={`min-h-[var(--tap-min)] rounded-sm border px-2 text-2xs sm:min-h-0 sm:py-1 ${
+                view === opcion
+                  ? 'border-accent bg-surface-raised text-text-primary'
+                  : 'border-border-strong text-text-secondary'
+              }`}
+            >
+              {opcion === 'puntos' ? 'Municipios' : 'Departamentos'}
+            </button>
+          ))}
+        </div>
       </div>
+
+      <p className="mt-1 text-2xs text-text-muted">
+        {view === 'puntos'
+          ? 'El tamaño del círculo es proporcional al número de hechos. Haga clic en un municipio para filtrar el tablero.'
+          : 'El departamento entero se pinta con el color de su conteo: sirve para comparar territorios, no para ubicar un hecho. Haga clic para filtrar.'}
+      </p>
 
       <div
         ref={containerRef}
@@ -213,9 +360,29 @@ export function IncidentMap({
       />
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs text-text-secondary">
-        <Leyenda color={colorMarca} texto="Municipio con hechos" />
-        <Leyenda color={colorFoco} texto="Zona con foco detectado" />
-        <Leyenda color={colorAnomalia} texto="Municipio con anomalía en el último mes" />
+        {view === 'puntos' ? (
+          <>
+            <Leyenda color={colorMarca} texto="Municipio con hechos" />
+            <Leyenda color={colorFoco} texto="Zona con foco detectado" />
+            <Leyenda color={colorAnomalia} texto="Municipio con anomalía en el último mes" />
+          </>
+        ) : (
+          <>
+            <span className="flex items-center gap-1">
+              menos
+              {getSequentialPalette(theme).map((color) => (
+                <span key={color} aria-hidden className="inline-block size-2.5 rounded-[2px]" style={{ backgroundColor: color }} />
+              ))}
+              más
+            </span>
+            {/* Un departamento sin hechos en el corte NO se pinta como "pocos": se
+                deja sin relleno, porque el corte puede sencillamente no cubrirlo. */}
+            <span className="flex items-center gap-1.5">
+              <span aria-hidden className="inline-block size-2.5 rounded-[2px] border border-border-strong" />
+              Sin hechos en este corte
+            </span>
+          </>
+        )}
       </div>
 
       {/*

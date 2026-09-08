@@ -104,7 +104,23 @@ const ANALYSIS = {
   notes: [],
 }
 
+const GEOMETRIA = [
+  {
+    code: '05',
+    name: 'Antioquia',
+    geometry: { type: 'Polygon', coordinates: [[[-76, 6], [-75, 6], [-75, 7], [-76, 7], [-76, 6]]] },
+  },
+  {
+    code: '91',
+    name: 'Amazonas',
+    geometry: { type: 'Polygon', coordinates: [[[-72, -2], [-70, -2], [-70, 0], [-72, 0], [-72, -2]]] },
+  },
+]
+
 async function mockDashboard(page: Page, consultas: string[], analysisAvailable = true) {
+  await page.route('**/api/v1/catalog/departments/geometry', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(GEOMETRIA) }),
+  )
   await page.route('**/api/v1/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(ANALYST_SESSION) }),
   )
@@ -295,4 +311,33 @@ test('SPEC-0807: el ranking territorial lleva su micro-serie', async ({ page }) 
   const constante = tarjeta.getByRole('img', { name: 'Evolución mensual de SANTANDER' })
   const trazo = await constante.locator('path').getAttribute('d')
   expect(trazo).toBe('M0.0,10.0 L36.0,10.0 L72.0,10.0')
+})
+
+test('SPEC-0807: la coropleta se elige, no se impone, y no baja la geometría hasta que se pide', async ({ page }) => {
+  await mockDashboard(page, [])
+  // DESPUÉS del mock general: en Playwright gana la última ruta registrada, así
+  // que registrarla antes dejaba el contador en cero para siempre.
+  let geometriaPedida = 0
+  await page.route('**/api/v1/catalog/departments/geometry', (route) => {
+    geometriaPedida += 1
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(GEOMETRIA) })
+  })
+
+  await page.goto('/tableros/secuestro')
+  const mapa = page.getByRole('region', { name: 'Mapa del registro nacional' })
+
+  // La vista de puntos es la de entrada: es la que no exagera. Quien nunca abre
+  // la coropleta no baja el mapa de Colombia.
+  await expect(mapa.getByRole('button', { name: 'Municipios' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(mapa).toContainText('El tamaño del círculo es proporcional')
+  await page.waitForTimeout(800)
+  expect(geometriaPedida).toBe(0)
+
+  await mapa.getByRole('button', { name: 'Departamentos' }).click()
+  await expect(mapa.getByRole('button', { name: 'Departamentos' })).toHaveAttribute('aria-pressed', 'true')
+  // La advertencia va con la vista: pintar el departamento entero sirve para
+  // comparar territorios, no para ubicar un hecho.
+  await expect(mapa).toContainText('sirve para comparar territorios, no para ubicar un hecho')
+  await expect(mapa).toContainText('Sin hechos en este corte')
+  await expect.poll(() => geometriaPedida).toBe(1)
 })

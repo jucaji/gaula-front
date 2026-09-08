@@ -249,6 +249,9 @@ export function ObservatoryDashboardScreen({
             anomalyMunicipalities={(analysis.data?.anomalies ?? []).map((anomaly) => anomaly.municipalityText)}
             selectedMunicipalityCode={filters.municipalityCode}
             onSelect={(municipalityCode) => onFiltersChange({ ...filters, municipalityCode })}
+            byDepartment={data.byDepartment}
+            selectedDepartment={filters.departmentText}
+            onSelectDepartment={(departmentText) => onFiltersChange({ ...filters, departmentText })}
           />
           )}
           {analysis.data && <IncidentAnalysisPanel analysis={analysis.data} />}
