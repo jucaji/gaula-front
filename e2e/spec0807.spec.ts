@@ -313,7 +313,7 @@ test('SPEC-0807: el ranking territorial lleva su micro-serie', async ({ page }) 
   expect(trazo).toBe('M0.0,10.0 L36.0,10.0 L72.0,10.0')
 })
 
-test('SPEC-0807: la coropleta se elige, no se impone, y no baja la geometría hasta que se pide', async ({ page }) => {
+test('SPEC-0807: la coropleta se elige, no se impone, y el contorno es contexto de las dos vistas', async ({ page }) => {
   await mockDashboard(page, [])
   // DESPUÉS del mock general: en Playwright gana la última ruta registrada, así
   // que registrarla antes dejaba el contador en cero para siempre.
@@ -326,12 +326,14 @@ test('SPEC-0807: la coropleta se elige, no se impone, y no baja la geometría ha
   await page.goto('/tableros/secuestro')
   const mapa = page.getByRole('region', { name: 'Mapa del registro nacional' })
 
-  // La vista de puntos es la de entrada: es la que no exagera. Quien nunca abre
-  // la coropleta no baja el mapa de Colombia.
+  // La vista de puntos es la de entrada: es la que no exagera.
   await expect(mapa.getByRole('button', { name: 'Municipios' })).toHaveAttribute('aria-pressed', 'true')
   await expect(mapa).toContainText('El tamaño del círculo es proporcional')
-  await page.waitForTimeout(800)
-  expect(geometriaPedida).toBe(0)
+
+  // Pero la geometría se pide IGUAL: los límites departamentales son el contexto
+  // del mapa, no un adorno de la coropleta. Sin ellos, un círculo flota sobre un
+  // rectángulo negro y no dice dónde queda (reportado en vivo por el cliente).
+  await expect.poll(() => geometriaPedida).toBe(1)
 
   await mapa.getByRole('button', { name: 'Departamentos' }).click()
   await expect(mapa.getByRole('button', { name: 'Departamentos' })).toHaveAttribute('aria-pressed', 'true')
@@ -339,7 +341,8 @@ test('SPEC-0807: la coropleta se elige, no se impone, y no baja la geometría ha
   // comparar territorios, no para ubicar un hecho.
   await expect(mapa).toContainText('sirve para comparar territorios, no para ubicar un hecho')
   await expect(mapa).toContainText('Sin hechos en este corte')
-  await expect.poll(() => geometriaPedida).toBe(1)
+  // Una sola descarga para las dos vistas: son fronteras, no cifras.
+  expect(geometriaPedida).toBe(1)
 })
 
 test('SPEC-0807: filtrar desde la coropleta no devuelve el mapa a la vista de puntos', async ({ page }) => {

@@ -17,3 +17,45 @@ html {
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * SPEC-0807 — el globo del mapa.
+ *
+ * MapLibre trae su globo en blanco con texto oscuro, fijo. Sobre el tema oscuro
+ * de la consola se veía una tarjeta blanca con el texto casi invisible: parecía
+ * vacía (reportado por el cliente con una captura). Se lleva a los tokens del
+ * design system, para que siga las mismas reglas de contraste que el resto.
+ *
+ * Los selectores llevan una clase de más A PROPÓSITO: la hoja de MapLibre se
+ * carga en tiempo de ejecución (para no inflar el bundle de quien nunca abre un
+ * mapa), así que llega DESPUÉS de ésta y con la misma especificidad ganaría por
+ * orden. Subir la especificidad es lo que hace que estas reglas manden.
+ */
+.maplibregl-popup .maplibregl-popup-content {
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-strong);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  box-shadow: none;
+}
+
+/* La flecha es un borde CSS: hay que teñirla por lado o queda blanca. */
+.maplibregl-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--color-surface-raised);
+}
+.maplibregl-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--color-surface-raised);
+}
+.maplibregl-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--color-surface-raised);
+}
+.maplibregl-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--color-surface-raised);
+}

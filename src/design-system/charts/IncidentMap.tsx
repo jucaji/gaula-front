@@ -49,7 +49,12 @@ export function IncidentMap({
   // Leticia como si cubriera todo el Amazonas -- útil para comparar territorios,
   // engañoso para localizar. Por eso se elige, no se impone.
   const [view, setView] = useState<'puntos' | 'departamentos'>('puntos')
-  const geometry = useDepartmentGeometry(view === 'departamentos')
+  // HALLAZGO REAL (reportado por el cliente con una captura): en la vista de
+  // municipios los círculos flotaban sobre un rectángulo negro. Sin base map ni
+  // contorno, un punto en el vacío no dice DÓNDE queda -- que es lo único que un
+  // mapa aporta sobre una tabla. Los límites departamentales son el contexto
+  // mínimo, y por eso se cargan SIEMPRE, no sólo para la coropleta.
+  const geometry = useDepartmentGeometry(true)
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   // El manejador y el municipio elegido cambian en cada render (cierran sobre los
@@ -136,7 +141,8 @@ export function IncidentMap({
     const visible = (id: string, mostrar: boolean) =>
       map.setLayoutProperty(id, 'visibility', mostrar ? 'visible' : 'none')
     visible('departamentos-relleno', view === 'departamentos')
-    visible('departamentos-borde', view === 'departamentos')
+    // El contorno queda en las DOS vistas: es lo que le da ubicación a un punto.
+    visible('departamentos-borde', true)
     visible('municipios', view === 'puntos')
     visible('focos', view === 'puntos')
     visible('seleccionado', view === 'puntos')
@@ -183,6 +189,9 @@ export function IncidentMap({
         paint: {
           'line-color': theme === 'dark' ? '#475569' : '#94a3b8',
           'line-width': ['case', ['get', 'selected'], 2.5, 0.6],
+          // En la vista de puntos el contorno es CONTEXTO: se ve, pero no compite
+          // con los círculos, que son el dato.
+          'line-opacity': 0.85,
         },
       })
 
