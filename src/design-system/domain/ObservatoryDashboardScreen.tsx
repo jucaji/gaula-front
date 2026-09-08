@@ -1,4 +1,4 @@
-import { Download } from 'lucide-react'
+import { Download, Presentation } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { customFetch } from '@/api/client'
@@ -6,6 +6,8 @@ import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
 import { IncidentMap } from '@/design-system/charts/IncidentMap'
+import { ObservatorySlides } from './ObservatorySlides'
+import { useActiveSnapshot } from '@/lib/observatory/useActiveSnapshot'
 import { FilterChips, type AppliedFilter } from '@/design-system/patterns/FilterChips'
 import { IncidentDashboardView } from './IncidentDashboardView'
 import { IncidentAnalysisPanel } from './IncidentAnalysisPanel'
@@ -46,6 +48,11 @@ export function ObservatoryDashboardScreen({
   const analysis = useIncidentAnalysis(profile, filters)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+  // SPEC-0807 CA-5: la lámina es una VISTA de este mismo tablero, no otra
+  // consulta. Si fuera otra pantalla con su propia carga, lo proyectado podría
+  // diferir de lo que el analista revisó antes de entrar a la sala.
+  const [slideMode, setSlideMode] = useState(false)
+  const snapshot = useActiveSnapshot()
 
   async function handleExport() {
     setExporting(true)
@@ -63,6 +70,18 @@ export function ObservatoryDashboardScreen({
     } finally {
       setExporting(false)
     }
+  }
+
+  if (slideMode && data?.snapshotId) {
+    return (
+      <ObservatorySlides
+        profile={profile}
+        dashboard={data}
+        analysis={analysis.data}
+        snapshot={snapshot.data}
+        onExit={() => setSlideMode(false)}
+      />
+    )
   }
 
   return (
@@ -87,9 +106,16 @@ export function ObservatoryDashboardScreen({
             </p>
           )}
         </div>
-        <Button variant="secondary" size="md" loading={exporting} onClick={handleExport}>
-          <Download size={16} strokeWidth={1.5} aria-hidden /> Exportar a Excel
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {data?.snapshotId && (
+            <Button variant="secondary" size="md" onClick={() => setSlideMode(true)}>
+              <Presentation size={16} strokeWidth={1.5} aria-hidden /> Modo lámina
+            </Button>
+          )}
+          <Button variant="secondary" size="md" loading={exporting} onClick={handleExport}>
+            <Download size={16} strokeWidth={1.5} aria-hidden /> Exportar a Excel
+          </Button>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap items-end gap-3">

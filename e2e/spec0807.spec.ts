@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 /**
  * SPEC-0807: el tablero territorial — mapa, filtros y lo que queda fuera.
@@ -156,4 +157,77 @@ test('SPEC-0807: la ocupación de la víctima se grafica con su tabla equivalent
   await tarjeta.getByRole('button', { name: 'Ver tabla' }).click()
   await expect(tarjeta.getByRole('cell', { name: 'COMERCIANTE' })).toBeVisible()
   await expect(tarjeta.getByRole('cell', { name: '13', exact: true })).toBeVisible()
+})
+
+test('SPEC-0807 CA-5: el modo lámina proyecta el MISMO tablero, con su corte y sus abstenciones', async ({ page }) => {
+  const consultas: string[] = []
+  await mockDashboard(page, consultas)
+
+  await page.goto('/tableros/secuestro')
+  // Esperar a que la pantalla se asiente: contar consultas a medio vuelo mide el
+  // arranque, no lo que hace el modo lámina.
+  await expect(page.getByRole('button', { name: 'Modo lámina' })).toBeVisible()
+  await page.waitForTimeout(1000)
+  const consultasAntes = consultas.length
+
+  await page.getByRole('button', { name: 'Modo lámina' }).click()
+  const lamina = page.getByRole('region', { name: 'Modo lámina' })
+
+  // La procedencia va en TODAS las láminas: una cifra proyectada sin corte es la
+  // lámina escrita a mano que este módulo vino a reemplazar.
+  await expect(lamina).toContainText('Mesa de Seguimiento No.54')
+  await expect(lamina).toContainText('34')
+  await expect(lamina).toContainText('lámina 1 de')
+
+  // No calcula nada aparte: entrar al modo lámina no dispara una consulta nueva.
+  await page.waitForTimeout(1000)
+  expect(consultas.length).toBe(consultasAntes)
+
+  // Se avanza con el teclado, como en la sala.
+  await page.keyboard.press('ArrowRight')
+  await expect(lamina).toContainText('lámina 2 de')
+  await page.keyboard.press('ArrowLeft')
+  await expect(lamina).toContainText('lámina 1 de')
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('region', { name: 'Modo lámina' })).toBeHidden()
+})
+
+test('SPEC-0807 CA-5: la lámina lleva la anomalía y NO inventa láminas sin dato', async ({ page }) => {
+  await mockDashboard(page, [])
+
+  await page.goto('/tableros/secuestro')
+  await page.getByRole('button', { name: 'Modo lámina' }).click()
+  const lamina = page.getByRole('region', { name: 'Modo lámina' })
+
+  const titulos: string[] = []
+  for (let i = 0; i < 12; i++) {
+    titulos.push((await lamina.getByRole('heading', { level: 2 }).innerText()).trim())
+    const siguiente = lamina.getByRole('button', { name: 'Lámina siguiente' })
+    if (await siguiente.isDisabled()) break
+    await siguiente.click()
+  }
+
+  expect(titulos).toContain('Anomalías por municipio')
+  expect(titulos).toContain('Focos geográficos')
+  // El mock de secuestro no trae modalidad: esa lámina no puede existir, porque
+  // una gráfica vacía proyectada se lee como "no hubo".
+  expect(titulos).not.toContain('Modalidad de la denuncia')
+})
+
+test('SPEC-0807: la lámina cumple accesibilidad en los dos temas', async ({ page }) => {
+  await mockDashboard(page, [])
+
+  // El tema se fija ANTES de cargar, como en el resto de la suite: cambiarlo con
+  // la lámina ya en pantalla mide los colores a medio camino y da un fallo que
+  // no existe (visto al escribir esta prueba).
+  for (const tema of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: tema })
+    await page.goto('/tableros/secuestro')
+    await page.getByRole('button', { name: 'Modo lámina' }).click()
+    await expect(page.getByRole('region', { name: 'Modo lámina' })).toBeVisible()
+
+    const resultado = await new AxeBuilder({ page }).analyze()
+    expect(resultado.violations, `violaciones de accesibilidad en tema ${tema}`).toEqual([])
+  }
 })

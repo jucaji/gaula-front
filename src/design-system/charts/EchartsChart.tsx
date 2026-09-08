@@ -15,7 +15,11 @@ export function EchartsChart({
   ariaLabel,
 }: {
   option: echarts.EChartsOption
-  height?: number
+  /**
+   * Número de píxeles, o una medida CSS. El modo lámina pasa `'100%'` para que
+   * la gráfica llene la pantalla proyectada; el contenedor manda el alto.
+   */
+  height?: number | string
   ariaLabel: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
