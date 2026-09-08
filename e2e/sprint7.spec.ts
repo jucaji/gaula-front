@@ -166,8 +166,44 @@ test('S7.FE.04: el tablero de analítica muestra el comparativo de período y re
 
   await page.goto('/analitica')
   await expect(page.getByRole('heading', { name: 'Analítica' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cifras del período' })).toBeVisible()
   await expect(page.getByText('REPORTES').locator('..').getByText('12', { exact: true })).toBeVisible()
   await expect(page.getByText('50.0% vs. período anterior')).toBeVisible()
+})
+
+test('S7.FE.04 (corregido 2026-09-08): sin reportes validados el tablero lo DICE, no muestra seis ceros', async ({ page }) => {
+  await mockSession(page, ANALYST_SESSION)
+  await page.route('**/api/v1/catalog/crime-types', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
+  // `mv_daily_kpi` sólo cuenta reportes VALIDADOS: un tablero recién puesto en
+  // marcha se ve idéntico a una unidad que trabajó y no obtuvo nada. Un cero
+  // afirma "cero capturas", y eso este tablero no está en condiciones de decirlo.
+  await page.route('**/api/v1/analytics/kpi/compare**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        currentTotal: { reportCount: 0, arrests: 0, rescues: 0, preventedPaymentAmount: 0, weaponsSeized: 0, vehiclesSeized: 0 },
+        previousTotal: { reportCount: 0, arrests: 0, rescues: 0, preventedPaymentAmount: 0, weaponsSeized: 0, vehiclesSeized: 0 },
+        byModality: [],
+      }),
+    }),
+  )
+  await page.route('**/api/v1/analytics/series**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }),
+  )
+
+  await page.goto('/analitica')
+
+  await expect(page.getByText('No hay reportes validados en este rango')).toBeVisible()
+  await expect(page.getByText(/no significa que no haya habido operaciones/)).toBeVisible()
+  // Las tarjetas de cifras NO se pintan: no hay nada que cifrar. Se comprueba por
+  // la región completa y no por el texto de una tarjeta -- "Capturas" y "Dinero
+  // dejado de pagar" son también opciones del selector de métrica, y buscarlas
+  // por texto daría un falso positivo.
+  await expect(page.getByRole('region', { name: 'Cifras del período' })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Ver la cola de revisión' })).toBeVisible()
 })
 
 test('S7.FE.04: sin permiso ANALYTICS, /analitica redirige en vez de mostrar el tablero', async ({ page }) => {

@@ -13,6 +13,7 @@ import { useResolvedTheme } from '@/lib/theme/useResolvedTheme'
 import { Input } from '@/design-system/primitives/Input'
 import { Button } from '@/design-system/primitives/Button'
 import { formatCurrencyCOP } from '@/lib/format/formatDateTime'
+import { Info } from 'lucide-react'
 
 const METRICS = ['REPORT_COUNT', 'ARRESTS', 'RESCUES', 'PREVENTED_PAYMENT_AMOUNT', 'WEAPONS_SEIZED', 'VEHICLES_SEIZED'] as const
 const METRIC_LABEL: Record<string, string> = {
@@ -226,6 +227,23 @@ function AnalyticsDashboardPage() {
   const currentTotal = kpiCompare.data?.currentTotal
   const previousTotal = kpiCompare.data?.previousTotal
 
+  /**
+   * HALLAZGO REAL (2026-09-08): las seis tarjetas mostraban `0` / `$ 0` cuando
+   * no había NINGÚN reporte validado en el rango, y eso no es lo mismo.
+   *
+   * `mv_daily_kpi` sólo cuenta reportes en estado `VALIDATED` (SPEC-0405 CA-1),
+   * así que un tablero recién puesto en marcha -- o una unidad cuyo comandante
+   * todavía no ha validado nada -- se ve idéntico a una unidad que trabajó y no
+   * obtuvo un solo resultado. Un comandante que abra esto puede leer "no
+   * hicimos nada este mes", que es una afirmación sobre la operación que este
+   * tablero no está en condiciones de hacer.
+   *
+   * Es el mismo defecto que se corrigió en el observatorio (SPEC-0803 CA-5); la
+   * diferencia es que aquí venía desde el Sprint 7 y nadie lo había visto porque
+   * el entorno siempre tuvo datos... hasta que dejó de tenerlos.
+   */
+  const hasValidatedReports = (currentTotal?.reportCount ?? 0) > 0 || (previousTotal?.reportCount ?? 0) > 0
+
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -312,7 +330,29 @@ function AnalyticsDashboardPage() {
         </label>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
+      {kpiCompare.isSuccess && !hasValidatedReports ? (
+        <div className="flex items-start gap-2 rounded-sm border border-border-strong bg-surface-raised p-4">
+          <Info size={16} strokeWidth={1.5} className="mt-0.5 shrink-0 text-text-muted" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold text-text-primary">No hay reportes validados en este rango</p>
+            <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+              Este tablero cuenta únicamente reportes operacionales <strong>validados</strong> por un comandante de
+              unidad. Que no haya cifras no significa que no haya habido operaciones: significa que ninguna quedó
+              validada en este período con estos filtros.
+            </p>
+            <p className="mt-2 text-2xs text-text-muted">
+              Los reportes en borrador o en revisión no se cuentan aquí a propósito — una cifra que el comando aún no
+              avaló no puede publicarse como resultado.
+            </p>
+            <Button className="mt-3" asChild variant="secondary" size="sm">
+              <Link to="/reportes/revision" search={{ status: 'NEEDS_REVIEW', page: 0, size: 20 }}>
+                Ver la cola de revisión
+              </Link>
+            </Button>
+          </div>
+        </div>
+      ) : (
+      <section aria-label="Cifras del período" className="grid grid-cols-3 gap-3 lg:grid-cols-6">
         <KpiTile label="Reportes" value={currentTotal?.reportCount ?? 0} previousValue={previousTotal?.reportCount} />
         <KpiTile label="Capturas" value={currentTotal?.arrests ?? 0} previousValue={previousTotal?.arrests} />
         <KpiTile label="Rescates" value={currentTotal?.rescues ?? 0} previousValue={previousTotal?.rescues} />
@@ -324,7 +364,8 @@ function AnalyticsDashboardPage() {
         />
         <KpiTile label="Armas incautadas" value={currentTotal?.weaponsSeized ?? 0} previousValue={previousTotal?.weaponsSeized} />
         <KpiTile label="Vehículos incautados" value={currentTotal?.vehiclesSeized ?? 0} previousValue={previousTotal?.vehiclesSeized} />
-      </div>
+      </section>
+      )}
 
       <ChartWithTable
         title={`${METRIC_LABEL[search.metric]} por ${search.granularity === 'DAY' ? 'día' : search.granularity === 'WEEK' ? 'semana' : 'mes'}`}
