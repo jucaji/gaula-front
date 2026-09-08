@@ -14,16 +14,20 @@ import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
 import { ACTIVE_SNAPSHOT_KEY } from '@/lib/observatory/useActiveSnapshot'
 import {
+  dynamicFieldsOf,
+  formForProfile,
+  latestProfile,
+  useImportProfiles,
+} from '@/lib/observatory/useImportProfiles'
+import {
   KIDNAPPING_TYPE_LABEL,
   MODALITY_LABEL,
   PROFILE_LABEL,
   VICTIM_STATUS_LABEL,
   type CrimeIncident,
-  type ExtortionModality,
+  type FormField,
   type IncidentPage,
   type IncidentProfile,
-  type KidnappingType,
-  type VictimStatus,
 } from '@/lib/observatory/types'
 
 const PROFILES = ['EXTORTION', 'KIDNAPPING'] as const
@@ -81,6 +85,9 @@ function ObservatoryIncidentsPage() {
   const navigate = Route.useNavigate()
   const { data, isLoading, isError, error } = useIncidents(search)
   const canWrite = Route.useRouteContext().can('CREATE', 'OBSERVATORY')
+  // SPEC-0806 CA-3: lo capturado en una columna declarada TIENE que verse en la
+  // tabla; si no, el analista no puede comprobar que lo que escribió quedó.
+  const dynamicColumns = dynamicFieldsOf(latestProfile(useImportProfiles().data))
   const [showCapture, setShowCapture] = useState(false)
   const [correcting, setCorrecting] = useState<CrimeIncident | null>(null)
 
@@ -126,6 +133,11 @@ function ObservatoryIncidentsPage() {
             ? MODALITY_LABEL[row.original.modality]
             : '—',
     },
+    ...dynamicColumns.map<ColumnDef<CrimeIncident, unknown>>(({ code, label }) => ({
+      id: `attr:${code}`,
+      header: label,
+      cell: ({ row }) => row.original.attributes?.[code] ?? '—',
+    })),
     {
       id: 'sourceRowNumber',
       accessorKey: 'sourceRowNumber',
@@ -366,192 +378,173 @@ function ResolveMunicipalityDialog({ incident, onClose }: { incident: CrimeIncid
   )
 }
 
-interface CaptureForm {
-  profile: IncidentProfile
-  occurredOn: string
-  departmentText: string
-  municipalityText: string
-  authorGroup: string
-  kidnappingType: KidnappingType | ''
-  victimStatus: VictimStatus | ''
-  occupation: string
-  modality: ExtortionModality | ''
-  notes: string
+/**
+ * SPEC-0806 CA-1: el formulario NO está escrito a mano aquí. Se dibuja con los
+ * `formFields` del perfil vigente, así que tiene las mismas columnas, en el
+ * mismo orden y con las mismas etiquetas de la hoja del Excel que el analista
+ * llena hoy. Agregar una columna es publicar una versión nueva del perfil
+ * (CA-2), no desplegar frontend.
+ *
+ * El respaldo de abajo sólo entra si el perfil es anterior a SPEC-0806 (sin
+ * `formFields`) o si la consulta de perfiles falla: preferimos un formulario
+ * mínimo usable a una pantalla en blanco.
+ */
+const FALLBACK_FIELDS: Record<IncidentProfile, FormField[]> = {
+  KIDNAPPING: [
+    { code: 'occurredOn', label: 'FECHA', type: 'DATE', required: true, dynamic: false, options: [] },
+    {
+      code: 'kidnappingType',
+      label: 'TIPO SECUESTRO',
+      type: 'ENUM',
+      required: false,
+      dynamic: false,
+      options: Object.entries(KIDNAPPING_TYPE_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { code: 'departmentText', label: 'DEPARTAMENTO', type: 'TEXT', required: true, dynamic: false, options: [] },
+    { code: 'municipalityText', label: 'MUNICIPIO', type: 'TEXT', required: true, dynamic: false, options: [] },
+    {
+      code: 'victimStatus',
+      label: 'SITUACIÓN',
+      type: 'ENUM',
+      required: false,
+      dynamic: false,
+      options: Object.entries(VICTIM_STATUS_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { code: 'occupation', label: 'OCUPACIÓN', type: 'TEXT', required: false, dynamic: false, options: [] },
+    { code: 'authorGroup', label: 'AUTOR', type: 'TEXT', required: true, dynamic: false, options: [] },
+    { code: 'notes', label: 'Nota', type: 'TEXT', required: false, dynamic: false, options: [] },
+  ],
+  EXTORTION: [
+    { code: 'occurredOn', label: 'FECHA', type: 'DATE', required: true, dynamic: false, options: [] },
+    { code: 'departmentText', label: 'DEPARTAMENTO', type: 'TEXT', required: true, dynamic: false, options: [] },
+    { code: 'municipalityText', label: 'MUNICIPIO', type: 'TEXT', required: true, dynamic: false, options: [] },
+    {
+      code: 'modality',
+      label: 'MODALIDAD',
+      type: 'ENUM',
+      required: false,
+      dynamic: false,
+      options: Object.entries(MODALITY_LABEL).map(([value, label]) => ({ value, label })),
+    },
+    { code: 'authorGroup', label: 'AUTOR', type: 'TEXT', required: true, dynamic: false, options: [] },
+    { code: 'notes', label: 'Nota', type: 'TEXT', required: false, dynamic: false, options: [] },
+  ],
 }
 
-const EMPTY_CAPTURE: CaptureForm = {
-  profile: 'KIDNAPPING',
-  occurredOn: '',
-  departmentText: '',
-  municipalityText: '',
-  authorGroup: '',
-  kidnappingType: '',
-  victimStatus: '',
-  occupation: '',
-  modality: '',
-  notes: '',
-}
+/** Los códigos que tienen columna tipada propia; todo lo demás viaja en `attributes`. */
+const TYPED_CODES = new Set([
+  'occurredOn',
+  'departmentText',
+  'municipalityText',
+  'authorGroup',
+  'kidnappingType',
+  'victimStatus',
+  'occupation',
+  'modality',
+  'notes',
+])
+
+type CaptureValues = Record<string, string>
 
 /**
  * SPEC-0802 Vía B: capturar un hecho DIRECTAMENTE, sin pasar por el Excel.
- * Es la mitad que hoy no existe -- si llega un dato suelto, el analista tiene
- * que editar el archivo y recargarlo entero. El hecho cuelga del corte vigente
- * (el backend lo resuelve si no se manda `snapshotId`).
+ * El hecho cuelga del corte vigente (el backend lo resuelve si no se manda
+ * `snapshotId`).
  */
 function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
   const invalidate = useInvalidateIncidents()
-  const [form, setForm] = useState<CaptureForm>(EMPTY_CAPTURE)
+  const profiles = useImportProfiles()
+  const profile = latestProfile(profiles.data)
+  const [incidentProfile, setIncidentProfile] = useState<IncidentProfile>('KIDNAPPING')
+  const [values, setValues] = useState<CaptureValues>({})
+
+  const sheetForm = formForProfile(profile, incidentProfile)
+  const fields = sheetForm?.fields.length ? sheetForm.fields : FALLBACK_FIELDS[incidentProfile]
 
   const mutation = useMutation({
-    mutationFn: () =>
-      customFetch<CrimeIncident>('/api/v1/observatory/incidents', {
+    mutationFn: () => {
+      const attributes: Record<string, string> = {}
+      for (const field of fields) {
+        const value = values[field.code]?.trim()
+        // Un código que no es dinámico PERO tampoco tiene columna tipada sólo
+        // puede venir de un perfil más nuevo que esta consola: se guarda como
+        // atributo en vez de perderse en silencio.
+        if (value && (field.dynamic || !TYPED_CODES.has(field.code))) attributes[field.code] = value
+      }
+      const typed = (code: string) => values[code]?.trim() || null
+      return customFetch<CrimeIncident>('/api/v1/observatory/incidents', {
         method: 'POST',
         body: JSON.stringify({
-          profile: form.profile,
-          occurredOn: form.occurredOn,
-          departmentText: form.departmentText,
-          municipalityText: form.municipalityText,
-          authorGroup: form.authorGroup,
-          kidnappingType: form.profile === 'KIDNAPPING' ? form.kidnappingType || null : null,
-          victimStatus: form.profile === 'KIDNAPPING' ? form.victimStatus || null : null,
-          occupation: form.occupation || null,
-          modality: form.profile === 'EXTORTION' ? form.modality || null : null,
-          notes: form.notes || null,
+          profile: incidentProfile,
+          occurredOn: values.occurredOn ?? '',
+          departmentText: values.departmentText?.trim() ?? '',
+          municipalityText: values.municipalityText?.trim() ?? '',
+          authorGroup: values.authorGroup?.trim() ?? '',
+          kidnappingType: incidentProfile === 'KIDNAPPING' ? typed('kidnappingType') : null,
+          victimStatus: incidentProfile === 'KIDNAPPING' ? typed('victimStatus') : null,
+          occupation: typed('occupation'),
+          modality: incidentProfile === 'EXTORTION' ? typed('modality') : null,
+          notes: typed('notes'),
+          attributes,
         }),
-      }),
+      })
+    },
     onSuccess: async () => {
       await invalidate()
-      setForm(EMPTY_CAPTURE)
+      setValues({})
       onDone()
     },
   })
 
-  const complete =
-    form.occurredOn && form.departmentText.trim() && form.municipalityText.trim() && form.authorGroup.trim()
+  const complete = fields.every((field) => !field.required || (values[field.code]?.trim() ?? '') !== '')
+  const dynamicCount = fields.filter((field) => field.dynamic).length
 
   return (
-    <section className="mt-4 max-w-3xl rounded-sm border border-border-strong bg-surface-raised p-4">
+    <section className="mt-4 rounded-sm border border-border-strong bg-surface-raised p-3 sm:p-4">
       <h2 className="text-sm font-semibold text-text-primary">Registrar hecho directamente</h2>
       <p className="mt-1 text-2xs text-text-muted">
-        Queda en el corte vigente, igual que si hubiera venido en el archivo. El municipio se resuelve contra el
+        Mismas columnas, mismo orden y mismas etiquetas que la hoja «{sheetForm?.sheetName ?? incidentProfile}» del
+        archivo. Queda en el corte vigente, igual que si hubiera venido cargado. El municipio se resuelve contra el
         catálogo; si no resuelve, el hecho se guarda con el texto tal cual y queda marcado para corregir.
       </p>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Delito
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-2xs uppercase tracking-wide text-text-secondary">Delito (hoja)</span>
           <select
             aria-label="Delito del hecho"
-            value={form.profile}
-            onChange={(event) => setForm({ ...form, profile: event.target.value as IncidentProfile })}
+            value={incidentProfile}
+            onChange={(event) => {
+              setIncidentProfile(event.target.value as IncidentProfile)
+              setValues({})
+            }}
             className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
           >
-            {PROFILES.map((profile) => (
-              <option key={profile} value={profile}>
-                {PROFILE_LABEL[profile]}
+            {PROFILES.map((value) => (
+              <option key={value} value={value}>
+                {PROFILE_LABEL[value]}
               </option>
             ))}
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Fecha del hecho
-          <Input
-            type="date"
-            value={form.occurredOn}
-            onChange={(event) => setForm({ ...form, occurredOn: event.target.value })}
+        {fields.map((field) => (
+          <CaptureField
+            key={field.code}
+            field={field}
+            value={values[field.code] ?? ''}
+            onChange={(value) => setValues((current) => ({ ...current, [field.code]: value }))}
           />
-        </label>
-
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Departamento
-          <Input
-            value={form.departmentText}
-            onChange={(event) => setForm({ ...form, departmentText: event.target.value })}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Municipio
-          <Input
-            value={form.municipalityText}
-            onChange={(event) => setForm({ ...form, municipalityText: event.target.value })}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Autor
-          <Input
-            value={form.authorGroup}
-            placeholder="GDCO, ELN, DELINCUENCIA COMÚN…"
-            onChange={(event) => setForm({ ...form, authorGroup: event.target.value })}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-xs text-text-secondary">
-          Ocupación de la víctima
-          <Input value={form.occupation} onChange={(event) => setForm({ ...form, occupation: event.target.value })} />
-        </label>
-
-        {form.profile === 'KIDNAPPING' ? (
-          <>
-            <label className="flex flex-col gap-1 text-xs text-text-secondary">
-              Tipo de secuestro
-              <select
-                aria-label="Tipo de secuestro"
-                value={form.kidnappingType}
-                onChange={(event) => setForm({ ...form, kidnappingType: event.target.value as KidnappingType })}
-                className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
-              >
-                <option value="">Sin dato</option>
-                {Object.entries(KIDNAPPING_TYPE_LABEL).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-text-secondary">
-              Situación de la víctima
-              <select
-                aria-label="Situación de la víctima"
-                value={form.victimStatus}
-                onChange={(event) => setForm({ ...form, victimStatus: event.target.value as VictimStatus })}
-                className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
-              >
-                <option value="">Sin dato</option>
-                {Object.entries(VICTIM_STATUS_LABEL).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
-        ) : (
-          <label className="flex flex-col gap-1 text-xs text-text-secondary">
-            Modalidad
-            <select
-              aria-label="Modalidad"
-              value={form.modality}
-              onChange={(event) => setForm({ ...form, modality: event.target.value as ExtortionModality })}
-              className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
-            >
-              <option value="">Sin dato</option>
-              {Object.entries(MODALITY_LABEL).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        ))}
       </div>
 
-      <label className="mt-3 flex flex-col gap-1 text-xs text-text-secondary">
-        Observaciones
-        <Input value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} />
-      </label>
+      <p className="mt-3 text-2xs text-text-muted">
+        {dynamicCount > 0
+          ? `${dynamicCount} de estas columnas están declaradas en el perfil ${profile?.code ?? ''} v${profile?.version ?? ''}, no en el código.`
+          : 'Este perfil no declara columnas adicionales.'}{' '}
+        Para agregar otra columna del archivo se publica una versión nueva del perfil y aparece aquí, en la carga y en
+        la tabla sin desplegar la consola (SPEC-0806 CA-2).
+      </p>
 
       {mutation.isError && (
         <p className="mt-2 text-sm text-critical" role="alert">
@@ -560,7 +553,13 @@ function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
       )}
 
       <div className="mt-3 flex items-center gap-2">
-        <Button variant="primary" size="sm" disabled={!complete} loading={mutation.isPending} onClick={() => mutation.mutate()}>
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={!complete}
+          loading={mutation.isPending}
+          onClick={() => mutation.mutate()}
+        >
           Registrar
         </Button>
         <Button variant="ghost" size="sm" onClick={onDone}>
@@ -568,5 +567,52 @@ function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
         </Button>
       </div>
     </section>
+  )
+}
+
+/** Un campo del perfil. La etiqueta va tal cual viene del Excel, en mayúscula fija como el encabezado de la hoja. */
+function CaptureField({
+  field,
+  value,
+  onChange,
+}: {
+  field: FormField
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="font-mono text-2xs uppercase tracking-wide text-text-secondary">
+        {field.label}
+        {field.required && <span className="text-critical"> *</span>}
+        {field.dynamic && (
+          <span className="ml-1 font-sans normal-case text-text-muted" title="Columna declarada en el perfil">
+            (columna del perfil)
+          </span>
+        )}
+      </span>
+      {field.type === 'ENUM' ? (
+        <select
+          aria-label={field.label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
+        >
+          <option value="">Sin dato</option>
+          {field.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <Input
+          type={field.type === 'DATE' ? 'date' : 'text'}
+          aria-label={field.label}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
+    </label>
   )
 }

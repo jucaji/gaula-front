@@ -38,6 +38,7 @@ const PROFILE = {
   provisional: true,
   displayName: 'Fiscalía — Extorsión y Secuestro (plantilla observada 19/08/2026)',
   sheets: ['SECUESTRO', 'EXTORSION'],
+  forms: [],
   validFrom: '2026-01-01',
 }
 
@@ -173,13 +174,16 @@ test('S13.FE.02: capturar un hecho por la Vía B, sin pasar por el Excel', async
   await page.goto('/observatorio/hechos')
   await page.getByRole('button', { name: 'Registrar hecho' }).click()
 
-  await page.getByLabel('Delito del hecho').selectOption('KIDNAPPING')
-  await page.getByLabel('Fecha del hecho').fill('2026-02-15')
-  await page.getByLabel('Departamento').fill('ANTIOQUIA')
-  await page.getByLabel('Municipio', { exact: true }).fill('MEDELLIN')
-  await page.getByPlaceholder('GDCO, ELN, DELINCUENCIA COMÚN…').fill('GDCO')
-  await page.getByLabel('Tipo de secuestro').selectOption('SIMPLE')
-  await page.getByLabel('Situación de la víctima').selectOption('LIBERADO')
+  // Sin perfil disponible el formulario cae al respaldo, que igual trae las
+  // etiquetas de la hoja del Excel (SPEC-0806).
+  const capture = page.locator('section', { hasText: 'Registrar hecho directamente' })
+  await capture.getByLabel('Delito del hecho').selectOption('KIDNAPPING')
+  await capture.getByLabel('FECHA').fill('2026-02-15')
+  await capture.getByLabel('DEPARTAMENTO').fill('ANTIOQUIA')
+  await capture.getByLabel('MUNICIPIO', { exact: true }).fill('MEDELLIN')
+  await capture.getByLabel('AUTOR').fill('GDCO')
+  await capture.getByLabel('TIPO SECUESTRO').selectOption('SIMPLE')
+  await capture.getByLabel('SITUACIÓN').selectOption('LIBERADO')
   await page.getByRole('button', { name: 'Registrar', exact: true }).click()
 
   await expect.poll(() => posted).not.toBeNull()

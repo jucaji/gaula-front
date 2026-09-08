@@ -50,6 +50,8 @@ export interface CrimeIncident {
   occupation?: string | null
   modality?: ExtortionModality | null
   notes?: string | null
+  /** SPEC-0806: columnas declaradas en el perfil que no tienen columna tipada propia. */
+  attributes: Record<string, string>
   sourceRowNumber?: number | null
   registeredAt: string
   updatedAt?: string | null
@@ -91,7 +93,30 @@ export interface ImportProfileSummary {
   provisional: boolean
   displayName: string
   sheets: string[]
+  /** SPEC-0806 CA-1: con esto la consola DIBUJA el formulario en vez de llevarlo escrito a mano. */
+  forms: SheetForm[]
   validFrom: string
+}
+
+export interface SheetForm {
+  sheetName: string
+  profile: IncidentProfile
+  fields: FormField[]
+}
+
+export interface FormField {
+  code: string
+  label: string
+  type: 'TEXT' | 'DATE' | 'ENUM'
+  required: boolean
+  /** `true`: el valor viaja en `attributes`, no en una columna tipada. */
+  dynamic: boolean
+  options: FormFieldOption[]
+}
+
+export interface FormFieldOption {
+  value: string
+  label: string
 }
 
 export interface IncidentPage {

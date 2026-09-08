@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, CheckCircle2, FileSpreadsheet } from 'lucide-react'
 import { customFetch } from '@/api/client'
@@ -7,7 +7,8 @@ import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
 import { ACTIVE_SNAPSHOT_KEY } from '@/lib/observatory/useActiveSnapshot'
-import type { ImportJobStatus, ImportPreview, ImportProfileSummary, RowFailure } from '@/lib/observatory/types'
+import { useImportProfiles } from '@/lib/observatory/useImportProfiles'
+import type { ImportJobStatus, ImportPreview, RowFailure } from '@/lib/observatory/types'
 
 export const Route = createFileRoute('/observatorio/cargue')({
   beforeLoad: ({ context }) => {
@@ -17,16 +18,6 @@ export const Route = createFileRoute('/observatorio/cargue')({
   },
   component: ObservatoryImportPage,
 })
-
-function useImportProfiles() {
-  return useQuery({
-    queryKey: ['observatory', 'profiles'],
-    queryFn: () => customFetch<ImportProfileSummary[]>('/api/v1/observatory/profiles'),
-    staleTime: 5 * 60_000,
-    networkMode: 'always',
-    retry: false,
-  })
-}
 
 interface ImportForm {
   profileCode: string
