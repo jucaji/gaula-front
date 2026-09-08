@@ -61,7 +61,7 @@ export function SnapshotBand() {
       {snapshot.label && <span className="text-2xs text-text-secondary">{snapshot.label}</span>}
       <span className="text-2xs text-text-secondary">Fuente: {snapshot.source}</span>
       <span className="text-2xs text-text-secondary">
-        {snapshot.incidentCount.toLocaleString('es-CO')} hechos
+        {snapshot.incidentCount.toLocaleString('es-CO')} {snapshot.incidentCount === 1 ? 'hecho' : 'hechos'}
       </span>
       <span className="text-2xs text-text-muted">
         Cargado por {snapshot.loadedByName ?? 'un usuario que ya no existe'} · {formatDateTime(snapshot.loadedAt)}

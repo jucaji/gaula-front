@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { SnapshotBand } from './SnapshotBand'
 
 const OBSERVATORY_LINKS = [
+  { to: '/tableros', label: 'Tableros' },
   { to: '/observatorio/hechos', label: 'Hechos' },
   { to: '/observatorio/cargue', label: 'Cargue' },
 ] as const

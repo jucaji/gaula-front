@@ -30,7 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/campo', label: 'Campo', icon: MapPinned, resource: 'CASE_FILE' },
   { to: '/reportes', label: 'Reportes', icon: FileText, resource: 'OPERATIONAL_REPORT' },
   { to: '/analitica', label: 'Analítica', icon: BarChart3, resource: 'ANALYTICS' },
-  { to: '/observatorio/hechos', label: 'Observatorio', icon: Database, resource: 'OBSERVATORY' },
+  { to: '/tableros', label: 'Observatorio', icon: Database, resource: 'OBSERVATORY' },
   { to: '/recursos/flota', label: 'Flota', icon: Truck, resource: 'FLEET' },
   { to: '/admin/usuarios', label: 'Administración', icon: ShieldCheck, resource: 'ADMIN' },
 ]
@@ -58,7 +58,13 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
             <li key={to}>
               <Link
                 to={to}
-                className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary [&.active-link]:bg-accent-subtle [&.active-link]:text-accent"
+                // HALLAZGO REAL (axe-core, S14.FE.05): `text-accent` (pine-600) sobre
+                // `bg-accent-subtle` (pine-50) da 4.24:1 -- por debajo del 4.5:1 de
+                // WCAG AA. Afectaba al elemento activo del menú en TODAS las páginas y
+                // nadie lo había visto porque el escaneo de humo corre en `/`, donde
+                // ningún elemento del menú está activo. `accent-hover` es más oscuro en
+                // claro y más claro en oscuro: sube el contraste en los dos temas.
+                className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary [&.active-link]:bg-accent-subtle [&.active-link]:text-accent-hover"
                 activeProps={{ className: 'active-link' }}
               >
                 <Icon size={16} strokeWidth={1.5} />

@@ -29,10 +29,16 @@ import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamad
 import { Route as ReportesIndexRouteImport } from './routes/reportes/index'
 import { Route as ReportesReportIdRouteImport } from './routes/reportes/$reportId'
 import { Route as ReportesNuevoRouteImport } from './routes/reportes/nuevo'
+import { Route as TablerosIndexRouteImport } from './routes/tableros/index'
+import { Route as TablerosBoletinRouteImport } from './routes/tableros/boletin'
 import { Route as RecursosFlotaIndexRouteImport } from './routes/recursos/flota/index'
 import { Route as RecursosFlotaVehicleIdRouteImport } from './routes/recursos/flota/$vehicleId'
 import { Route as ReportesRevisionIndexRouteImport } from './routes/reportes/revision/index'
 import { Route as ReportesRevisionEmailIngestionIdRouteImport } from './routes/reportes/revision/$emailIngestionId'
+import { Route as TablerosExtorsionIndexRouteImport } from './routes/tableros/extorsion.index'
+import { Route as TablerosExtorsionDepartmentRouteImport } from './routes/tableros/extorsion.$department'
+import { Route as TablerosSecuestroIndexRouteImport } from './routes/tableros/secuestro.index'
+import { Route as TablerosSecuestroDepartmentRouteImport } from './routes/tableros/secuestro.$department'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -134,6 +140,16 @@ const ReportesNuevoRoute = ReportesNuevoRouteImport.update({
   path: '/reportes/nuevo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TablerosIndexRoute = TablerosIndexRouteImport.update({
+  id: '/tableros/',
+  path: '/tableros/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TablerosBoletinRoute = TablerosBoletinRouteImport.update({
+  id: '/tableros/boletin',
+  path: '/tableros/boletin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecursosFlotaIndexRoute = RecursosFlotaIndexRouteImport.update({
   id: '/recursos/flota/',
   path: '/recursos/flota/',
@@ -155,6 +171,28 @@ const ReportesRevisionEmailIngestionIdRoute =
     path: '/reportes/revision/$emailIngestionId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const TablerosExtorsionIndexRoute = TablerosExtorsionIndexRouteImport.update({
+  id: '/tableros/extorsion/',
+  path: '/tableros/extorsion/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TablerosExtorsionDepartmentRoute =
+  TablerosExtorsionDepartmentRouteImport.update({
+    id: '/tableros/extorsion/$department',
+    path: '/tableros/extorsion/$department',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TablerosSecuestroIndexRoute = TablerosSecuestroIndexRouteImport.update({
+  id: '/tableros/secuestro/',
+  path: '/tableros/secuestro/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TablerosSecuestroDepartmentRoute =
+  TablerosSecuestroDepartmentRouteImport.update({
+    id: '/tableros/secuestro/$department',
+    path: '/tableros/secuestro/$department',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -172,15 +210,21 @@ export interface FileRoutesByFullPath {
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
+  '/tableros/boletin': typeof TablerosBoletinRoute
   '/analitica/': typeof AnaliticaIndexRoute
   '/campo/': typeof CampoIndexRoute
   '/casos/': typeof CasosIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
   '/reportes/': typeof ReportesIndexRoute
+  '/tableros/': typeof TablerosIndexRoute
   '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/tableros/extorsion/$department': typeof TablerosExtorsionDepartmentRoute
+  '/tableros/secuestro/$department': typeof TablerosSecuestroDepartmentRoute
   '/recursos/flota/': typeof RecursosFlotaIndexRoute
   '/reportes/revision/': typeof ReportesRevisionIndexRoute
+  '/tableros/extorsion/': typeof TablerosExtorsionIndexRoute
+  '/tableros/secuestro/': typeof TablerosSecuestroIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -198,15 +242,21 @@ export interface FileRoutesByTo {
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
+  '/tableros/boletin': typeof TablerosBoletinRoute
   '/analitica': typeof AnaliticaIndexRoute
   '/campo': typeof CampoIndexRoute
   '/casos': typeof CasosIndexRoute
   '/recepcion': typeof RecepcionIndexRoute
   '/reportes': typeof ReportesIndexRoute
+  '/tableros': typeof TablerosIndexRoute
   '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/tableros/extorsion/$department': typeof TablerosExtorsionDepartmentRoute
+  '/tableros/secuestro/$department': typeof TablerosSecuestroDepartmentRoute
   '/recursos/flota': typeof RecursosFlotaIndexRoute
   '/reportes/revision': typeof ReportesRevisionIndexRoute
+  '/tableros/extorsion': typeof TablerosExtorsionIndexRoute
+  '/tableros/secuestro': typeof TablerosSecuestroIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -225,15 +275,21 @@ export interface FileRoutesById {
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
+  '/tableros/boletin': typeof TablerosBoletinRoute
   '/analitica/': typeof AnaliticaIndexRoute
   '/campo/': typeof CampoIndexRoute
   '/casos/': typeof CasosIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
   '/reportes/': typeof ReportesIndexRoute
+  '/tableros/': typeof TablerosIndexRoute
   '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/tableros/extorsion/$department': typeof TablerosExtorsionDepartmentRoute
+  '/tableros/secuestro/$department': typeof TablerosSecuestroDepartmentRoute
   '/recursos/flota/': typeof RecursosFlotaIndexRoute
   '/reportes/revision/': typeof ReportesRevisionIndexRoute
+  '/tableros/extorsion/': typeof TablerosExtorsionIndexRoute
+  '/tableros/secuestro/': typeof TablerosSecuestroIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -253,15 +309,21 @@ export interface FileRouteTypes {
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
+    | '/tableros/boletin'
     | '/analitica/'
     | '/campo/'
     | '/casos/'
     | '/recepcion/'
     | '/reportes/'
+    | '/tableros/'
     | '/recursos/flota/$vehicleId'
     | '/reportes/revision/$emailIngestionId'
+    | '/tableros/extorsion/$department'
+    | '/tableros/secuestro/$department'
     | '/recursos/flota/'
     | '/reportes/revision/'
+    | '/tableros/extorsion/'
+    | '/tableros/secuestro/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -279,15 +341,21 @@ export interface FileRouteTypes {
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
+    | '/tableros/boletin'
     | '/analitica'
     | '/campo'
     | '/casos'
     | '/recepcion'
     | '/reportes'
+    | '/tableros'
     | '/recursos/flota/$vehicleId'
     | '/reportes/revision/$emailIngestionId'
+    | '/tableros/extorsion/$department'
+    | '/tableros/secuestro/$department'
     | '/recursos/flota'
     | '/reportes/revision'
+    | '/tableros/extorsion'
+    | '/tableros/secuestro'
   id:
     | '__root__'
     | '/'
@@ -305,15 +373,21 @@ export interface FileRouteTypes {
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
+    | '/tableros/boletin'
     | '/analitica/'
     | '/campo/'
     | '/casos/'
     | '/recepcion/'
     | '/reportes/'
+    | '/tableros/'
     | '/recursos/flota/$vehicleId'
     | '/reportes/revision/$emailIngestionId'
+    | '/tableros/extorsion/$department'
+    | '/tableros/secuestro/$department'
     | '/recursos/flota/'
     | '/reportes/revision/'
+    | '/tableros/extorsion/'
+    | '/tableros/secuestro/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -332,15 +406,21 @@ export interface RootRouteChildren {
   RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
   ReportesReportIdRoute: typeof ReportesReportIdRoute
   ReportesNuevoRoute: typeof ReportesNuevoRoute
+  TablerosBoletinRoute: typeof TablerosBoletinRoute
   AnaliticaIndexRoute: typeof AnaliticaIndexRoute
   CampoIndexRoute: typeof CampoIndexRoute
   CasosIndexRoute: typeof CasosIndexRoute
   RecepcionIndexRoute: typeof RecepcionIndexRoute
   ReportesIndexRoute: typeof ReportesIndexRoute
+  TablerosIndexRoute: typeof TablerosIndexRoute
   RecursosFlotaVehicleIdRoute: typeof RecursosFlotaVehicleIdRoute
   ReportesRevisionEmailIngestionIdRoute: typeof ReportesRevisionEmailIngestionIdRoute
+  TablerosExtorsionDepartmentRoute: typeof TablerosExtorsionDepartmentRoute
+  TablerosSecuestroDepartmentRoute: typeof TablerosSecuestroDepartmentRoute
   RecursosFlotaIndexRoute: typeof RecursosFlotaIndexRoute
   ReportesRevisionIndexRoute: typeof ReportesRevisionIndexRoute
+  TablerosExtorsionIndexRoute: typeof TablerosExtorsionIndexRoute
+  TablerosSecuestroIndexRoute: typeof TablerosSecuestroIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -485,6 +565,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportesNuevoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableros/': {
+      id: '/tableros/'
+      path: '/tableros'
+      fullPath: '/tableros/'
+      preLoaderRoute: typeof TablerosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tableros/boletin': {
+      id: '/tableros/boletin'
+      path: '/tableros/boletin'
+      fullPath: '/tableros/boletin'
+      preLoaderRoute: typeof TablerosBoletinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recursos/flota/': {
       id: '/recursos/flota/'
       path: '/recursos/flota'
@@ -513,6 +607,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportesRevisionEmailIngestionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableros/extorsion/': {
+      id: '/tableros/extorsion/'
+      path: '/tableros/extorsion'
+      fullPath: '/tableros/extorsion/'
+      preLoaderRoute: typeof TablerosExtorsionIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tableros/extorsion/$department': {
+      id: '/tableros/extorsion/$department'
+      path: '/tableros/extorsion/$department'
+      fullPath: '/tableros/extorsion/$department'
+      preLoaderRoute: typeof TablerosExtorsionDepartmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tableros/secuestro/': {
+      id: '/tableros/secuestro/'
+      path: '/tableros/secuestro'
+      fullPath: '/tableros/secuestro/'
+      preLoaderRoute: typeof TablerosSecuestroIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tableros/secuestro/$department': {
+      id: '/tableros/secuestro/$department'
+      path: '/tableros/secuestro/$department'
+      fullPath: '/tableros/secuestro/$department'
+      preLoaderRoute: typeof TablerosSecuestroDepartmentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -532,15 +654,21 @@ const rootRouteChildren: RootRouteChildren = {
   RecepcionLlamadasRoute: RecepcionLlamadasRoute,
   ReportesReportIdRoute: ReportesReportIdRoute,
   ReportesNuevoRoute: ReportesNuevoRoute,
+  TablerosBoletinRoute: TablerosBoletinRoute,
   AnaliticaIndexRoute: AnaliticaIndexRoute,
   CampoIndexRoute: CampoIndexRoute,
   CasosIndexRoute: CasosIndexRoute,
   RecepcionIndexRoute: RecepcionIndexRoute,
   ReportesIndexRoute: ReportesIndexRoute,
+  TablerosIndexRoute: TablerosIndexRoute,
   RecursosFlotaVehicleIdRoute: RecursosFlotaVehicleIdRoute,
   ReportesRevisionEmailIngestionIdRoute: ReportesRevisionEmailIngestionIdRoute,
+  TablerosExtorsionDepartmentRoute: TablerosExtorsionDepartmentRoute,
+  TablerosSecuestroDepartmentRoute: TablerosSecuestroDepartmentRoute,
   RecursosFlotaIndexRoute: RecursosFlotaIndexRoute,
   ReportesRevisionIndexRoute: ReportesRevisionIndexRoute,
+  TablerosExtorsionIndexRoute: TablerosExtorsionIndexRoute,
+  TablerosSecuestroIndexRoute: TablerosSecuestroIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

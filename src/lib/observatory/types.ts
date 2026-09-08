@@ -128,3 +128,55 @@ export const MODALITY_LABEL: Record<ExtortionModality, string> = {
   PANFLETOS: 'Panfletos',
   SIN_ESTABLECER: 'Sin establecer',
 }
+
+/** SPEC-0803: lo que devuelve `/observatory/dashboard`. Conteos exactos, nunca porcentajes. */
+export interface Breakdown {
+  key: string
+  count: number
+}
+
+export interface MonthlyPoint {
+  month: string
+  count: number
+}
+
+export interface YearlyPoint {
+  year: number
+  count: number
+}
+
+export interface IncidentDashboard {
+  /** Nulo = no hay corte vigente. NO es lo mismo que un tablero de ceros (CA-5). */
+  snapshotId: string | null
+  total: number
+  byAuthorGroup: Breakdown[]
+  byDepartment: Breakdown[]
+  byMunicipality: Breakdown[]
+  byModality: Breakdown[]
+  byVictimStatus: Breakdown[]
+  byKidnappingType: Breakdown[]
+  monthly: MonthlyPoint[]
+  yearly: YearlyPoint[]
+}
+
+export interface Bulletin {
+  snapshotId: string
+  source: string
+  cutoffDate: string
+  label?: string | null
+  loadedByName?: string | null
+  loadedAt: string
+  generatedAt: string
+  extortionTotal: number
+  kidnappingTotal: number
+  topAuthorGroups: Breakdown[]
+  topDepartments: Breakdown[]
+  byModality: Breakdown[]
+  byVictimStatus: Breakdown[]
+  /** Ausente cuando no hay corte anterior comparable: se omite la sección, no se escribe 0% (CA-4). */
+  previousComparison?: {
+    previousCutoffDate: string
+    previousExtortionTotal: number
+    previousKidnappingTotal: number
+  } | null
+}

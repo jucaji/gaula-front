@@ -24,9 +24,18 @@ export function ChartWithTable<TRow>({
   const [showTable, setShowTable] = useState(false)
 
   return (
-    <div className="rounded-sm border border-border-strong bg-surface p-3">
+    // `section` con nombre accesible: cada gráfica es una región navegable por
+    // lector de pantalla, no un `div` anónimo más dentro de una rejilla de ocho.
+    <section aria-label={title} className="rounded-sm border border-border-strong bg-surface p-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-text-primary">{title}</h3>
+        {/*
+          HALLAZGO REAL (axe-core, S14.FE.05): era un `h3` bajo el `h1` de la
+          página, saltándose el nivel 2 -- `heading-order`. Afectaba también a
+          /analitica desde el Sprint 7 y nadie lo vio porque el escaneo de humo
+          sólo cubre `/`. Para quien navega por encabezados, un salto de nivel es
+          una sección que parece colgar de otra que no existe.
+        */}
+        <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
         <div className="flex items-center gap-3">
           {actions}
           <button
@@ -71,6 +80,6 @@ export function ChartWithTable<TRow>({
           chart
         )}
       </div>
-    </div>
+    </section>
   )
 }
