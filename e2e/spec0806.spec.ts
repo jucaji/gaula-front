@@ -236,7 +236,7 @@ test('SPEC-0806: AÑO y ubicación se CALCULAN — no se piden, no se guardan y 
   expect(posted!.attributes).toEqual({})
 })
 
-test('la pantalla entra con el último mes y 15 por página; quitar las fechas trae todo el corte', async ({ page }) => {
+test('la pantalla entra con el último mes y 10 por página; quitar las fechas trae todo el corte', async ({ page }) => {
   const consultas: string[] = []
   await mockObservatory(page, [INCIDENT_WITH_ATTRIBUTE])
   await page.route('**/api/v1/observatory/incidents?**', (route) => {
@@ -249,7 +249,7 @@ test('la pantalla entra con el último mes y 15 por página; quitar las fechas t
         totalElements: 1,
         totalPages: 1,
         pageNumber: 0,
-        pageSize: 15,
+        pageSize: 10,
       }),
     })
   })
@@ -257,7 +257,7 @@ test('la pantalla entra con el último mes y 15 por página; quitar las fechas t
   await page.goto('/observatorio/hechos')
 
   // El período por defecto viaja en la URL, no escondido: el input lo muestra.
-  await expect.poll(() => consultas.at(-1)).toContain('size=15')
+  await expect.poll(() => consultas.at(-1)).toContain('size=10')
   await expect.poll(() => consultas.at(-1)).toMatch(/from=\d{4}-\d{2}-\d{2}/)
   await expect(page.getByLabel('Desde')).not.toHaveValue('')
 

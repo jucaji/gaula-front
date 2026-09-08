@@ -33,10 +33,10 @@ import {
 const PROFILES = ['EXTORTION', 'KIDNAPPING'] as const
 
 /**
- * 15 caben en pantalla sin scroll en un portátil: la tabla se lee de un vistazo
- * en vez de convertirse en un muro de 54 filas.
+ * 10 caben en pantalla sin scroll incluso en un portátil pequeño: la tabla se lee
+ * de un vistazo en vez de convertirse en un muro de filas.
  */
-const PAGE_SIZE = 15
+const PAGE_SIZE = 10
 
 /** El filtro de fecha con que se entra: el último mes, como en la mesa de seguimiento. */
 const DEFAULT_RANGE_DAYS = 30
