@@ -1,0 +1,130 @@
+/**
+ * SPEC-0801/0802: los tipos del observatorio se escriben a mano, igual que en
+ * el resto de pantallas del proyecto -- Orval sólo regenera cuando alguien
+ * corre el generador contra el backend vivo, y estas rutas se construyeron
+ * contra el contrato real de `CrimeIncidentController`/`DatasetSnapshotController`.
+ */
+
+export type IncidentProfile = 'EXTORTION' | 'KIDNAPPING'
+export type KidnappingType = 'SIMPLE' | 'EXTORSIVO'
+export type VictimStatus =
+  | 'LIBERADO'
+  | 'RESCATADO'
+  | 'MUERTO_EN_CAUTIVERIO'
+  | 'LIBERADO_BAJO_PRESION'
+  | 'FUGA'
+  | 'SIN_ESTABLECER'
+export type ExtortionModality =
+  | 'LLAMADA_TELEFONICA'
+  | 'REDES_SOCIALES'
+  | 'PERSONALMENTE'
+  | 'PANFLETOS'
+  | 'SIN_ESTABLECER'
+
+export interface DatasetSnapshot {
+  id: string
+  source: string
+  cutoffDate: string
+  label?: string | null
+  status: 'ACTIVE' | 'SUPERSEDED'
+  loadedBy: string
+  /** Puede venir nulo: un corte cargado por un usuario ya borrado no deja la banda sin corte. */
+  loadedByName?: string | null
+  loadedAt: string
+  incidentCount: number
+}
+
+export interface CrimeIncident {
+  id: string
+  snapshotId: string
+  profile: IncidentProfile
+  occurredOn: string
+  departmentText: string
+  municipalityText: string
+  municipalityCode?: string | null
+  /** SPEC-0801 CA-3: el sistema NUNCA adivina el municipio; lo marca y lo deja corregir. */
+  municipalityUnresolved: boolean
+  authorGroup: string
+  kidnappingType?: KidnappingType | null
+  victimStatus?: VictimStatus | null
+  occupation?: string | null
+  modality?: ExtortionModality | null
+  notes?: string | null
+  sourceRowNumber?: number | null
+  registeredAt: string
+  updatedAt?: string | null
+}
+
+export interface RowFailure {
+  sheetName: string
+  rowNumber: number
+  reason: string
+}
+
+export interface ImportPreview {
+  totalRows: number
+  created: number
+  updated: number
+  skipped: number
+  unresolvedMunicipalities: number
+  failures: RowFailure[]
+}
+
+export interface ImportJobStatus {
+  jobId: string
+  status: 'PENDING' | 'PROCESSING' | 'DONE' | 'FAILED'
+  snapshotId?: string | null
+  totalRows?: number | null
+  createdRows?: number | null
+  skippedRows?: number | null
+  failures?: RowFailure[] | null
+  errorMessage?: string | null
+  requestedAt: string
+  completedAt?: string | null
+}
+
+export interface ImportProfileSummary {
+  id: string
+  code: string
+  version: number
+  /** Se muestra en pantalla: el analista tiene que saber que el mapeo es una hipótesis (docs/00 §8.8). */
+  provisional: boolean
+  displayName: string
+  sheets: string[]
+  validFrom: string
+}
+
+export interface IncidentPage {
+  content: CrimeIncident[]
+  totalElements: number
+  totalPages: number
+  pageNumber: number
+  pageSize: number
+}
+
+export const PROFILE_LABEL: Record<IncidentProfile, string> = {
+  EXTORTION: 'Extorsión',
+  KIDNAPPING: 'Secuestro',
+}
+
+export const KIDNAPPING_TYPE_LABEL: Record<KidnappingType, string> = {
+  SIMPLE: 'Simple',
+  EXTORSIVO: 'Extorsivo',
+}
+
+export const VICTIM_STATUS_LABEL: Record<VictimStatus, string> = {
+  LIBERADO: 'Liberado',
+  RESCATADO: 'Rescatado',
+  MUERTO_EN_CAUTIVERIO: 'Muerto en cautiverio',
+  LIBERADO_BAJO_PRESION: 'Liberado bajo presión',
+  FUGA: 'Fuga',
+  SIN_ESTABLECER: 'Sin establecer',
+}
+
+export const MODALITY_LABEL: Record<ExtortionModality, string> = {
+  LLAMADA_TELEFONICA: 'Llamada telefónica',
+  REDES_SOCIALES: 'Redes sociales',
+  PERSONALMENTE: 'Personalmente',
+  PANFLETOS: 'Panfletos',
+  SIN_ESTABLECER: 'Sin establecer',
+}

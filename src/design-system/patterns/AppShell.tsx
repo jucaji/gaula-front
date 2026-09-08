@@ -6,6 +6,7 @@ import {
   MapPinned,
   FileText,
   BarChart3,
+  Database,
   Truck,
   ShieldCheck,
   UserCircle,
@@ -29,6 +30,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/campo', label: 'Campo', icon: MapPinned, resource: 'CASE_FILE' },
   { to: '/reportes', label: 'Reportes', icon: FileText, resource: 'OPERATIONAL_REPORT' },
   { to: '/analitica', label: 'Analítica', icon: BarChart3, resource: 'ANALYTICS' },
+  { to: '/observatorio/hechos', label: 'Observatorio', icon: Database, resource: 'OBSERVATORY' },
   { to: '/recursos/flota', label: 'Flota', icon: Truck, resource: 'FLEET' },
   { to: '/admin/usuarios', label: 'Administración', icon: ShieldCheck, resource: 'ADMIN' },
 ]

@@ -59,6 +59,17 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
   // roles con uso real de inteligencia (INTELLIGENCE_ANALYST envía/recibe,
   // UNIT_COMMANDER supervisa), mismo criterio que ANALYTICS/FLEET.
   EXTERNAL_DATA_REQUEST: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER'],
+  // S13.FE.01-03, verificado contra el backend real: `CrimeIncidentController`/
+  // `DatasetSnapshotController` sólo exigen `isAuthenticated()`. La lectura se
+  // abre igual que ANALYTICS (el observatorio existe para que el comando y
+  // prevención MIREN estas cifras), pero CREATE/UPDATE se limita a quien hoy
+  // hace el trabajo manual que este módulo automatiza: los dos analistas del
+  // relevo Excel->Power BI observados en la visita (docs/00 §8.1).
+  OBSERVATORY: {
+    READ: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'PREVENTION_STAFF', 'SYSTEM_ADMIN'],
+    CREATE: ['INTELLIGENCE_ANALYST', 'SYSTEM_ADMIN'],
+    UPDATE: ['INTELLIGENCE_ANALYST', 'SYSTEM_ADMIN'],
+  },
   ADMIN: ['SYSTEM_ADMIN'],
 }
 

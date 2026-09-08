@@ -22,6 +22,8 @@ import { Route as CampoTrackingNumberRouteImport } from './routes/campo/$trackin
 import { Route as CasosIndexRouteImport } from './routes/casos/index'
 import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackingNumber'
 import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
+import { Route as ObservatorioCargueRouteImport } from './routes/observatorio/cargue'
+import { Route as ObservatorioHechosRouteImport } from './routes/observatorio/hechos'
 import { Route as RecepcionIndexRouteImport } from './routes/recepcion/index'
 import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamadas'
 import { Route as ReportesIndexRouteImport } from './routes/reportes/index'
@@ -97,6 +99,16 @@ const CasosNuevoRoute = CasosNuevoRouteImport.update({
   path: '/casos/nuevo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObservatorioCargueRoute = ObservatorioCargueRouteImport.update({
+  id: '/observatorio/cargue',
+  path: '/observatorio/cargue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ObservatorioHechosRoute = ObservatorioHechosRouteImport.update({
+  id: '/observatorio/hechos',
+  path: '/observatorio/hechos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecepcionIndexRoute = RecepcionIndexRouteImport.update({
   id: '/recepcion/',
   path: '/recepcion/',
@@ -155,6 +167,8 @@ export interface FileRoutesByFullPath {
   '/campo/$trackingNumber': typeof CampoTrackingNumberRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
+  '/observatorio/cargue': typeof ObservatorioCargueRoute
+  '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
@@ -179,6 +193,8 @@ export interface FileRoutesByTo {
   '/campo/$trackingNumber': typeof CampoTrackingNumberRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
+  '/observatorio/cargue': typeof ObservatorioCargueRoute
+  '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
@@ -204,6 +220,8 @@ export interface FileRoutesById {
   '/campo/$trackingNumber': typeof CampoTrackingNumberRoute
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
+  '/observatorio/cargue': typeof ObservatorioCargueRoute
+  '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
@@ -230,6 +248,8 @@ export interface FileRouteTypes {
     | '/campo/$trackingNumber'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
+    | '/observatorio/cargue'
+    | '/observatorio/hechos'
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
@@ -254,6 +274,8 @@ export interface FileRouteTypes {
     | '/campo/$trackingNumber'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
+    | '/observatorio/cargue'
+    | '/observatorio/hechos'
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
@@ -278,6 +300,8 @@ export interface FileRouteTypes {
     | '/campo/$trackingNumber'
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
+    | '/observatorio/cargue'
+    | '/observatorio/hechos'
     | '/recepcion/llamadas'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
@@ -303,6 +327,8 @@ export interface RootRouteChildren {
   CampoTrackingNumberRoute: typeof CampoTrackingNumberRoute
   CasosTrackingNumberRoute: typeof CasosTrackingNumberRoute
   CasosNuevoRoute: typeof CasosNuevoRoute
+  ObservatorioCargueRoute: typeof ObservatorioCargueRoute
+  ObservatorioHechosRoute: typeof ObservatorioHechosRoute
   RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
   ReportesReportIdRoute: typeof ReportesReportIdRoute
   ReportesNuevoRoute: typeof ReportesNuevoRoute
@@ -410,6 +436,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CasosNuevoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/observatorio/cargue': {
+      id: '/observatorio/cargue'
+      path: '/observatorio/cargue'
+      fullPath: '/observatorio/cargue'
+      preLoaderRoute: typeof ObservatorioCargueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/observatorio/hechos': {
+      id: '/observatorio/hechos'
+      path: '/observatorio/hechos'
+      fullPath: '/observatorio/hechos'
+      preLoaderRoute: typeof ObservatorioHechosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recepcion/': {
       id: '/recepcion/'
       path: '/recepcion'
@@ -487,6 +527,8 @@ const rootRouteChildren: RootRouteChildren = {
   CampoTrackingNumberRoute: CampoTrackingNumberRoute,
   CasosTrackingNumberRoute: CasosTrackingNumberRoute,
   CasosNuevoRoute: CasosNuevoRoute,
+  ObservatorioCargueRoute: ObservatorioCargueRoute,
+  ObservatorioHechosRoute: ObservatorioHechosRoute,
   RecepcionLlamadasRoute: RecepcionLlamadasRoute,
   ReportesReportIdRoute: ReportesReportIdRoute,
   ReportesNuevoRoute: ReportesNuevoRoute,
