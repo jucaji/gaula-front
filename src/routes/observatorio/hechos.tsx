@@ -268,6 +268,29 @@ function ObservatoryIncidentsPage() {
 }
 
 /**
+ * Las columnas derivadas del archivo. En el Excel existen porque una hoja de
+ * cálculo no tiene otra forma de agrupar por año ni de armar la etiqueta del
+ * mapa; aquí las dos salen del dato que ya está guardado, así que no se piden ni
+ * se escriben: un AÑO que diga 2025 sobre una FECHA de 2026 es una contradicción
+ * que nadie detecta, porque las dos celdas se ven bien por separado.
+ */
+function derivedValue(
+  code: string,
+  source: { occurredOn?: string | undefined; departmentText?: string | undefined; municipalityText?: string | undefined },
+) {
+  switch (code) {
+    case 'year':
+      return source.occurredOn ? source.occurredOn.slice(0, 4) : ''
+    case 'location': {
+      const partes = [source.municipalityText, source.departmentText].map((parte) => parte?.trim()).filter(Boolean)
+      return partes.length > 0 ? `${partes.join(', ')}, COLOMBIA` : ''
+    }
+    default:
+      return ''
+  }
+}
+
+/**
  * Una columna de la tabla a partir de un campo del perfil. Los códigos tipados
  * se leen del hecho; todo lo demás sale de `attributes`, que es donde viven las
  * columnas declaradas (SPEC-0806).
@@ -281,6 +304,7 @@ function incidentColumn(field: FormField): ColumnDef<CrimeIncident, unknown> {
 }
 
 function renderIncidentValue(field: FormField, incident: CrimeIncident) {
+  if (field.type === 'DERIVED') return derivedValue(field.code, incident) || '—'
   if (field.dynamic) return incident.attributes?.[field.code] || '—'
 
   switch (field.code) {
@@ -511,6 +535,7 @@ function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
         // Un código que no es dinámico PERO tampoco tiene columna tipada sólo
         // puede venir de un perfil más nuevo que esta consola: se guarda como
         // atributo en vez de perderse en silencio.
+        if (field.type === 'DERIVED') continue
         if (value && (field.dynamic || !TYPED_CODES.has(field.code))) attributes[field.code] = value
       }
       const typed = (code: string) => values[code]?.trim() || null
@@ -538,7 +563,9 @@ function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
     },
   })
 
-  const complete = fields.every((field) => !field.required || (values[field.code]?.trim() ?? '') !== '')
+  const complete = fields.every(
+    (field) => field.type === 'DERIVED' || !field.required || (values[field.code]?.trim() ?? '') !== '',
+  )
   const dynamicCount = fields.filter((field) => field.dynamic).length
 
   return (
@@ -574,7 +601,18 @@ function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
           <CaptureField
             key={field.code}
             field={field}
-            value={values[field.code] ?? ''}
+            // Un campo derivado se muestra CALCULADO y bloqueado en vez de
+            // esconderse: quien viene del Excel busca esa columna, y verla
+            // llenarse sola explica por qué no hay que escribirla.
+            value={
+              field.type === 'DERIVED'
+                ? derivedValue(field.code, {
+                    occurredOn: values.occurredOn,
+                    departmentText: values.departmentText,
+                    municipalityText: values.municipalityText,
+                  })
+                : (values[field.code] ?? '')
+            }
             onChange={(value) => setValues((current) => ({ ...current, [field.code]: value }))}
           />
         ))}
@@ -633,8 +671,23 @@ function CaptureField({
             (columna del perfil)
           </span>
         )}
+        {field.type === 'DERIVED' && (
+          <span className="ml-1 font-sans normal-case text-text-muted" title="Se calcula del propio hecho">
+            {' '}
+            (se calcula)
+          </span>
+        )}
       </span>
-      {field.type === 'ENUM' ? (
+      {field.type === 'DERIVED' ? (
+        <Input
+          aria-label={field.label}
+          value={value}
+          readOnly
+          disabled
+          placeholder="se calcula solo"
+          onChange={() => undefined}
+        />
+      ) : field.type === 'ENUM' ? (
         <select
           aria-label={field.label}
           value={value}

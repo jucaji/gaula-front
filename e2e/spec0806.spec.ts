@@ -44,6 +44,8 @@ const PROFILE_V2 = {
         { code: 'occupation', label: 'OCUPACION', type: 'TEXT', required: false, dynamic: false, options: [] },
         { code: 'authorGroup', label: 'AUTOR', type: 'TEXT', required: true, dynamic: false, options: [] },
         { code: 'investigado', label: 'INVESTIGADO', type: 'TEXT', required: false, dynamic: true, options: [] },
+        { code: 'year', label: 'AÑO', type: 'DERIVED', required: false, dynamic: false, options: [] },
+        { code: 'location', label: 'ubicación', type: 'DERIVED', required: false, dynamic: false, options: [] },
       ],
     },
   ],
@@ -108,7 +110,12 @@ test('SPEC-0806 CA-1/CA-2: el formulario sale del perfil, con el orden y las eti
   // El orden es el de la hoja, no el que se le ocurra a la consola.
   const capture = page.locator('section', { hasText: 'Registrar hecho directamente' })
   const labels = await capture.locator('label > span').allInnerTexts()
-  expect(labels.map((label) => label.replace('(columna del perfil)', '').replace('*', '').trim())).toEqual([
+  // El formulario pone las etiquetas en mayúscula fija, como la cabecera de la hoja.
+  expect(
+    labels.map((label) =>
+      label.replace('(columna del perfil)', '').replace('(se calcula)', '').replace('*', '').trim(),
+    ),
+  ).toEqual([
     'DELITO (HOJA)',
     'FECHA',
     'TIPO SECUESTRO',
@@ -118,6 +125,8 @@ test('SPEC-0806 CA-1/CA-2: el formulario sale del perfil, con el orden y las eti
     'OCUPACION',
     'AUTOR',
     'INVESTIGADO',
+    'AÑO',
+    'UBICACIÓN',
   ])
 
   await capture.getByLabel('FECHA').fill('2026-02-15')
@@ -168,6 +177,8 @@ test('SPEC-0806 CA-3: la tabla tiene las columnas del Excel, una por dato y con 
     'OCUPACION',
     'AUTOR',
     'INVESTIGADO',
+    'AÑO',
+    'ubicación',
     'Fila del archivo',
   ])
 
@@ -186,4 +197,41 @@ test('SPEC-0806 CA-3: con un delito elegido se ven las columnas de ESA hoja, no 
 
   await expect(page.getByRole('columnheader', { name: 'TIPO SECUESTRO' })).toBeVisible()
   await expect(page.getByRole('columnheader', { name: 'MODALIDAD' })).toBeHidden()
+})
+
+test('SPEC-0806: AÑO y ubicación se CALCULAN — no se piden, no se guardan y no pueden contradecir a su origen', async ({ page }) => {
+  await mockObservatory(page, [INCIDENT_WITH_ATTRIBUTE])
+
+  let posted: Record<string, unknown> | null = null
+  await page.route('**/api/v1/observatory/incidents', (route) => {
+    posted = route.request().postDataJSON() as Record<string, unknown>
+    return route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(INCIDENT_WITH_ATTRIBUTE) })
+  })
+
+  await page.goto('/observatorio/hechos')
+
+  // En la tabla salen del hecho que ya está guardado.
+  await expect(page.getByRole('cell', { name: '2026', exact: true })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'MEDELLIN, ANTIOQUIA, COLOMBIA' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Registrar hecho' }).click()
+  const capture = page.locator('section', { hasText: 'Registrar hecho directamente' })
+
+  // En el formulario se ven, se llenan solas y no se pueden escribir.
+  await expect(capture.getByLabel('AÑO')).toBeDisabled()
+  await capture.getByLabel('FECHA').fill('2026-02-15')
+  await capture.getByLabel('DEPARTAMENTO').fill('ANTIOQUIA')
+  await capture.getByLabel('MUNICIPIO', { exact: true }).fill('MEDELLIN')
+  await expect(capture.getByLabel('AÑO')).toHaveValue('2026')
+  await expect(capture.getByLabel('ubicación')).toHaveValue('MEDELLIN, ANTIOQUIA, COLOMBIA')
+
+  await capture.getByLabel('OCUPACION').fill('COMERCIANTE')
+  await capture.getByLabel('AUTOR').fill('GDCO')
+  await capture.getByLabel('TIPO SECUESTRO').selectOption('SIMPLE')
+  await page.getByRole('button', { name: 'Registrar', exact: true }).click()
+
+  // Y NO viajan al backend: ni como columna tipada ni dentro de `attributes`.
+  await expect.poll(() => posted).not.toBeNull()
+  expect(posted).not.toHaveProperty('year')
+  expect(posted!.attributes).toEqual({})
 })

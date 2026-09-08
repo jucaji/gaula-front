@@ -107,7 +107,8 @@ export interface SheetForm {
 export interface FormField {
   code: string
   label: string
-  type: 'TEXT' | 'DATE' | 'ENUM'
+  /** `DERIVED`: no se captura ni se guarda; la consola lo calcula del propio hecho. */
+  type: 'TEXT' | 'DATE' | 'ENUM' | 'DERIVED'
   required: boolean
   /** `true`: el valor viaja en `attributes`, no en una columna tipada. */
   dynamic: boolean
