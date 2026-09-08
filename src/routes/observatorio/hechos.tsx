@@ -32,28 +32,66 @@ import {
 
 const PROFILES = ['EXTORTION', 'KIDNAPPING'] as const
 
+/**
+ * 15 caben en pantalla sin scroll en un portátil: la tabla se lee de un vistazo
+ * en vez de convertirse en un muro de 54 filas.
+ */
+const PAGE_SIZE = 15
+
+/** El filtro de fecha con que se entra: el último mes, como en la mesa de seguimiento. */
+const DEFAULT_RANGE_DAYS = 30
+
 const incidentSearchSchema = z.object({
   page: z.number().catch(0),
-  size: z.number().catch(50),
+  size: z.number().catch(PAGE_SIZE),
   profile: z.enum(PROFILES).optional().catch(undefined),
   from: z.string().optional().catch(undefined),
   to: z.string().optional().catch(undefined),
   municipalityCode: z.string().optional().catch(undefined),
   authorGroup: z.string().optional().catch(undefined),
   onlyUnresolved: z.boolean().catch(false),
+  /**
+   * Marca de «el analista quitó las fechas a propósito». Sin ella no se puede
+   * distinguir «entré por primera vez» de «borré el filtro para ver todo», y la
+   * pantalla volvería a ponerle el último mes en la cara cada vez que lo quita.
+   */
+  wholeSnapshot: z.boolean().catch(false),
 })
+
+/** Hoy menos 30 días, en el `yyyy-MM-dd` que entienden el input y el backend. */
+function defaultFrom(today: Date = new Date()) {
+  const from = new Date(today)
+  from.setDate(from.getDate() - DEFAULT_RANGE_DAYS)
+  return from.toISOString().slice(0, 10)
+}
 
 type IncidentSearch = z.infer<typeof incidentSearchSchema>
 
 export const Route = createFileRoute('/observatorio/hechos')({
   validateSearch: incidentSearchSchema,
-  beforeLoad: ({ context }) => {
+  beforeLoad: ({ context, search }) => {
     if (!context.can('READ', 'OBSERVATORY')) {
       throw redirect({ to: '/', search: { denied: 'OBSERVATORY' } })
+    }
+    // El período por defecto viaja en la URL, no escondido en el componente: el
+    // input lo muestra, y compartir la vista sigue siendo compartir el enlace.
+    if (!search.from && !search.to && !search.wholeSnapshot) {
+      throw redirect({ to: '/observatorio/hechos', search: { ...search, from: defaultFrom() } })
     }
   },
   component: ObservatoryIncidentsPage,
 })
+
+/**
+ * Cambiar una fecha del filtro. Si el analista deja las dos vacías está pidiendo
+ * el corte entero, y hay que ANOTARLO: si no, la ruta le vuelve a poner el
+ * último mes en cuanto la pantalla se recarga o se comparte el enlace.
+ */
+function withDates(search: IncidentSearch, change: { from?: string | undefined; to?: string | undefined }) {
+  const from = 'from' in change ? change.from : search.from
+  const to = 'to' in change ? change.to : search.to
+  return { ...search, page: 0, from, to, wholeSnapshot: !from && !to }
+}
 
 function useIncidents(search: IncidentSearch) {
   return useQuery({
@@ -181,7 +219,7 @@ function ObservatoryIncidentsPage() {
           <Input
             type="date"
             value={search.from ?? ''}
-            onChange={(event) => void navigate({ search: { ...search, page: 0, from: event.target.value || undefined } })}
+            onChange={(event) => void navigate({ search: withDates(search, { from: event.target.value || undefined }) })}
           />
         </label>
 
@@ -190,7 +228,7 @@ function ObservatoryIncidentsPage() {
           <Input
             type="date"
             value={search.to ?? ''}
-            onChange={(event) => void navigate({ search: { ...search, page: 0, to: event.target.value || undefined } })}
+            onChange={(event) => void navigate({ search: withDates(search, { to: event.target.value || undefined }) })}
           />
         </label>
 
@@ -222,14 +260,29 @@ function ObservatoryIncidentsPage() {
       )}
 
       {!isLoading && !isError && incidents.length === 0 && (
-        <EmptyState
-          title="No hay hechos con estos filtros"
-          description={
-            search.onlyUnresolved
-              ? 'Ningún hecho del corte vigente quedó con el municipio sin resolver.'
-              : 'Cargue la plantilla del registro nacional o registre un hecho a mano.'
-          }
-        />
+        <div className="flex flex-col items-center">
+          <EmptyState
+            title="No hay hechos con estos filtros"
+            description={
+              search.onlyUnresolved
+                ? 'Ningún hecho del corte vigente quedó con el municipio sin resolver.'
+                : search.from || search.to
+                  ? 'La pantalla entra filtrada por el último mes. El corte puede tener hechos más antiguos.'
+                  : 'Cargue la plantilla del registro nacional o registre un hecho a mano.'
+            }
+          />
+          {(search.from || search.to) && (
+            // Sin esto, entrar y ver cero por el filtro por defecto se lee como
+            // «no hay datos» en vez de «no hay datos EN ESTE MES».
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void navigate({ search: withDates(search, { from: undefined, to: undefined }) })}
+            >
+              Ver todo el corte
+            </Button>
+          )}
+        </div>
       )}
 
       {incidents.length > 0 && (
