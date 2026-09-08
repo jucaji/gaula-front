@@ -176,3 +176,14 @@ test('SPEC-0806 CA-3: la tabla tiene las columnas del Excel, una por dato y con 
   await expect(page.getByRole('cell', { name: 'Liberado', exact: true })).toBeVisible()
   await expect(page.getByRole('cell', { name: 'COMERCIANTE', exact: true })).toBeVisible()
 })
+
+test('SPEC-0806 CA-3: con un delito elegido se ven las columnas de ESA hoja, no las de la otra en blanco', async ({ page }) => {
+  await mockObservatory(page, [INCIDENT_WITH_ATTRIBUTE])
+
+  // En el libro, SECUESTRO y EXTORSIÓN no comparten columnas. Dejar las de la
+  // otra hoja en «—» hace ver como dato faltante lo que es otra hoja.
+  await page.goto('/observatorio/hechos?profile=KIDNAPPING')
+
+  await expect(page.getByRole('columnheader', { name: 'TIPO SECUESTRO' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'MODALIDAD' })).toBeHidden()
+})

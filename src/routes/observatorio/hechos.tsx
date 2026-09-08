@@ -85,11 +85,22 @@ function ObservatoryIncidentsPage() {
   const navigate = Route.useNavigate()
   const { data, isLoading, isError, error } = useIncidents(search)
   const canWrite = Route.useRouteContext().can('CREATE', 'OBSERVATORY')
-  const declaredFields = tableFieldsOf(latestProfile(useImportProfiles().data))
+  const activeProfile = latestProfile(useImportProfiles().data)
+  // Con un delito elegido se muestran las columnas de ESA hoja: en el libro,
+  // SECUESTRO y EXTORSIÓN no comparten columnas, y dejar las cuatro de la otra
+  // hoja en «—» hace ver como dato faltante lo que es una hoja distinta.
+  const declaredFields = search.profile
+    ? (formForProfile(activeProfile, search.profile)?.fields ?? [])
+    : tableFieldsOf(activeProfile)
   // Mismo respaldo que el formulario: con un perfil anterior a SPEC-0806, o si la
   // consulta de perfiles falla, la tabla conserva sus columnas en vez de quedarse
   // en una fecha y un delito.
-  const profileFields = declaredFields.length > 0 ? declaredFields : FALLBACK_TABLE_FIELDS
+  const profileFields =
+    declaredFields.length > 0
+      ? declaredFields
+      : search.profile
+        ? FALLBACK_FIELDS[search.profile]
+        : FALLBACK_TABLE_FIELDS
   const [showCapture, setShowCapture] = useState(false)
   const [correcting, setCorrecting] = useState<CrimeIncident | null>(null)
 
