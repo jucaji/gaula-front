@@ -341,3 +341,23 @@ test('SPEC-0807: la coropleta se elige, no se impone, y no baja la geometría ha
   await expect(mapa).toContainText('Sin hechos en este corte')
   await expect.poll(() => geometriaPedida).toBe(1)
 })
+
+test('SPEC-0807: filtrar desde la coropleta no devuelve el mapa a la vista de puntos', async ({ page }) => {
+  await mockDashboard(page, [])
+
+  await page.goto('/tableros/secuestro')
+  const mapa = page.getByRole('region', { name: 'Mapa del registro nacional' })
+  await mapa.getByRole('button', { name: 'Departamentos' }).click()
+  await expect(mapa.getByRole('button', { name: 'Departamentos' })).toHaveAttribute('aria-pressed', 'true')
+
+  // El filtro entra por la URL, como si se hubiera hecho clic en el mapa: lo que
+  // se prueba es que la llegada del tablero filtrado NO desmonte el componente.
+  // Sin `keepPreviousData` el tablero se caía entero mientras volaba la consulta
+  // y el mapa volvía a "Municipios" justo después de hacer clic en un
+  // departamento (visto en vivo).
+  await page.goto('/tableros/secuestro?departmentText=ANTIOQUIA')
+  await mapa.getByRole('button', { name: 'Departamentos' }).click()
+  await page.getByRole('group', { name: 'Filtros aplicados' }).waitFor()
+
+  await expect(mapa.getByRole('button', { name: 'Departamentos' })).toHaveAttribute('aria-pressed', 'true')
+})

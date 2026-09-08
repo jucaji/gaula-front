@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
 import type { IncidentAnalysis, IncidentProfile } from './types'
 import { dashboardSearchParams, type DashboardFilters } from './useIncidentDashboard'
@@ -16,6 +16,9 @@ export function useIncidentAnalysis(profile: IncidentProfile, filters: Dashboard
       customFetch<IncidentAnalysis>(
         `/api/v1/observatory/dashboard/analysis?${dashboardSearchParams(profile, filters).toString()}`,
       ),
+    // Mismo motivo que el tablero: sin el dato anterior, el panel de análisis
+    // desaparece y reaparece en cada filtro.
+    placeholderData: keepPreviousData,
     staleTime: 60_000,
     networkMode: 'always',
     retry: false,

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
 import type { IncidentDashboard, IncidentProfile } from './types'
 
@@ -42,6 +42,14 @@ export function useIncidentDashboard(profile: IncidentProfile, filters: Dashboar
       customFetch<IncidentDashboard>(
         `/api/v1/observatory/dashboard?${dashboardSearchParams(profile, filters).toString()}`,
       ),
+    // HALLAZGO REAL (verificado en vivo con la coropleta): sin esto, cada cambio
+    // de filtro deja `data` en `undefined` mientras vuela la consulta, el tablero
+    // entero se DESMONTA y se vuelve a montar. Se veía como un parpadeo, pero el
+    // daño real era que el mapa perdía su estado: filtrar por un departamento
+    // desde la coropleta devolvía la vista a "Municipios", justo después de hacer
+    // clic en el departamento. Conservar el dato anterior mientras llega el nuevo
+    // mantiene la pantalla en pie.
+    placeholderData: keepPreviousData,
     staleTime: 30_000,
     networkMode: 'always',
     retry: false,
