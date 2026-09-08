@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
-import type { ImportProfileSummary, IncidentProfile, SheetForm } from '@/lib/observatory/types'
+import type { FormField, ImportProfileSummary, IncidentProfile, SheetForm } from '@/lib/observatory/types'
 
 export const IMPORT_PROFILES_KEY = ['observatory', 'profiles'] as const
 
@@ -33,6 +33,23 @@ export function formForProfile(
   incidentProfile: IncidentProfile,
 ): SheetForm | undefined {
   return profile?.forms.find((form) => form.profile === incidentProfile)
+}
+
+/**
+ * SPEC-0806 CA-3: las columnas de la TABLA salen del mismo sitio que las del
+ * formulario, así que el analista ve el registro con la misma forma que su
+ * Excel. La tabla mezcla las dos hojas del libro, así que se unen sus campos:
+ * se conserva el orden de la primera hoja y se anexan al final los que sólo
+ * existen en la otra (MODALIDAD, que es de extorsión).
+ */
+export function tableFieldsOf(profile: ImportProfileSummary | undefined): FormField[] {
+  const byCode = new Map<string, FormField>()
+  for (const form of profile?.forms ?? []) {
+    for (const field of form.fields) {
+      if (!byCode.has(field.code)) byCode.set(field.code, field)
+    }
+  }
+  return [...byCode.values()]
 }
 
 /** Las columnas declaradas (SPEC-0806): van en `attributes`, no en columnas tipadas. */

@@ -14,9 +14,9 @@ import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
 import { ACTIVE_SNAPSHOT_KEY } from '@/lib/observatory/useActiveSnapshot'
 import {
-  dynamicFieldsOf,
   formForProfile,
   latestProfile,
+  tableFieldsOf,
   useImportProfiles,
 } from '@/lib/observatory/useImportProfiles'
 import {
@@ -85,59 +85,28 @@ function ObservatoryIncidentsPage() {
   const navigate = Route.useNavigate()
   const { data, isLoading, isError, error } = useIncidents(search)
   const canWrite = Route.useRouteContext().can('CREATE', 'OBSERVATORY')
-  // SPEC-0806 CA-3: lo capturado en una columna declarada TIENE que verse en la
-  // tabla; si no, el analista no puede comprobar que lo que escribió quedó.
-  const dynamicColumns = dynamicFieldsOf(latestProfile(useImportProfiles().data))
+  const declaredFields = tableFieldsOf(latestProfile(useImportProfiles().data))
+  // Mismo respaldo que el formulario: con un perfil anterior a SPEC-0806, o si la
+  // consulta de perfiles falla, la tabla conserva sus columnas en vez de quedarse
+  // en una fecha y un delito.
+  const profileFields = declaredFields.length > 0 ? declaredFields : FALLBACK_TABLE_FIELDS
   const [showCapture, setShowCapture] = useState(false)
   const [correcting, setCorrecting] = useState<CrimeIncident | null>(null)
 
+  // SPEC-0806 CA-3: la tabla se dibuja con los MISMOS campos del perfil que el
+  // formulario, en el orden y con las etiquetas de la hoja. Antes tenía una
+  // columna «Tipo / situación» que juntaba dos columnas del Excel y escondía
+  // OCUPACIÓN: quien viene del archivo no reconocía su propio registro.
   const columns: ColumnDef<CrimeIncident, unknown>[] = [
-    { id: 'occurredOn', accessorKey: 'occurredOn', header: 'Fecha' },
     {
       id: 'profile',
       accessorKey: 'profile',
       header: 'Delito',
+      // En el libro esto es la HOJA; aquí las dos van en una sola tabla, así que
+      // hay que decir de cuál viene cada fila.
       cell: ({ getValue }) => PROFILE_LABEL[getValue<IncidentProfile>()] ?? '—',
     },
-    { id: 'departmentText', accessorKey: 'departmentText', header: 'Departamento' },
-    {
-      id: 'municipalityText',
-      header: 'Municipio',
-      // SPEC-0801 CA-3: el texto original SIEMPRE visible junto al código resuelto.
-      cell: ({ row }) => (
-        <span className="flex items-center gap-2">
-          {row.original.municipalityText}
-          {row.original.municipalityUnresolved ? (
-            <Badge tone="alert">
-              <AlertTriangle size={11} strokeWidth={2} aria-hidden /> sin resolver
-            </Badge>
-          ) : (
-            <span className="font-mono text-2xs text-text-muted">{row.original.municipalityCode}</span>
-          )}
-        </span>
-      ),
-    },
-    { id: 'authorGroup', accessorKey: 'authorGroup', header: 'Autor' },
-    {
-      id: 'detail',
-      header: 'Tipo / situación',
-      cell: ({ row }) =>
-        row.original.profile === 'KIDNAPPING'
-          ? [
-              row.original.kidnappingType ? KIDNAPPING_TYPE_LABEL[row.original.kidnappingType] : null,
-              row.original.victimStatus ? VICTIM_STATUS_LABEL[row.original.victimStatus] : null,
-            ]
-              .filter(Boolean)
-              .join(' · ') || '—'
-          : row.original.modality
-            ? MODALITY_LABEL[row.original.modality]
-            : '—',
-    },
-    ...dynamicColumns.map<ColumnDef<CrimeIncident, unknown>>(({ code, label }) => ({
-      id: `attr:${code}`,
-      header: label,
-      cell: ({ row }) => row.original.attributes?.[code] ?? '—',
-    })),
+    ...profileFields.map((field) => incidentColumn(field)),
     {
       id: 'sourceRowNumber',
       accessorKey: 'sourceRowNumber',
@@ -287,6 +256,60 @@ function ObservatoryIncidentsPage() {
   )
 }
 
+/**
+ * Una columna de la tabla a partir de un campo del perfil. Los códigos tipados
+ * se leen del hecho; todo lo demás sale de `attributes`, que es donde viven las
+ * columnas declaradas (SPEC-0806).
+ */
+function incidentColumn(field: FormField): ColumnDef<CrimeIncident, unknown> {
+  return {
+    id: field.dynamic ? `attr:${field.code}` : field.code,
+    header: field.label,
+    cell: ({ row }) => renderIncidentValue(field, row.original),
+  }
+}
+
+function renderIncidentValue(field: FormField, incident: CrimeIncident) {
+  if (field.dynamic) return incident.attributes?.[field.code] || '—'
+
+  switch (field.code) {
+    case 'occurredOn':
+      return incident.occurredOn
+    case 'departmentText':
+      return incident.departmentText
+    case 'municipalityText':
+      // SPEC-0801 CA-3: el texto original SIEMPRE visible junto al código resuelto.
+      return (
+        <span className="flex items-center gap-2">
+          {incident.municipalityText}
+          {incident.municipalityUnresolved ? (
+            <Badge tone="alert">
+              <AlertTriangle size={11} strokeWidth={2} aria-hidden /> sin resolver
+            </Badge>
+          ) : (
+            <span className="font-mono text-2xs text-text-muted">{incident.municipalityCode}</span>
+          )}
+        </span>
+      )
+    case 'authorGroup':
+      return incident.authorGroup
+    case 'occupation':
+      return incident.occupation || '—'
+    case 'notes':
+      return incident.notes || '—'
+    case 'kidnappingType':
+      return incident.kidnappingType ? KIDNAPPING_TYPE_LABEL[incident.kidnappingType] : '—'
+    case 'victimStatus':
+      return incident.victimStatus ? VICTIM_STATUS_LABEL[incident.victimStatus] : '—'
+    case 'modality':
+      return incident.modality ? MODALITY_LABEL[incident.modality] : '—'
+    default:
+      // Un campo tipado que esta consola todavía no sabe pintar: se dice, en vez
+      // de dejar una columna en blanco que parece un dato faltante.
+      return <span className="text-text-muted">sin representar</span>
+  }
+}
+
 function useInvalidateIncidents() {
   const queryClient = useQueryClient()
   return async () => {
@@ -430,6 +453,14 @@ const FALLBACK_FIELDS: Record<IncidentProfile, FormField[]> = {
     { code: 'notes', label: 'Nota', type: 'TEXT', required: false, dynamic: false, options: [] },
   ],
 }
+
+/** El respaldo de la tabla: los campos de las dos hojas, sin repetir. */
+const FALLBACK_TABLE_FIELDS: FormField[] = [
+  ...FALLBACK_FIELDS.KIDNAPPING,
+  ...FALLBACK_FIELDS.EXTORTION.filter(
+    (field) => !FALLBACK_FIELDS.KIDNAPPING.some((kidnapping) => kidnapping.code === field.code),
+  ),
+]
 
 /** Los códigos que tienen columna tipada propia; todo lo demás viaja en `attributes`. */
 const TYPED_CODES = new Set([

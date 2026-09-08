@@ -39,6 +39,9 @@ const PROFILE_V2 = {
         },
         { code: 'departmentText', label: 'DEPARTAMENTO', type: 'TEXT', required: true, dynamic: false, options: [] },
         { code: 'municipalityText', label: 'MUNICIPIO', type: 'TEXT', required: true, dynamic: false, options: [] },
+        { code: 'victimStatus', label: 'SITUACION', type: 'ENUM', required: false, dynamic: false,
+          options: [{ value: 'LIBERADO', label: 'LIBERADO' }] },
+        { code: 'occupation', label: 'OCUPACION', type: 'TEXT', required: false, dynamic: false, options: [] },
         { code: 'authorGroup', label: 'AUTOR', type: 'TEXT', required: true, dynamic: false, options: [] },
         { code: 'investigado', label: 'INVESTIGADO', type: 'TEXT', required: false, dynamic: true, options: [] },
       ],
@@ -57,8 +60,8 @@ const INCIDENT_WITH_ATTRIBUTE = {
   municipalityUnresolved: false,
   authorGroup: 'GDCO',
   kidnappingType: 'SIMPLE',
-  victimStatus: null,
-  occupation: null,
+  victimStatus: 'LIBERADO',
+  occupation: 'COMERCIANTE',
   modality: null,
   notes: null,
   attributes: { investigado: 'CTI 110016000000202600123' },
@@ -111,6 +114,8 @@ test('SPEC-0806 CA-1/CA-2: el formulario sale del perfil, con el orden y las eti
     'TIPO SECUESTRO',
     'DEPARTAMENTO',
     'MUNICIPIO',
+    'SITUACION',
+    'OCUPACION',
     'AUTOR',
     'INVESTIGADO',
   ])
@@ -118,6 +123,7 @@ test('SPEC-0806 CA-1/CA-2: el formulario sale del perfil, con el orden y las eti
   await capture.getByLabel('FECHA').fill('2026-02-15')
   await capture.getByLabel('DEPARTAMENTO').fill('ANTIOQUIA')
   await capture.getByLabel('MUNICIPIO', { exact: true }).fill('MEDELLIN')
+  await capture.getByLabel('OCUPACION').fill('COMERCIANTE')
   await capture.getByLabel('AUTOR').fill('GDCO')
   await capture.getByLabel('TIPO SECUESTRO').selectOption('SIMPLE')
   await capture.getByLabel('INVESTIGADO').fill('CTI 110016000000202600123')
@@ -141,4 +147,32 @@ test('SPEC-0806 CA-3: lo capturado en una columna declarada se ve de vuelta en l
 
   await expect(page.getByRole('columnheader', { name: 'INVESTIGADO' })).toBeVisible()
   await expect(page.getByText('CTI 110016000000202600123')).toBeVisible()
+})
+
+test('SPEC-0806 CA-3: la tabla tiene las columnas del Excel, una por dato y con su etiqueta', async ({ page }) => {
+  await mockObservatory(page, [INCIDENT_WITH_ATTRIBUTE])
+
+  await page.goto('/observatorio/hechos')
+
+  // El orden y las etiquetas son los de la hoja. `Delito` va primero porque en el
+  // libro eso es la HOJA y aquí las dos viven en una sola tabla.
+  await expect(page.getByRole('columnheader', { name: 'INVESTIGADO' })).toBeVisible()
+  const encabezados = await page.getByRole('columnheader').allInnerTexts()
+  expect(encabezados.map((texto) => texto.replace(/[↑↓\s]+$/u, '').trim()).filter(Boolean)).toEqual([
+    'Delito',
+    'FECHA',
+    'TIPO SECUESTRO',
+    'DEPARTAMENTO',
+    'MUNICIPIO',
+    'SITUACION',
+    'OCUPACION',
+    'AUTOR',
+    'INVESTIGADO',
+    'Fila del archivo',
+  ])
+
+  // Situación y ocupación son columnas PROPIAS, no un texto pegado en una sola
+  // celda: quien viene del Excel tiene que reconocer su registro.
+  await expect(page.getByRole('cell', { name: 'Liberado', exact: true })).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'COMERCIANTE', exact: true })).toBeVisible()
 })
