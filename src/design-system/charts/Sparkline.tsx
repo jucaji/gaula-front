@@ -25,13 +25,19 @@ export function Sparkline({ points, ariaLabel }: { points: MonthlyPoint[]; ariaL
     const height = 20
     const max = Math.max(...points.map((point) => point.count))
     const min = Math.min(...points.map((point) => point.count))
-    const rango = max - min || 1
+    const rango = max - min
     return points
       .map((point, index) => {
         const x = (index / (points.length - 1)) * width
-        // La escala arranca en el mínimo de ESTA serie: la micro-serie compara la
-        // categoría consigo misma a lo largo del tiempo, no contra las demás.
-        const y = height - ((point.count - min) / rango) * height
+        // Una serie CONSTANTE se dibuja por la mitad, no pegada al borde de abajo.
+        // Con la escala normal, «uno todos los meses» y «cero todos los meses»
+        // darían la misma raya al pie del recuadro, y son cosas distintas (visto
+        // en vivo con departamentos de un hecho por mes).
+        //
+        // Cuando sí hay variación, la escala arranca en el mínimo de ESTA serie:
+        // la micro-serie compara la categoría consigo misma a lo largo del
+        // tiempo, no contra las demás.
+        const y = rango === 0 ? height / 2 : height - ((point.count - min) / rango) * height
         return `${index === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`
       })
       .join(' ')

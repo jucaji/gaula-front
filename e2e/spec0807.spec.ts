@@ -35,7 +35,10 @@ const DASHBOARD = {
   total: 34,
   mappedTotal: 30,
   byAuthorGroup: [{ key: 'ELN', count: 17 }],
-  byDepartment: [{ key: 'ANTIOQUIA', count: 22 }],
+  byDepartment: [
+    { key: 'ANTIOQUIA', count: 22 },
+    { key: 'SANTANDER', count: 3 },
+  ],
   byMunicipality: [{ key: 'MEDELLIN', count: 6 }],
   byModality: [],
   byVictimStatus: [{ key: 'RESCATADO', count: 9 }],
@@ -61,6 +64,15 @@ const DASHBOARD = {
       points: [
         { month: '2025-01-01', count: 2 },
         { month: '2026-08-01', count: 5 },
+      ],
+    },
+    // Un departamento con un hecho todos los meses: su serie es constante.
+    {
+      key: 'SANTANDER',
+      points: [
+        { month: '2025-01-01', count: 1 },
+        { month: '2025-02-01', count: 1 },
+        { month: '2025-03-01', count: 1 },
       ],
     },
   ],
@@ -276,4 +288,11 @@ test('SPEC-0807: el ranking territorial lleva su micro-serie', async ({ page }) 
   const tarjeta = page.getByRole('region', { name: 'Departamentos con más hechos' })
   await tarjeta.getByRole('button', { name: 'Ver tabla' }).click()
   await expect(tarjeta.getByRole('img', { name: 'Evolución mensual de ANTIOQUIA' })).toBeVisible()
+
+  // Una serie CONSTANTE se dibuja por la mitad, no pegada al borde inferior: al
+  // pie del recuadro, "uno todos los meses" y "cero todos los meses" se verían
+  // igual, y son cosas distintas (defecto visto en vivo).
+  const constante = tarjeta.getByRole('img', { name: 'Evolución mensual de SANTANDER' })
+  const trazo = await constante.locator('path').getAttribute('d')
+  expect(trazo).toBe('M0.0,10.0 L36.0,10.0 L72.0,10.0')
 })
