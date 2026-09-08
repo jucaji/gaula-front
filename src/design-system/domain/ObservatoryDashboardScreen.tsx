@@ -255,6 +255,8 @@ export function ObservatoryDashboardScreen({
           <IncidentDashboardView
             profile={profile}
             dashboard={data}
+            from={filters.from}
+            to={filters.to}
             {...(departmentHref ? { departmentHref } : {})}
           />
         </>

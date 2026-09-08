@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ChartWithTable } from '@/design-system/patterns/ChartWithTable'
 import { EchartsChart } from '@/design-system/charts/EchartsChart'
+import { MonthlyCalendar } from '@/design-system/charts/MonthlyCalendar'
+import { Sparkline } from '@/design-system/charts/Sparkline'
 import {
   barOption as buildBarOption,
   donutOption as buildDonutOption,
@@ -21,15 +23,25 @@ import type { Breakdown, IncidentDashboard, IncidentProfile } from '@/lib/observ
  * porque la tabla es la única forma de CITAR una cifra: el tablero actual sólo
  * muestra porcentajes en una dona, y de ahí nadie puede sacar el conteo exacto.
  */
+/** La serie de una categoría del ranking; vacía si el backend no la trajo. */
+function seriesFor(series: IncidentDashboard['departmentMonthly'] | undefined, key: string) {
+  return series?.find((item) => item.key === key)?.points ?? []
+}
+
 export function IncidentDashboardView({
   profile,
   dashboard,
   departmentHref,
+  from,
+  to,
 }: {
   profile: IncidentProfile
   dashboard: IncidentDashboard
   /** Drill-down: SPEC-0803 CA-4 exige que sea una ruta, no un estado interno. */
   departmentHref?: (department: string) => { to: string; params: Record<string, string> }
+  /** El período consultado, para que el calendario sepa qué meses NO cubre el corte. */
+  from?: string | undefined
+  to?: string | undefined
 }) {
   const theme = useResolvedTheme()
 
@@ -59,6 +71,24 @@ export function IncidentDashboardView({
         ]}
         getRowKey={(row) => row.month}
       />
+
+      {/*
+        SPEC-0807: la misma serie, leída por estacionalidad. Sólo tiene sentido
+        con más de un año: con doce meses sueltos la cuadrícula es la misma línea
+        de arriba, partida en pedazos.
+      */}
+      {dashboard.yearly.length > 1 && (
+        <ChartWithTable
+          title="Estacionalidad por mes y año"
+          chart={<MonthlyCalendar points={dashboard.monthly} from={from} to={to} />}
+          rows={dashboard.monthly}
+          columns={[
+            { header: 'Mes', cell: (row) => row.month },
+            { header: 'Hechos', cell: (row) => row.count.toLocaleString('es-CO') },
+          ]}
+          getRowKey={(row) => row.month}
+        />
+      )}
 
       <ChartWithTable
         title="Comparativo anual"
@@ -103,6 +133,17 @@ export function IncidentDashboardView({
           },
           { header: 'Hechos', cell: (row) => row.count.toLocaleString('es-CO') },
           { header: 'Participación', cell: (row) => shareOf(dashboard.byDepartment, row) },
+          {
+            // SPEC-0807: el ranking dice quién encabeza; la micro-serie dice si
+            // viene subiendo o bajando, que es la otra mitad de la pregunta.
+            header: 'Evolución',
+            cell: (row) => (
+              <Sparkline
+                points={seriesFor(dashboard.departmentMonthly, row.key)}
+                ariaLabel={`Evolución mensual de ${row.key}`}
+              />
+            ),
+          },
         ]}
         getRowKey={(row) => row.key}
       />

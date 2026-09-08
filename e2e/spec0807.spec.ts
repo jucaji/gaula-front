@@ -44,8 +44,26 @@ const DASHBOARD = {
     { key: 'COMERCIANTE', count: 13 },
     { key: 'GANADERO', count: 7 },
   ],
-  monthly: [{ month: '2026-08-01', count: 5 }],
-  yearly: [{ year: 2026, count: 15 }],
+  // Dos años y un hueco en medio: el calendario tiene que distinguir el mes con
+  // cero hechos del mes que el corte no cubre.
+  monthly: [
+    { month: '2025-01-01', count: 2 },
+    { month: '2025-03-01', count: 4 },
+    { month: '2026-08-01', count: 5 },
+  ],
+  yearly: [
+    { year: 2025, count: 9 },
+    { year: 2026, count: 15 },
+  ],
+  departmentMonthly: [
+    {
+      key: 'ANTIOQUIA',
+      points: [
+        { month: '2025-01-01', count: 2 },
+        { month: '2026-08-01', count: 5 },
+      ],
+    },
+  ],
   map: [
     { municipalityCode: '05001', municipalityText: 'MEDELLIN', count: 6, latitude: 6.2466, longitude: -75.5818 },
     { municipalityCode: '05002', municipalityText: 'ABEJORRAL', count: 10, latitude: 5.7893, longitude: -75.4287 },
@@ -230,4 +248,32 @@ test('SPEC-0807: la lámina cumple accesibilidad en los dos temas', async ({ pag
     const resultado = await new AxeBuilder({ page }).analyze()
     expect(resultado.violations, `violaciones de accesibilidad en tema ${tema}`).toEqual([])
   }
+})
+
+test('SPEC-0807: el calendario distingue un mes SIN hechos de un mes que el corte no cubre', async ({ page }) => {
+  await mockDashboard(page, [])
+
+  await page.goto('/tableros/secuestro')
+
+  const calendario = page.getByRole('region', { name: 'Estacionalidad por mes y año' })
+  await expect(calendario).toBeVisible()
+
+  // Febrero de 2025 está DENTRO del período y no tuvo hechos: es un cero.
+  await expect(calendario.getByLabel('febrero de 2025: 0 hechos')).toBeVisible()
+  // Marzo de 2025 sí los tuvo.
+  await expect(calendario.getByLabel('marzo de 2025: 4 hechos')).toBeVisible()
+  // Diciembre de 2026 es posterior al último mes con dato: no es un cero, es
+  // ausencia de cobertura, y la leyenda lo nombra.
+  await expect(calendario.getByLabel('diciembre de 2026: fuera del período consultado')).toBeVisible()
+  await expect(calendario).toContainText('Fuera del período consultado')
+})
+
+test('SPEC-0807: el ranking territorial lleva su micro-serie', async ({ page }) => {
+  await mockDashboard(page, [])
+
+  await page.goto('/tableros/secuestro')
+
+  const tarjeta = page.getByRole('region', { name: 'Departamentos con más hechos' })
+  await tarjeta.getByRole('button', { name: 'Ver tabla' }).click()
+  await expect(tarjeta.getByRole('img', { name: 'Evolución mensual de ANTIOQUIA' })).toBeVisible()
 })

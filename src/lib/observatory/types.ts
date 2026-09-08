@@ -186,12 +186,19 @@ export interface IncidentDashboard {
   yearly: YearlyPoint[]
   /** SPEC-0807: sólo los municipios que tienen dónde pintarse. */
   map: MapPoint[]
+  /** SPEC-0807: la serie mensual de cada departamento del ranking. */
+  departmentMonthly: DimensionSeries[]
   /**
    * Hechos que SÍ entraron al mapa. Comparado con `total` dice cuántos quedaron
    * fuera por no tener municipio resuelto o centroide: un mapa que muestra menos
    * de lo que hay sin avisar es un mapa que miente.
    */
   mappedTotal: number
+}
+
+export interface DimensionSeries {
+  key: string
+  points: MonthlyPoint[]
 }
 
 export interface MapPoint {
