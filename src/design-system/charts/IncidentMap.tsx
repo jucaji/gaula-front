@@ -44,6 +44,8 @@ export function IncidentMap({
   // de un efecto: escribir un ref durante el render no está permitido.
   const onSelectRef = useRef(onSelect)
   const selectedMunicipalityCodeRef = useRef(selectedMunicipalityCode)
+  // El último GeoJSON conocido, para que la fuente nazca ya con él.
+  const pendingDataRef = useRef<FeatureCollection>(emptyCollection())
   useEffect(() => {
     onSelectRef.current = onSelect
     selectedMunicipalityCodeRef.current = selectedMunicipalityCode
@@ -85,7 +87,7 @@ export function IncidentMap({
     mapRef.current = map
 
     map.on('load', () => {
-      map.addSource('hechos', { type: 'geojson', data: emptyCollection() })
+      map.addSource('hechos', { type: 'geojson', data: pendingDataRef.current })
 
       // El halo del foco va DEBAJO del punto: marca la zona sin taparla.
       map.addLayer({
@@ -172,15 +174,24 @@ export function IncidentMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- el estilo se recrea sólo al cambiar de tema; los datos se actualizan abajo sin recrear el mapa
   }, [theme])
 
+  /**
+   * HALLAZGO REAL (verificado en vivo, 2026-09-08): el mapa marcaba los focos
+   * pero NO las anomalías, y el dato llegaba bien del backend.
+   *
+   * <p>Es una carrera. El análisis llega en su propia consulta, después de los
+   * conteos; cuando su actualización caía mientras el estilo aún no estaba
+   * listo, el código se colgaba de `map.once('load')` — un evento que YA había
+   * ocurrido y que no vuelve a dispararse nunca. Esa actualización se perdía en
+   * silencio y el mapa se quedaba con la versión anterior, sin anomalías.
+   *
+   * <p>Ahora el último dato vive en una referencia y se aplica en cuanto la
+   * fuente existe: el momento en que llega deja de importar.
+   */
   useEffect(() => {
+    pendingDataRef.current = withRadius(collection, maxCount, selectedMunicipalityCode)
     const map = mapRef.current
-    if (!map) return
-    const apply = () => {
-      const source = map.getSource('hechos') as maplibregl.GeoJSONSource | undefined
-      source?.setData(withRadius(collection, maxCount, selectedMunicipalityCode))
-    }
-    if (map.isStyleLoaded()) apply()
-    else map.once('load', apply)
+    const source = map?.getSource('hechos') as maplibregl.GeoJSONSource | undefined
+    source?.setData(pendingDataRef.current)
   }, [collection, maxCount, selectedMunicipalityCode])
 
   const sinUbicar = total - mappedTotal
