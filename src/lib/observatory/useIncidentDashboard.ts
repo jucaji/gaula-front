@@ -8,6 +8,26 @@ export interface DashboardFilters {
   departmentText?: string | undefined
   municipalityCode?: string | undefined
   authorGroup?: string | undefined
+  modality?: string | undefined
+  kidnappingType?: string | undefined
+  victimStatus?: string | undefined
+  occupation?: string | undefined
+}
+
+/**
+ * SPEC-0807: los filtros se serializan en UN solo sitio.
+ *
+ * <p>Las cifras, el análisis y la exportación tienen que responder al mismo
+ * filtro; cuando cada consulta armaba su propia URL, agregar un filtro era
+ * acordarse de tocar las tres, y la que se olvidara devolvería un Excel que no
+ * coincide con la pantalla que el analista está viendo.
+ */
+export function dashboardSearchParams(profile: IncidentProfile, filters: DashboardFilters): URLSearchParams {
+  const params = new URLSearchParams({ profile })
+  for (const [key, value] of Object.entries(filters)) {
+    if (typeof value === 'string' && value.trim() !== '') params.set(key, value)
+  }
+  return params
 }
 
 /**
@@ -18,15 +38,10 @@ export interface DashboardFilters {
 export function useIncidentDashboard(profile: IncidentProfile, filters: DashboardFilters) {
   return useQuery({
     queryKey: ['observatory', 'dashboard', profile, filters],
-    queryFn: () => {
-      const params = new URLSearchParams({ profile })
-      if (filters.from) params.set('from', filters.from)
-      if (filters.to) params.set('to', filters.to)
-      if (filters.departmentText) params.set('departmentText', filters.departmentText)
-      if (filters.municipalityCode) params.set('municipalityCode', filters.municipalityCode)
-      if (filters.authorGroup) params.set('authorGroup', filters.authorGroup)
-      return customFetch<IncidentDashboard>(`/api/v1/observatory/dashboard?${params.toString()}`)
-    },
+    queryFn: () =>
+      customFetch<IncidentDashboard>(
+        `/api/v1/observatory/dashboard?${dashboardSearchParams(profile, filters).toString()}`,
+      ),
     staleTime: 30_000,
     networkMode: 'always',
     retry: false,
@@ -34,11 +49,5 @@ export function useIncidentDashboard(profile: IncidentProfile, filters: Dashboar
 }
 
 export function dashboardExportUrl(profile: IncidentProfile, filters: DashboardFilters): string {
-  const params = new URLSearchParams({ profile })
-  if (filters.from) params.set('from', filters.from)
-  if (filters.to) params.set('to', filters.to)
-  if (filters.departmentText) params.set('departmentText', filters.departmentText)
-  if (filters.municipalityCode) params.set('municipalityCode', filters.municipalityCode)
-  if (filters.authorGroup) params.set('authorGroup', filters.authorGroup)
-  return `/api/v1/observatory/dashboard/export?${params.toString()}`
+  return `/api/v1/observatory/dashboard/export?${dashboardSearchParams(profile, filters).toString()}`
 }

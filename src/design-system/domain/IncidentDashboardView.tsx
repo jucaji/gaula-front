@@ -238,6 +238,26 @@ export function IncidentDashboardView({
           />
         </>
       )}
+
+      {/*
+        SPEC-0807: la ocupación de la víctima es una de las columnas que el
+        analista llena a mano en el Excel y que hasta ahora viajaba hasta la base
+        para no volver a salir nunca. Si el corte no la trae, la gráfica no se
+        dibuja: una gráfica vacía dice "no hubo", y aquí sería "no se registró".
+      */}
+      {(dashboard.byOccupation ?? []).length > 0 && (
+        <ChartWithTable
+          title="Ocupación de la víctima"
+          chart={<EchartsChart option={barOption(dashboard.byOccupation ?? [], 'occupation')} ariaLabel="Hechos por ocupación de la víctima" />}
+          rows={dashboard.byOccupation ?? []}
+          columns={[
+            { header: 'Ocupación', cell: (row) => row.key },
+            { header: 'Hechos', cell: (row) => row.count.toLocaleString('es-CO') },
+            { header: 'Participación', cell: (row) => shareOf(dashboard.byOccupation ?? [], row) },
+          ]}
+          getRowKey={(row) => row.key}
+        />
+      )}
     </div>
   )
 }

@@ -181,8 +181,25 @@ export interface IncidentDashboard {
   byModality: Breakdown[]
   byVictimStatus: Breakdown[]
   byKidnappingType: Breakdown[]
+  byOccupation: Breakdown[]
   monthly: MonthlyPoint[]
   yearly: YearlyPoint[]
+  /** SPEC-0807: sólo los municipios que tienen dónde pintarse. */
+  map: MapPoint[]
+  /**
+   * Hechos que SÍ entraron al mapa. Comparado con `total` dice cuántos quedaron
+   * fuera por no tener municipio resuelto o centroide: un mapa que muestra menos
+   * de lo que hay sin avisar es un mapa que miente.
+   */
+  mappedTotal: number
+}
+
+export interface MapPoint {
+  municipalityCode: string
+  municipalityText: string
+  count: number
+  latitude: number
+  longitude: number
 }
 
 export interface Bulletin {

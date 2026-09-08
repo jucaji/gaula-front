@@ -8,6 +8,12 @@ const dashboardSearchSchema = z.object({
   to: z.string().optional().catch(undefined),
   authorGroup: z.string().optional().catch(undefined),
   municipalityCode: z.string().optional().catch(undefined),
+  // SPEC-0807: el resto de dimensiones que el dato ya sabía responder.
+  departmentText: z.string().optional().catch(undefined),
+  modality: z.string().optional().catch(undefined),
+  kidnappingType: z.string().optional().catch(undefined),
+  victimStatus: z.string().optional().catch(undefined),
+  occupation: z.string().optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/tableros/extorsion/')({

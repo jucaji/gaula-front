@@ -5,11 +5,19 @@ import { customFetch } from '@/api/client'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
+import { IncidentMap } from '@/design-system/charts/IncidentMap'
+import { FilterChips, type AppliedFilter } from '@/design-system/patterns/FilterChips'
 import { IncidentDashboardView } from './IncidentDashboardView'
 import { IncidentAnalysisPanel } from './IncidentAnalysisPanel'
 import { useIncidentAnalysis } from '@/lib/observatory/useIncidentAnalysis'
 import { dashboardExportUrl, useIncidentDashboard, type DashboardFilters } from '@/lib/observatory/useIncidentDashboard'
-import { PROFILE_LABEL, type IncidentProfile } from '@/lib/observatory/types'
+import {
+  KIDNAPPING_TYPE_LABEL,
+  MODALITY_LABEL,
+  PROFILE_LABEL,
+  VICTIM_STATUS_LABEL,
+  type IncidentProfile,
+} from '@/lib/observatory/types'
 
 /**
  * SPEC-0803: la pantalla de tablero, compartida por los dos delitos.
@@ -109,7 +117,58 @@ export function ObservatoryDashboardScreen({
             onChange={(event) => onFiltersChange({ ...filters, authorGroup: event.target.value || undefined })}
           />
         </label>
+
+        {/*
+          Las listas se llenan con lo que ESTE corte tiene, no con un catálogo
+          fijo: ofrecer una opción que no existe en el dato lleva al analista a
+          una pantalla vacía y le hace creer que no hubo hechos.
+        */}
+        {profile === 'EXTORTION' && (
+          <FiltroLista
+            etiqueta="Modalidad"
+            valor={filters.modality}
+            opciones={(data?.byModality ?? []).map((item) => ({
+              value: item.key,
+              label: MODALITY_LABEL[item.key as keyof typeof MODALITY_LABEL] ?? item.key,
+            }))}
+            onChange={(value) => onFiltersChange({ ...filters, modality: value })}
+          />
+        )}
+        {profile === 'KIDNAPPING' && (
+          <>
+            <FiltroLista
+              etiqueta="Tipo de secuestro"
+              valor={filters.kidnappingType}
+              opciones={(data?.byKidnappingType ?? []).map((item) => ({
+                value: item.key,
+                label: KIDNAPPING_TYPE_LABEL[item.key as keyof typeof KIDNAPPING_TYPE_LABEL] ?? item.key,
+              }))}
+              onChange={(value) => onFiltersChange({ ...filters, kidnappingType: value })}
+            />
+            <FiltroLista
+              etiqueta="Situación de la víctima"
+              valor={filters.victimStatus}
+              opciones={(data?.byVictimStatus ?? []).map((item) => ({
+                value: item.key,
+                label: VICTIM_STATUS_LABEL[item.key as keyof typeof VICTIM_STATUS_LABEL] ?? item.key,
+              }))}
+              onChange={(value) => onFiltersChange({ ...filters, victimStatus: value })}
+            />
+          </>
+        )}
+        <FiltroLista
+          etiqueta="Ocupación"
+          valor={filters.occupation}
+          opciones={(data?.byOccupation ?? []).map((item) => ({ value: item.key, label: item.key }))}
+          onChange={(value) => onFiltersChange({ ...filters, occupation: value })}
+        />
       </div>
+
+      <FilterChips
+        filters={appliedFilters(filters, Array.isArray(data?.map) ? data.map : [])}
+        onRemove={(key) => onFiltersChange({ ...filters, [key]: undefined })}
+        onClearAll={() => onFiltersChange({})}
+      />
 
       {exportError && (
         <p className="mt-2 text-sm text-critical" role="alert">
@@ -145,6 +204,27 @@ export function ObservatoryDashboardScreen({
             {data.total.toLocaleString('es-CO')} {data.total === 1 ? 'hecho' : 'hechos'} de{' '}
             {PROFILE_LABEL[profile].toLowerCase()} en el corte vigente con estos filtros.
           </p>
+          {/*
+            El mapa NO espera al análisis (CA-6): los focos y las anomalías son una
+            capa encima de los conteos, no el mapa. Con el servicio caído, el mapa
+            sigue mostrando dónde están los hechos.
+          */}
+          {/*
+            Sin `map` en la respuesta (un backend anterior a SPEC-0807, o una
+            respuesta recortada) no se dibuja un mapa vacío: un mapa sin puntos
+            se lee como "no hubo hechos aquí", que es justo lo que no pasó.
+          */}
+          {Array.isArray(data.map) && (
+          <IncidentMap
+            points={data.map}
+            total={data.total}
+            mappedTotal={data.mappedTotal ?? 0}
+            hotspotMunicipalities={(analysis.data?.hotspots ?? []).flatMap((hotspot) => hotspot.municipalities)}
+            anomalyMunicipalities={(analysis.data?.anomalies ?? []).map((anomaly) => anomaly.municipalityText)}
+            selectedMunicipalityCode={filters.municipalityCode}
+            onSelect={(municipalityCode) => onFiltersChange({ ...filters, municipalityCode })}
+          />
+          )}
           {analysis.data && <IncidentAnalysisPanel analysis={analysis.data} />}
           <IncidentDashboardView
             profile={profile}
@@ -155,4 +235,70 @@ export function ObservatoryDashboardScreen({
       )}
     </div>
   )
+}
+
+/** Una lista de filtro. Vacía = «todos», nunca una opción inventada. */
+function FiltroLista({
+  etiqueta,
+  valor,
+  opciones,
+  onChange,
+}: {
+  etiqueta: string
+  valor: string | undefined
+  opciones: { value: string; label: string }[]
+  onChange: (value: string | undefined) => void
+}) {
+  if (opciones.length === 0) return null
+  return (
+    <label className="flex flex-col gap-1 text-xs text-text-secondary">
+      {etiqueta}
+      {/*
+        El nombre accesible dice que esto FILTRA: la gráfica de más abajo se
+        llama igual ("Situación de la víctima"), y sin el prefijo un lector de
+        pantalla anuncia dos controles con el mismo nombre y distinta función.
+      */}
+      <select
+        aria-label={`Filtrar por ${etiqueta.toLowerCase()}`}
+        value={valor ?? ''}
+        onChange={(event) => onChange(event.target.value || undefined)}
+        className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
+      >
+        <option value="">Todas</option>
+        {opciones.map((opcion) => (
+          <option key={opcion.value} value={opcion.value}>
+            {opcion.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+const FILTER_LABELS: Record<string, string> = {
+  from: 'Desde',
+  to: 'Hasta',
+  departmentText: 'Departamento',
+  municipalityCode: 'Municipio',
+  authorGroup: 'Autor',
+  modality: 'Modalidad',
+  kidnappingType: 'Tipo',
+  victimStatus: 'Situación',
+  occupation: 'Ocupación',
+}
+
+/**
+ * Los filtros puestos, con su valor legible. El municipio se muestra por su
+ * NOMBRE aunque en la URL viaje el código DIVIPOLA: una ficha que dijera
+ * «Municipio: 05360» obliga al analista a traducir un código de memoria.
+ */
+function appliedFilters(filters: DashboardFilters, points: { municipalityCode: string; municipalityText: string }[]) {
+  const municipio = points.find((point) => point.municipalityCode === filters.municipalityCode)
+  return Object.entries(filters)
+    .filter((entry): entry is [string, string] => typeof entry[1] === 'string' && entry[1].trim() !== '')
+    .map<AppliedFilter>(([key, value]) => ({
+      key,
+      label: FILTER_LABELS[key] ?? key,
+      value: key === 'municipalityCode' ? (municipio?.municipalityText ?? value) : value,
+    }))
 }
