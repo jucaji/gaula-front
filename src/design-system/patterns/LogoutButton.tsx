@@ -40,7 +40,7 @@ export function LogoutButton() {
       <input ref={csrfRef} type="hidden" name="_csrf" defaultValue="" />
       <button
         type="submit"
-        className="flex items-center gap-1.5 rounded-sm px-2 py-1 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+        className="flex min-h-[var(--tap-min)] min-w-[var(--tap-min)] items-center gap-1.5 rounded-sm px-2 py-1 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
       >
         <LogOut size={16} strokeWidth={1.5} aria-hidden />
         Cerrar sesión

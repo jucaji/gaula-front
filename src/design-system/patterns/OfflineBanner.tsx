@@ -30,14 +30,14 @@ export function OfflineBanner() {
         <span className="flex items-center gap-3">
           {pending.length > 0 && <span>{pending.length} registro(s) en cola</span>}
           {failed.length > 0 && (
-            <button type="button" onClick={() => setShowFailed((value) => !value)} className="font-medium text-critical underline decoration-dotted">
+            <button type="button" onClick={() => setShowFailed((value) => !value)} className="min-h-[var(--tap-min)] font-medium text-critical underline decoration-dotted">
               {failed.length} rechazado(s) -- revisar
             </button>
           )}
           {pending.length === 0 && failed.length === 0 && lastSyncedAt && (
             <span>Todo sincronizado -- último envío {lastSyncedAt.toLocaleTimeString('es-CO')}</span>
           )}
-          <button type="button" onClick={syncNow} className="flex items-center gap-1 hover:text-text-primary" aria-label="Sincronizar ahora">
+          <button type="button" onClick={syncNow} className="flex min-h-[var(--tap-min)] min-w-[var(--tap-min)] items-center justify-center gap-1 hover:text-text-primary" aria-label="Sincronizar ahora">
             <RefreshCw size={12} />
           </button>
         </span>
@@ -50,10 +50,10 @@ export function OfflineBanner() {
               <span className="text-sm font-medium text-text-primary">{item.label}</span>
               <span className="text-xs text-critical">{item.lastError ?? 'El servidor rechazó este registro.'}</span>
               <span className="flex gap-3 text-xs">
-                <button type="button" className="text-accent hover:underline" onClick={() => item.id !== undefined && retryFailed(item.id)}>
+                <button type="button" className="min-h-[var(--tap-min)] text-accent hover:underline" onClick={() => item.id !== undefined && retryFailed(item.id)}>
                   Reintentar
                 </button>
-                <button type="button" className="text-text-secondary hover:underline" onClick={() => item.id !== undefined && discardFailed(item.id)}>
+                <button type="button" className="min-h-[var(--tap-min)] text-text-secondary hover:underline" onClick={() => item.id !== undefined && discardFailed(item.id)}>
                   Descartar
                 </button>
               </span>

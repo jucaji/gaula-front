@@ -27,6 +27,11 @@
           var density = localStorage.getItem('gaula-density');
           if (density === 'compact' || density === 'default' || density === 'comfortable') {
             document.documentElement.setAttribute('data-density', density);
+          } else if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) {
+            // Sin preferencia guardada y apuntando con el dedo: densidad cómoda
+            // desde el PRIMER pintado. Decidirlo sólo en React haría que los
+            // controles cambiaran de tamaño a mitad de la carga.
+            document.documentElement.setAttribute('data-density', 'comfortable');
           }
         } catch (e) {
           /* localStorage inaccesible -- se usa el default */

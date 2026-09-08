@@ -28,6 +28,29 @@ export function getStoredDensityPreference(): DensityPreference {
   } catch {
     /* localStorage inaccesible -- se usa el default */
   }
+  return defaultDensityForDevice()
+}
+
+/**
+ * HALLAZGO REAL (2026-09-08, midiendo zonas táctiles): docs/06 §7 garantiza
+ * objetivos de 44x44 px **en densidad `comfortable`**, pero la densidad por
+ * defecto era `default` para todo el mundo -- también para un dedo. En un
+ * teléfono, los controles quedaban en 28 y 34 px.
+ *
+ * <p>La densidad se decide por el DISPOSITIVO DE ENTRADA, no por el ancho de la
+ * pantalla: lo que exige un objetivo grande es el dedo, no el tamaño del
+ * monitor. Una tableta de 1024 px con pantalla táctil necesita `comfortable`
+ * tanto como un teléfono de 375; un portátil pequeño con ratón, no.
+ *
+ * <p>Sigue siendo sólo el valor INICIAL: en cuanto el usuario elige, su elección
+ * manda y se persiste (docs/06 §5, "elegibles por el usuario").
+ */
+function defaultDensityForDevice(): DensityPreference {
+  try {
+    if (window.matchMedia('(pointer: coarse)').matches) return 'comfortable'
+  } catch {
+    /* sin matchMedia (pruebas de nodo, renderizado en servidor) */
+  }
   return 'default'
 }
 

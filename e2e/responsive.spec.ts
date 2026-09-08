@@ -56,6 +56,15 @@ async function mockTodo(page: Page) {
 }
 
 const RUTAS = [
+  // Rutas con parámetro: se prueban con identificadores concretos, porque una
+  // pantalla de detalle es donde más contenido cabe y donde antes se rompía.
+  '/casos/GAULA-BOG-2026-000004',
+  '/campo/GAULA-BOG-2026-000004',
+  '/reportes/44444444-4444-4444-4444-444444444444',
+  '/reportes/revision/55555555-5555-5555-5555-555555555555',
+  '/recursos/flota/66666666-6666-6666-6666-666666666666',
+  '/tableros/extorsion/VALLE DEL CAUCA',
+  '/tableros/secuestro/VALLE DEL CAUCA',
   '/', '/casos', '/casos/nuevo', '/campo', '/recepcion', '/recepcion/llamadas',
   '/reportes', '/reportes/nuevo', '/reportes/revision', '/analitica', '/analitica/carga-147',
   '/observatorio/hechos', '/observatorio/cargue', '/tableros', '/tableros/extorsion',
@@ -134,4 +143,61 @@ test('canario: el detector de texto recortado no está ciego', async ({ page }) 
   expect(encontrados.join(' '), 'el detector no vio un texto deliberadamente recortado').toContain(
     'ESTE TEXTO NO CABE',
   )
+})
+
+
+/**
+ * ZONAS TÁCTILES (docs/06 §7: "≥ 44×44 px en densidad `comfortable`",
+ * WCAG 2.2 AA 2.5.8).
+ *
+ * <p>Se emula un dispositivo con DEDO (`hasTouch`), no sólo una pantalla
+ * estrecha: lo que exige un objetivo grande es el puntero grueso, no el ancho.
+ * Una tableta de 1024 px táctil lo necesita tanto como un teléfono; un portátil
+ * pequeño con ratón, no.
+ *
+ * <p>Al escribirla se encontró que la promesa de docs/06 NO estaba implementada:
+ * la densidad `comfortable` sólo cambiaba el alto de fila de las TABLAS, así que
+ * los controles seguían en 28 y 34 px por más que el usuario la eligiera.
+ */
+test.describe('zonas táctiles en un dispositivo con dedo', () => {
+  test.use({ hasTouch: true, isMobile: true, viewport: { width: 375, height: 812 } })
+
+  for (const ruta of RUTAS) {
+    test(`${ruta} respeta 44x44 px`, async ({ page }) => {
+      await mockTodo(page)
+      await page.goto(ruta)
+      await page.waitForSelector('main', { timeout: 15_000 })
+      await page.waitForTimeout(400)
+
+      // Control del propio control: si el puntero no se emula como grueso, la
+      // densidad no sube y la prueba mediría otra cosa.
+      const punteroGrueso = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches)
+      expect(punteroGrueso, 'no se está emulando un dispositivo táctil').toBe(true)
+
+      const pequenos = await page.evaluate(() => {
+        const selector = 'button, a[href], input, select, textarea, [role="radio"], [role="checkbox"]'
+        // EXCEPCIÓN DE WCAG 2.5.8, no un atajo: el criterio excluye expresamente
+        // los objetivos "en línea", es decir los que van dentro de una frase y
+        // cuyo tamaño lo determina la altura de línea del texto que los rodea.
+        // Agrandar un enlace incrustado en un párrafo rompería el párrafo.
+        const enLineaDentroDeTexto = (el: Element) => {
+          const padre = el.parentElement
+          if (!padre) return false
+          if (!['P', 'SPAN', 'LI', 'DD', 'DT', 'LABEL'].includes(padre.tagName)) return false
+          // Hay texto real alrededor: no es un contenedor que sólo envuelve al control.
+          return (padre.textContent ?? '').trim().length > (el.textContent ?? '').trim().length + 3
+        }
+        return Array.from(document.querySelectorAll(selector))
+          .filter((el) => !enLineaDentroDeTexto(el))
+          .map((el) => ({ el, caja: el.getBoundingClientRect() }))
+          .filter(({ caja }) => caja.width > 0 && caja.height > 0)
+          .filter(({ caja }) => caja.height < 44 || caja.width < 44)
+          .map(({ el, caja }) =>
+            `${el.tagName.toLowerCase()} ${Math.round(caja.width)}x${Math.round(caja.height)} "${(el.textContent ?? '').trim().slice(0, 24)}"`,
+          )
+      })
+
+      expect(pequenos, `objetivos táctiles por debajo de 44x44 px en ${ruta}`).toEqual([])
+    })
+  }
 })

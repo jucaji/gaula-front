@@ -125,7 +125,7 @@ export function DataTable<TData>({ data, columns, getRowId, onSelectionChange, c
                       {header.isPlaceholder ? null : sortable ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1 hover:text-text-primary"
+                          className="inline-flex min-h-[var(--tap-min)] items-center gap-1 hover:text-text-primary"
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
@@ -187,7 +187,7 @@ function ColumnVisibilityMenu<TData>({ table }: { table: ReturnType<typeof useRe
       <DropdownMenu.Trigger asChild>
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-xs px-2 py-1 text-xs text-text-secondary hover:bg-surface hover:text-text-primary"
+          className="inline-flex min-h-[var(--tap-min)] items-center gap-1.5 rounded-xs px-2 py-1 text-xs text-text-secondary hover:bg-surface hover:text-text-primary"
         >
           <Columns3 size={14} strokeWidth={1.5} />
           Columnas

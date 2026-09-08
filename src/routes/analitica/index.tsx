@@ -152,7 +152,7 @@ function ExportComparisonButton(props: { currentFrom: string; currentTo: string;
   return (
     <span className="flex items-center gap-2">
       {error && <span className="text-2xs text-critical">{error}</span>}
-      <button type="button" onClick={handleExport} disabled={exporting} className="text-2xs font-medium text-accent hover:text-accent-hover disabled:opacity-50">
+      <button type="button" onClick={handleExport} disabled={exporting} className="min-h-[var(--tap-min)] px-1 text-2xs font-medium text-accent hover:text-accent-hover disabled:opacity-50">
         {exporting ? 'Exportando…' : 'Exportar comparativo'}
       </button>
     </span>

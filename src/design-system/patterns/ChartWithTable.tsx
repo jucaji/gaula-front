@@ -41,7 +41,7 @@ export function ChartWithTable<TRow>({
           <button
             type="button"
             onClick={() => setShowTable((value) => !value)}
-            className="text-2xs font-medium text-accent hover:text-accent-hover"
+            className="min-h-[var(--tap-min)] min-w-[var(--tap-min)] px-1 text-2xs font-medium text-accent hover:text-accent-hover"
           >
             {showTable ? 'Ver gráfica' : 'Ver tabla'}
           </button>

@@ -84,7 +84,7 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
                 // nadie lo había visto porque el escaneo de humo corre en `/`, donde
                 // ningún elemento del menú está activo. `accent-hover` es más oscuro en
                 // claro y más claro en oscuro: sube el contraste en los dos temas.
-                className="flex items-center gap-2 whitespace-nowrap rounded-sm px-3 py-2 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary [&.active-link]:bg-accent-subtle [&.active-link]:text-accent-hover"
+                className="flex items-center gap-2 whitespace-nowrap rounded-sm px-3 py-2 text-sm min-h-[var(--tap-min)] min-w-[var(--tap-min)]  text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary [&.active-link]:bg-accent-subtle [&.active-link]:text-accent-hover"
                 activeProps={{ className: 'active-link' }}
               >
                 <Icon size={16} strokeWidth={1.5} />

@@ -244,7 +244,7 @@ function ObservatoryImportPage() {
               setPreview(null)
               setJob(null)
             }}
-            className="text-sm text-text-primary"
+            className="min-h-[var(--tap-min)] text-sm text-text-primary"
           />
         </label>
 

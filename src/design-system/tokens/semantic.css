@@ -50,8 +50,38 @@
   --density-row: var(--density-compact-row);
 }
 
+/* HALLAZGO REAL (2026-09-08): docs/06 §7 promete objetivos tactiles de 44x44 px
+   "en densidad comfortable", pero esa densidad solo cambiaba el ALTO DE FILA de
+   las tablas. Los controles seguian en 28 y 34 px, asi que la promesa no estaba
+   implementada en ninguna parte: elegir `comfortable` en un telefono no agrandaba
+   ni un boton. */
 :root[data-density='comfortable'] {
   --density-row: var(--density-comfortable-row);
+  /* TODOS los altos suben al objetivo tactil, incluido `sm`. Los tamanos existen
+     para la jerarquia visual, no para rebajar el minimo de accesibilidad: un
+     filtro pequeno sigue siendo algo que hay que poder tocar. Medido: con `sm` en
+     36 px quedaban tres controles por debajo del estandar del proyecto. */
+  --control-height-sm: var(--control-height-touch);
+  --control-height-md: var(--control-height-touch);
+  --control-height-lg: var(--control-height-touch);
+}
+
+/* Objetivo tactil minimo. Cero en escritorio con raton (un boton de 44 px ahi
+   solo gasta espacio) y 44 px cuando el dispositivo apunta con el dedo o cuando
+   el usuario pidio densidad comoda. Lo consumen los controles del armazon, que
+   no pasan por los tokens de alto de control. */
+:root {
+  --tap-min: 0px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --tap-min: var(--control-height-touch);
+  }
+}
+
+:root[data-density='comfortable'] {
+  --tap-min: var(--control-height-touch);
 }
 
 /* Oscuro explícito, o "sistema" cuando el SO ya está en oscuro (docs/06 §3.6: tres estados). */

@@ -245,7 +245,7 @@ function FieldCaseDetailPage() {
                 ))}
               </select>
             </label>
-            <input ref={fileInputRef} type="file" className="text-sm text-text-primary" />
+            <input ref={fileInputRef} type="file" className="min-h-[var(--tap-min)] text-sm text-text-primary" />
             <div className="flex gap-2">
               <Button variant="primary" size="md" loading={busy} disabled={!evidenceType} onClick={handleAttachEvidence}>
                 Guardar

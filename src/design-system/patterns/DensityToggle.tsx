@@ -23,7 +23,7 @@ export function DensityToggle() {
           title={label}
           onClick={() => setDensity(value)}
           className={
-            'flex h-7 w-7 items-center justify-center rounded-xs transition-colors duration-instant ' +
+            'flex h-7 w-7 min-h-[var(--tap-min)] min-w-[var(--tap-min)] items-center justify-center rounded-xs transition-colors duration-instant ' +
             (density === value ? 'bg-accent-subtle text-accent-hover' : 'text-text-muted hover:text-text-primary')
           }
         >

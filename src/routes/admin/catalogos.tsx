@@ -59,7 +59,7 @@ function AdminCatalogsPage() {
           type="file"
           accept=".csv,text/csv"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          className="text-sm text-text-secondary file:mr-3 file:rounded-sm file:border-0 file:bg-surface-sunken file:px-3 file:py-1.5 file:text-sm file:text-text-primary"
+          className="min-h-[var(--tap-min)] text-sm text-text-secondary file:mr-3 file:min-h-[var(--tap-min)] file:rounded-sm file:border-0 file:bg-surface-sunken file:px-3 file:py-1.5 file:text-sm file:text-text-primary"
         />
         <Button variant="primary" size="md" disabled={!file} loading={uploading} onClick={handleImport}>
           Importar
