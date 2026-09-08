@@ -355,7 +355,7 @@ function AnalyticsDashboardPage() {
       // A tres columnas en un panel angosto cada tarjeta quedaba en 88 px, y
       // "$ 73.000.000" no cabe ahí a ningún tamaño legible. Dos columnas primero;
       // sólo se aprieta cuando hay ancho de verdad.
-      <section aria-label="Cifras del período" className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <section aria-label="Cifras del período" className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6">
         <KpiTile label="Reportes" value={currentTotal?.reportCount ?? 0} previousValue={previousTotal?.reportCount} />
         <KpiTile label="Capturas" value={currentTotal?.arrests ?? 0} previousValue={previousTotal?.arrests} />
         <KpiTile label="Rescates" value={currentTotal?.rescues ?? 0} previousValue={previousTotal?.rescues} />

@@ -40,22 +40,40 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
   const visibleItems = NAV_ITEMS.filter((item) => can('READ', item.resource, session.roles))
 
   return (
-    <div className="grid min-h-dvh grid-cols-[var(--layout-sidebar-width)_1fr] grid-rows-[var(--layout-header-height)_1fr]">
-      <header className="col-span-2 flex items-center justify-between border-b border-border bg-surface px-4">
-        <span className="font-mono text-sm font-medium text-text-primary">GAULA DIGITAL</span>
-        <div className="flex items-center gap-3">
-          <DensityToggle />
+    // HALLAZGO REAL (2026-09-08, midiendo la consola a 375 px): la barra lateral
+    // tenía ancho FIJO en todos los tamaños, así que en un teléfono se comía la
+    // pantalla -- el contenido quedaba en columnas de 12 px y el documento entero
+    // desbordaba en horizontal. En móvil la navegación pasa arriba, en una fila
+    // que se desplaza; a partir de `md` vuelve a ser la barra lateral de siempre.
+    <div className="grid min-h-dvh grid-rows-[var(--layout-header-height)_auto_1fr] md:grid-cols-[var(--layout-sidebar-width)_1fr] md:grid-rows-[var(--layout-header-height)_1fr]">
+      {/* `min-w-0` en la cabecera y en la barra: sin eso, sus hijos imponen su
+          ancho mínimo, estiran la rejilla entera y el DOCUMENTO desborda en
+          horizontal -- que es lo que pasaba a 375 px. */}
+      <header className="flex min-w-0 items-center justify-between gap-2 border-b border-border bg-surface px-3 md:col-span-2 md:px-4">
+        <span className="truncate font-mono text-sm font-medium text-text-primary">GAULA DIGITAL</span>
+        <div className="flex min-w-0 items-center gap-2 md:gap-3">
+          {/* La densidad regula el alto de fila de las tablas: en un teléfono no
+              hay tabla que valga la pena densificar, y sus tres botones eran lo
+              que empujaba fuera al botón de salir. */}
+          <span className="hidden sm:contents">
+            <DensityToggle />
+          </span>
           <ThemeToggle />
           <div className="flex items-center gap-2 text-sm text-text-secondary">
             <UserCircle size={20} strokeWidth={1.5} />
-            <span>{session.displayName}</span>
+            {/* El nombre se oculta en pantallas angostas: el icono ya identifica
+                la sesión y el nombre completo empujaba fuera al botón de salir. */}
+            <span className="hidden lg:inline">{session.displayName}</span>
           </div>
           <LogoutButton />
         </div>
       </header>
 
-      <nav className="border-r border-border bg-surface p-2" aria-label="Navegación principal">
-        <ul className="flex flex-col gap-0.5">
+      <nav
+        className="min-w-0 overflow-x-auto border-b border-border bg-surface p-2 md:overflow-visible md:border-b-0 md:border-r"
+        aria-label="Navegación principal"
+      >
+        <ul className="flex gap-1 md:flex-col md:gap-0.5">
           {visibleItems.map(({ to, label, icon: Icon }) => (
             <li key={to}>
               <Link
@@ -66,7 +84,7 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
                 // nadie lo había visto porque el escaneo de humo corre en `/`, donde
                 // ningún elemento del menú está activo. `accent-hover` es más oscuro en
                 // claro y más claro en oscuro: sube el contraste en los dos temas.
-                className="flex items-center gap-2 rounded-sm px-3 py-2 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary [&.active-link]:bg-accent-subtle [&.active-link]:text-accent-hover"
+                className="flex items-center gap-2 whitespace-nowrap rounded-sm px-3 py-2 text-sm text-text-secondary transition-colors duration-instant hover:bg-surface-sunken hover:text-text-primary [&.active-link]:bg-accent-subtle [&.active-link]:text-accent-hover"
                 activeProps={{ className: 'active-link' }}
               >
                 <Icon size={16} strokeWidth={1.5} />
@@ -77,7 +95,7 @@ export function AppShell({ children, session }: { children: ReactNode; session: 
         </ul>
       </nav>
 
-      <main className="overflow-auto bg-canvas p-6">{children}</main>
+      <main className="min-w-0 overflow-auto bg-canvas p-4 md:p-6">{children}</main>
     </div>
   )
 }
