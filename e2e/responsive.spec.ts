@@ -2,93 +2,136 @@
 import { test, expect, type Page } from '@playwright/test'
 
 /**
- * docs/06: la consola tiene que servir en cualquier pantalla, incluido un
- * teléfono. Esta prueba MIDE, no mira: compara el ancho del contenido contra el
- * de su caja, en cinco anchos reales.
+ * BARRIDO DE RESPONSIVIDAD sobre TODAS las pantallas de la consola.
  *
- * Nace de un defecto encontrado el 2026-09-08: a 375 px la barra lateral tenía
- * ancho FIJO, así que se comía la pantalla -- las tarjetas de cifras quedaban en
- * columnas de 12 px y el documento entero desbordaba en horizontal. Una revisión
- * visual en un portátil no lo veía; una medición sí.
+ * <p>Mide, no mira: en cada ancho comprueba que el documento no se desplace en
+ * horizontal y que ningún texto quede recortado dentro de su caja. Nace de dos
+ * defectos reales del 2026-09-08 -- la barra lateral de ancho fijo que en un
+ * teléfono dejaba el contenido en columnas de 12 px, y la cifra de dinero que se
+ * salía de su tarjeta.
+ *
+ * <p><strong>El canario del final no es decoración.</strong> La primera versión
+ * de este detector daba 0 problemas en las 22 rutas... porque estaba ciego: el
+ * `<main>` de la consola tiene `overflow-auto`, así que su comprobación de
+ * ancestros consideraba desplazable a TODO elemento de la página y no reportaba
+ * nada. Un detector roto y una pantalla perfecta se ven exactamente igual desde
+ * fuera. El canario inyecta un texto que NO cabe y exige que se detecte: si
+ * alguien vuelve a romper la detección, falla esa prueba y no las 22 falsas.
  */
 const SESSION = {
-  userId: '00000000-0000-0000-0000-000000000202',
-  displayName: 'Sargento Cárdenas Marín',
-  roles: ['INTELLIGENCE_ANALYST'],
+  userId: '00000000-0000-0000-0000-000000000203',
+  displayName: 'Administrador del Sistema',
+  roles: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'HOTLINE_OPERATOR', 'FIELD_OFFICER', 'ADMIN_STAFF', 'PREVENTION_STAFF', 'SYSTEM_ADMIN'],
   territorialUnitId: '00000000-0000-0000-0000-000000000001',
   operationalUnitId: '00000000-0000-0000-0000-000000000102',
 }
 
-// Cifras grandes A PROPÓSITO: "$ 1.873.450.000" son quince caracteres, y es el
-// caso que rompía la tarjeta. Un dato de juguete no habría encontrado nada.
-const KPI = {
-  currentTotal: { reportCount: 128, arrests: 412, rescues: 37, preventedPaymentAmount: 1873450000, weaponsSeized: 96, vehiclesSeized: 54 },
-  previousTotal: { reportCount: 64, arrests: 200, rescues: 30, preventedPaymentAmount: 900000000, weaponsSeized: 40, vehiclesSeized: 25 },
-  byModality: [],
-}
-
-async function mockAnalytics(page: Page) {
-  await page.route('**/api/v1/me', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SESSION) }))
-  await page.route('**/api/v1/catalog/crime-types', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
-  await page.route('**/api/v1/analytics/kpi/compare**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(KPI) }))
-  await page.route('**/api/v1/analytics/series**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
-}
-
-const PANTALLAS = [
-  { nombre: 'móvil', width: 375, height: 812 },
-  { nombre: 'móvil grande', width: 430, height: 932 },
-  { nombre: 'tableta', width: 768, height: 1024 },
-  { nombre: 'portátil', width: 1280, height: 800 },
-  { nombre: 'escritorio', width: 1920, height: 1080 },
-] as const
-
-for (const { nombre, width, height } of PANTALLAS) {
-  test(`/analitica no desborda ni corta cifras en ${nombre} (${width}px)`, async ({ page }) => {
-    await page.setViewportSize({ width, height })
-    await mockAnalytics(page)
-
-    await page.goto('/analitica')
-    await expect(page.getByRole('region', { name: 'Cifras del período' })).toBeVisible()
-
-    // 1. El documento no puede desplazarse en horizontal: si lo hace, hay algo
-    //    que impone un ancho mínimo mayor que la pantalla.
-    const desbordaDocumento = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
-    )
-    expect(desbordaDocumento, `el documento se desplaza en horizontal en ${nombre}`).toBe(false)
-
-    // 2. Ninguna cifra puede quedar recortada dentro de su tarjeta. Una cifra de
-    //    dinero cortada no es un detalle estético: se lee como OTRA cifra.
-    const recortadas = await page.evaluate(() => {
-      const region = document.querySelector('section[aria-label="Cifras del período"]')!
-      return Array.from(region.querySelectorAll('p'))
-        .filter((p) => /\d/.test(p.textContent ?? '') && !(p.textContent ?? '').includes('vs.'))
-        .filter((p) => p.scrollWidth > p.clientWidth + 1)
-        .map((p) => p.textContent ?? '')
-    })
-    expect(recortadas, `cifras recortadas en ${nombre}`).toEqual([])
+async function mockTodo(page: Page) {
+  await page.route('**/api/**', async (route) => {
+    const url = route.request().url()
+    const json = (body: unknown) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+    // La sesión va DENTRO del comodín: en Playwright la última ruta registrada
+    // gana, así que un `page.route('**/api/v1/me')` aparte quedaba tapado por
+    // este comodín y la consola se quedaba sin sesión -- todas las pantallas
+    // vacías y un barrido en verde que no probaba nada.
+    if (/\/api\/v1\/me/.test(url)) return json(SESSION)
+    if (/kpi\/compare/.test(url)) return json({ currentTotal: { reportCount: 128, arrests: 412, rescues: 37, preventedPaymentAmount: 1873450000, weaponsSeized: 96, vehiclesSeized: 54 }, previousTotal: { reportCount: 64, arrests: 200, rescues: 30, preventedPaymentAmount: 900000000, weaponsSeized: 40, vehiclesSeized: 25 }, byModality: [] })
+    if (/observatory\/snapshots\/active/.test(url)) return json({ id: 'a1', source: 'Fiscalía General de la Nación', cutoffDate: '2026-06-30', label: 'Mesa de Seguimiento No.53', status: 'ACTIVE', loadedBy: 'x', loadedByName: 'Sargento Cárdenas Marín', loadedAt: '2026-09-07T14:05:00Z', incidentCount: 1873450 })
+    if (/observatory\/dashboard\/analysis/.test(url)) return json({ available: true, unavailableReason: null, snapshotId: 'a1', trend: [{ month: '2026-07-01', observed: 3, trend: 2.4, seasonal: 0.2 }], variations: [{ label: 'Último mes contra el anterior', current: 4, previous: 2, changePct: 100, lowerPct: -30.2, upperPct: 512.4, significant: false, explanation: 'ruido' }], anomalies: [{ municipalityCode: '05002', municipalityText: 'SAN ANDRÉS DE CUERQUÍA', month: '2026-06-01', observed: 8, expected: 0.4, zScore: 7.6, explanation: 'contra su propia historia' }], hotspots: [{ clusterId: 0, municipalities: ['MEDELLIN', 'BELLO'], totalCount: 16 }], forecast: [{ month: '2026-08-01', projected: 5, lower: 1.6, upper: 8.4 }], notes: ['nota'] })
+    if (/observatory\/dashboard/.test(url)) return json({ snapshotId: 'a1', total: 1873450, byAuthorGroup: [{ key: 'DELINCUENCIA COMÚN ORGANIZADA', count: 1873450 }], byDepartment: [{ key: 'VALLE DEL CAUCA', count: 900000 }], byMunicipality: [{ key: 'SANTIAGO DE CALI', count: 700000 }], byModality: [{ key: 'LLAMADA_TELEFONICA', count: 500000 }], byVictimStatus: [{ key: 'RESCATADO', count: 3 }], byKidnappingType: [{ key: 'SIMPLE', count: 3 }], monthly: [{ month: '2026-07-01', count: 1873450 }], yearly: [{ year: 2026, count: 1873450 }] })
+    if (/observatory\/bulletin/.test(url)) return json({ snapshotId: 'a1', source: 'Fiscalía General de la Nación', cutoffDate: '2026-06-30', label: 'Mesa No.53', loadedByName: 'Sargento Cárdenas Marín', loadedAt: '2026-09-07T14:05:00Z', generatedAt: '2026-09-08T15:00:00Z', extortionTotal: 1873450, kidnappingTotal: 98765, topAuthorGroups: [{ key: 'DELINCUENCIA COMÚN ORGANIZADA', count: 1873450 }], topDepartments: [{ key: 'VALLE DEL CAUCA', count: 900000 }], byModality: [{ key: 'LLAMADA_TELEFONICA', count: 500000 }], byVictimStatus: [{ key: 'RESCATADO', count: 3 }], previousComparison: { previousCutoffDate: '2025-12-31', previousExtortionTotal: 1000000, previousKidnappingTotal: 50000 } })
+    if (/observatory\/profiles/.test(url)) return json([{ id: 'p1', code: 'FISCALIA_EXTORSION_SECUESTRO', version: 1, provisional: true, displayName: 'Fiscalía — Extorsión y Secuestro (plantilla observada 19/08/2026)', sheets: ['SECUESTRO', 'EXTORSION'], validFrom: '2026-01-01' }])
+    if (/observatory\/incidents/.test(url)) return json({ content: [{ id: 'i1', snapshotId: 'a1', profile: 'KIDNAPPING', occurredOn: '2026-07-21', departmentText: 'VALLE DEL CAUCA', municipalityText: 'SANTIAGO DE CALI', municipalityCode: '76001', municipalityUnresolved: false, authorGroup: 'DELINCUENCIA COMÚN ORGANIZADA', kidnappingType: 'EXTORSIVO', victimStatus: 'RESCATADO', occupation: 'COMERCIANTE', modality: null, notes: null, sourceRowNumber: 4, registeredAt: '2026-09-07T14:05:00Z', updatedAt: null }], totalElements: 1, totalPages: 1, pageNumber: 0, pageSize: 50 })
+    if (/case-files\?|case-files$/.test(url)) return json({ content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: 20 })
+    if (/operational-reports/.test(url)) return json({ content: [], totalElements: 0 })
+    if (/report-templates/.test(url)) return json({ id: 't1', code: 'BASE', version: 1, sections: [] })
+    if (/review-queue/.test(url)) return json({ content: [], totalElements: 0 })
+    if (/vehicles|maintenance/.test(url)) return json({ content: [], totalElements: 0 })
+    if (/admin\/users/.test(url)) return json({ content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: 20 })
+    if (/audit/.test(url)) return json({ content: [], totalElements: 0, totalPages: 0, pageNumber: 0, pageSize: 20 })
+    if (/access-policies/.test(url)) return json([])
+    if (/crime-types|municipalities|modus|authorities|guidelines/.test(url)) return json([])
+    return json([])
   })
 }
 
-test('en móvil la navegación se desplaza en horizontal en vez de comerse la pantalla', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 })
-  await mockAnalytics(page)
+const RUTAS = [
+  '/', '/casos', '/casos/nuevo', '/campo', '/recepcion', '/recepcion/llamadas',
+  '/reportes', '/reportes/nuevo', '/reportes/revision', '/analitica', '/analitica/carga-147',
+  '/observatorio/hechos', '/observatorio/cargue', '/tableros', '/tableros/extorsion',
+  '/tableros/secuestro', '/tableros/boletin', '/recursos/flota',
+  '/admin/usuarios', '/admin/roles', '/admin/catalogos', '/admin/auditoria',
+]
 
-  await page.goto('/analitica')
 
-  const navegacion = page.getByRole('navigation', { name: 'Navegación principal' })
-  await expect(navegacion).toBeVisible()
-
-  // La barra ocupa el ancho de la pantalla y desplaza su contenido dentro; no
-  // reserva una columna fija como en escritorio.
-  const { anchoNav, anchoPantalla, seDesplaza } = await page.evaluate(() => {
-    const nav = document.querySelector('nav[aria-label="Navegación principal"]') as HTMLElement
-    return {
-      anchoNav: Math.round(nav.getBoundingClientRect().width),
-      anchoPantalla: document.documentElement.clientWidth,
-      seDesplaza: nav.scrollWidth > nav.clientWidth,
+/** Recorre hasta `main`, cuyo `overflow-auto` es el scroll de la página y no una franja desplazable. */
+const DETECTOR_RECORTADOS = () => {
+  const puedeDesplazarse = (el: Element) => {
+    let actual: Element | null = el
+    while (actual && actual !== document.body && actual.tagName !== 'MAIN') {
+      const overflow = getComputedStyle(actual).overflowX
+      if (overflow === 'auto' || overflow === 'scroll') return true
+      actual = actual.parentElement
     }
+    return false
+  }
+  return Array.from(
+    document.querySelectorAll('main p, main span, main h1, main h2, main h3, main td, main th, main button, main a'),
+  )
+    .filter((el) => (el.textContent ?? '').trim().length > 0)
+    .filter((el) => el.scrollWidth > el.clientWidth + 1 && el.clientWidth > 0)
+    .filter((el) => !puedeDesplazarse(el))
+    .map((el) => `${(el.textContent ?? '').trim().slice(0, 40)} (${el.scrollWidth}>${el.clientWidth})`)
+}
+
+for (const ancho of [320, 375, 768, 1280]) {
+  test(`ninguna pantalla desborda ni recorta texto a ${ancho}px`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: 900 })
+    await mockTodo(page)
+
+    const problemas: string[] = []
+    for (const ruta of RUTAS) {
+      await page.goto(ruta)
+      await page.waitForSelector('main', { timeout: 15_000 })
+      await page.waitForTimeout(500)
+
+      // Control del propio barrido: una pantalla que no pinta nada no desborda
+      // nunca. Sin esto, un fallo de la sesión simulada daría 22 verdes falsos.
+      const largo = await page.evaluate(() => (document.querySelector('main')?.innerText ?? '').trim().length)
+      expect(largo, `${ruta} no pintó contenido: el barrido no estaría probando nada`).toBeGreaterThan(20)
+
+      const exceso = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      )
+      if (exceso > 1) problemas.push(`${ruta}: el documento se desplaza en horizontal (+${exceso}px)`)
+
+      for (const recortado of await page.evaluate(DETECTOR_RECORTADOS)) {
+        problemas.push(`${ruta}: texto recortado — ${recortado}`)
+      }
+    }
+
+    expect(problemas, `problemas de responsividad a ${ancho}px`).toEqual([])
   })
-  expect(anchoNav).toBeGreaterThan(anchoPantalla * 0.9)
-  expect(seDesplaza).toBe(true)
+}
+
+test('canario: el detector de texto recortado no está ciego', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await mockTodo(page)
+  await page.goto('/')
+  await page.waitForSelector('main', { timeout: 15_000 })
+
+  await page.evaluate(() => {
+    const caja = document.createElement('div')
+    caja.style.cssText = 'width:60px;overflow:hidden'
+    const parrafo = document.createElement('p')
+    parrafo.style.cssText = 'white-space:nowrap'
+    parrafo.textContent = 'ESTE TEXTO NO CABE DE NINGUNA MANERA'
+    caja.appendChild(parrafo)
+    document.querySelector('main')!.appendChild(caja)
+  })
+
+  const encontrados = await page.evaluate(DETECTOR_RECORTADOS)
+  expect(encontrados.join(' '), 'el detector no vio un texto deliberadamente recortado').toContain(
+    'ESTE TEXTO NO CABE',
+  )
 })

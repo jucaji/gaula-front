@@ -45,7 +45,12 @@ function AdminCatalogsPage() {
       <AdminNav />
       <h1 className="text-lg font-semibold text-text-primary">Importar enrutamiento territorial</h1>
       <p className="mt-1 max-w-2xl text-sm text-text-secondary">
-        CSV con columnas <code className="font-mono text-xs">municipalityCode,territorialUnitCode,effectiveDate</code>{' '}
+        {/* `break-all`: la lista de columnas es un solo token sin espacios y, sin
+            esto, se salía de su párrafo en pantallas angostas (medido a 320 y
+            375 px). Partir una cadena técnica entre caracteres es aceptable;
+            recortarla la vuelve ilegible. */}
+        CSV con columnas{' '}
+        <code className="break-all font-mono text-xs">municipalityCode,territorialUnitCode,effectiveDate</code>{' '}
         (fecha ISO). Una fila con datos malos se reporta y no afecta al resto del archivo.
       </p>
 
