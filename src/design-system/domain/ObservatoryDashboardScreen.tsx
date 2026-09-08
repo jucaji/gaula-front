@@ -6,6 +6,8 @@ import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
 import { IncidentDashboardView } from './IncidentDashboardView'
+import { IncidentAnalysisPanel } from './IncidentAnalysisPanel'
+import { useIncidentAnalysis } from '@/lib/observatory/useIncidentAnalysis'
 import { dashboardExportUrl, useIncidentDashboard, type DashboardFilters } from '@/lib/observatory/useIncidentDashboard'
 import { PROFILE_LABEL, type IncidentProfile } from '@/lib/observatory/types'
 
@@ -32,6 +34,8 @@ export function ObservatoryDashboardScreen({
   departmentHref?: (department: string) => { to: string; params: Record<string, string> }
 }) {
   const { data, isLoading, isError, error } = useIncidentDashboard(profile, filters)
+  // Consulta APARTE: el tablero no espera al análisis para pintarse (SPEC-0805 CA-2).
+  const analysis = useIncidentAnalysis(profile, filters)
   const [exporting, setExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
 
@@ -141,6 +145,7 @@ export function ObservatoryDashboardScreen({
             {data.total.toLocaleString('es-CO')} {data.total === 1 ? 'hecho' : 'hechos'} de{' '}
             {PROFILE_LABEL[profile].toLowerCase()} en el corte vigente con estos filtros.
           </p>
+          {analysis.data && <IncidentAnalysisPanel analysis={analysis.data} />}
           <IncidentDashboardView
             profile={profile}
             dashboard={data}

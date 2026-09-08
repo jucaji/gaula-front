@@ -180,3 +180,34 @@ export interface Bulletin {
     previousKidnappingTotal: number
   } | null
 }
+
+/** SPEC-0805: lo que el análisis estadístico agrega. `available: false` es una respuesta válida. */
+export interface IncidentAnalysis {
+  available: boolean
+  unavailableReason?: string | null
+  snapshotId?: string | null
+  trend: { month: string; observed: number; trend?: number | null; seasonal?: number | null }[]
+  variations: {
+    label: string
+    current: number
+    previous: number
+    changePct?: number | null
+    lowerPct?: number | null
+    upperPct?: number | null
+    significant: boolean
+    explanation: string
+  }[]
+  anomalies: {
+    municipalityCode?: string | null
+    municipalityText: string
+    month: string
+    observed: number
+    expected: number
+    zScore: number
+    explanation: string
+  }[]
+  hotspots: { clusterId: number; municipalities: string[]; totalCount: number }[]
+  /** CA-3: proyección, NUNCA dato. Viaja en su propia lista, con banda. */
+  forecast: { month: string; projected: number; lower: number; upper: number }[]
+  notes: string[]
+}
