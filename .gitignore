@@ -43,3 +43,6 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+
+# Configuración local de la herramienta de desarrollo, no del proyecto.
+.claude/
