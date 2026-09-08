@@ -540,7 +540,7 @@ function CaptureIncidentForm({ onDone }: { onDone: () => void }) {
 
       <p className="mt-3 text-2xs text-text-muted">
         {dynamicCount > 0
-          ? `${dynamicCount} de estas columnas están declaradas en el perfil ${profile?.code ?? ''} v${profile?.version ?? ''}, no en el código.`
+          ? `${dynamicCount === 1 ? 'Una de estas columnas está declarada' : `${dynamicCount} de estas columnas están declaradas`} en el perfil ${profile?.code ?? ''} v${profile?.version ?? ''}, no en el código.`
           : 'Este perfil no declara columnas adicionales.'}{' '}
         Para agregar otra columna del archivo se publica una versión nueva del perfil y aparece aquí, en la carga y en
         la tabla sin desplegar la consola (SPEC-0806 CA-2).
@@ -587,6 +587,7 @@ function CaptureField({
         {field.required && <span className="text-critical"> *</span>}
         {field.dynamic && (
           <span className="ml-1 font-sans normal-case text-text-muted" title="Columna declarada en el perfil">
+            {' '}
             (columna del perfil)
           </span>
         )}
