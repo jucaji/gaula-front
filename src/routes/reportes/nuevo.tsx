@@ -102,7 +102,7 @@ function NewReportPage() {
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="mx-auto w-full max-w-2xl">
       <h1 className="text-lg font-semibold text-text-primary">Nuevo reporte operacional</h1>
       {template.data.provisional && (
         <p className="mt-1 text-2xs text-alert">

@@ -63,7 +63,7 @@ function NewCasePage() {
   }
 
   return (
-    <div className="max-w-xl">
+    <div className="mx-auto w-full max-w-xl">
       <h1 className="text-lg font-semibold text-text-primary">Nuevo caso</h1>
       <p className="mt-1 text-sm text-text-secondary">Sólo 3 campos son obligatorios. El resto se completa después.</p>
 
