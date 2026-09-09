@@ -187,8 +187,20 @@ test.describe('zonas táctiles en un dispositivo con dedo', () => {
           // Hay texto real alrededor: no es un contenedor que sólo envuelve al control.
           return (padre.textContent ?? '').trim().length > (el.textContent ?? '').trim().length + 3
         }
+        // SEGUNDA EXCEPCIÓN, también del criterio: un control oculto a la vista
+        // cuyo objetivo real es OTRO elemento. El input de archivo del cargue va
+        // `sr-only` —de 1x1— y quien lo pulsa es su `<label>`, que sí mide 44.
+        // Contar el input sería medir algo que ningún dedo puede tocar; quitarlo
+        // del DOM sería peor: el teclado y los lectores de pantalla lo necesitan.
+        const ocultoConControlEquivalente = (el: Element) => {
+          const caja = el.getBoundingClientRect()
+          if (caja.width > 2 || caja.height > 2) return false
+          const id = el.getAttribute('id')
+          return Boolean(id && document.querySelector(`label[for="${id}"]`))
+        }
         return Array.from(document.querySelectorAll(selector))
           .filter((el) => !enLineaDentroDeTexto(el))
+          .filter((el) => !ocultoConControlEquivalente(el))
           .map((el) => ({ el, caja: el.getBoundingClientRect() }))
           .filter(({ caja }) => caja.width > 0 && caja.height > 0)
           .filter(({ caja }) => caja.height < 44 || caja.width < 44)
