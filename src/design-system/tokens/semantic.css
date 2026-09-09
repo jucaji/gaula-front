@@ -7,21 +7,48 @@
  * nombre, así que cambiar de tema no toca ni una regla de componente.
  */
 @theme {
-  --color-canvas: var(--color-slate-50);
+  /*
+   * docs/06 §elevación pide que cada nivel sea "un cambio de superficie más un
+   * borde de 1 px". En claro eso no se podía cumplir: `surface` y
+   * `surface-raised` eran los DOS blanco puro, así que una tarjeta sobre el
+   * lienzo no cambiaba de superficie y la pantalla entera se veía plana
+   * (reportado por el cliente). El tema oscuro no tenía el problema porque ahí
+   * sí hay tres grises distintos.
+   *
+   * El lienzo baja un paso y las tarjetas se quedan en blanco: es el blanco el
+   * que tiene que destacar, no al revés. Los bordes suben un paso porque sobre
+   * blanco un slate-200 no se ve.
+   */
+  --color-canvas: var(--color-slate-100);
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
-  --color-surface-sunken: var(--color-slate-100);
-  --color-border: var(--color-slate-200);
-  --color-border-strong: var(--color-slate-300);
+  --color-surface-sunken: var(--color-slate-200);
+  --color-border: var(--color-slate-300);
+  --color-border-strong: var(--color-slate-400);
   --color-text-primary: var(--color-slate-900);
-  --color-text-secondary: var(--color-slate-600);
-  --color-text-muted: var(--color-slate-500);
+  /*
+   * Un paso más oscuros que antes. Al bajar el lienzo a slate-100 para que las
+   * tarjetas blancas se despeguen, el gris tenue quedó en 4.41:1 sobre ese
+   * fondo — por DEBAJO del 4.5 que exige WCAG AA, y lo detectó axe en la
+   * primera pasada. Se conservan los tres niveles de jerarquía; lo que sube es
+   * el contraste de los dos más claros.
+   */
+  --color-text-secondary: var(--color-slate-700);
+  --color-text-muted: var(--color-slate-600);
   --color-accent: var(--color-pine-600);
   --color-accent-hover: var(--color-pine-700);
   --color-accent-subtle: var(--color-pine-50);
   --color-on-accent: white;
   --color-focus-ring: var(--color-pine-500);
   --viz-surface: #f7f8f7;
+
+  /*
+   * docs/06 §elevación, nivel 2: sombra de 1 px al 6 %. NO es una nube difusa
+   * -- eso está prohibido en el sistema --, es el mínimo que despega una tarjeta
+   * blanca de su lienzo. En oscuro se anula: allí la separación la dan los
+   * grises, y una sombra negra sobre negro no aporta nada.
+   */
+  --shadow-raised: 0 1px 2px rgb(15 23 42 / 0.06);
 
   --color-critical: var(--color-critical-light);
   --color-alert: var(--color-alert-light);
@@ -94,6 +121,7 @@
   --color-surface-sunken: #101317;
   --color-border: var(--color-slate-800);
   --color-border-strong: var(--color-slate-700);
+  --shadow-raised: none;
   --color-text-primary: var(--color-slate-50);
   --color-text-secondary: var(--color-slate-300);
   --color-text-muted: var(--color-slate-400);
@@ -123,6 +151,7 @@
     --color-surface-sunken: #101317;
     --color-border: var(--color-slate-800);
     --color-border-strong: var(--color-slate-700);
+    --shadow-raised: none;
     --color-text-primary: var(--color-slate-50);
     --color-text-secondary: var(--color-slate-300);
     --color-text-muted: var(--color-slate-400);

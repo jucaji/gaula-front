@@ -19,6 +19,19 @@ html {
 }
 
 /*
+ * docs/06 §elevación, nivel 2: "cambio de superficie + borde de 1 px + sombra
+ * 0 1px 2px / 6 %". La sombra faltaba en toda la consola.
+ *
+ * Va aquí y no en cada componente porque es una regla del SISTEMA: todo lo que
+ * se declara superficie elevada es nivel 2 por definición. En oscuro el token
+ * vale `none` — allí la separación la dan los tres grises, y una sombra negra
+ * sobre negro no aporta nada.
+ */
+.bg-surface-raised {
+  box-shadow: var(--shadow-raised);
+}
+
+/*
  * SPEC-0807 — el globo del mapa.
  *
  * MapLibre trae su globo en blanco con texto oscuro, fijo. Sobre el tema oscuro
