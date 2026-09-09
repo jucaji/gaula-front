@@ -102,6 +102,7 @@ export function IncidentMap({
   // El último GeoJSON conocido de cada capa, para que su fuente nazca ya con él.
   const pendingDataRef = useRef<FeatureCollection>(emptyCollection())
   const pendingDepartmentsRef = useRef<FeatureCollection>(emptyCollection())
+  const viewRef = useRef(view)
   useEffect(() => {
     onSelectRef.current = onSelect
     onSelectDepartmentRef.current = onSelectDepartment
@@ -176,33 +177,6 @@ export function IncidentMap({
     source?.setData(departmentCollection)
   }, [departmentCollection])
 
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !map.getLayer('departamentos-relleno')) return
-    // Las dos vistas son excluyentes: superponerlas convierte un mapa en un
-    // adorno del que ya no se puede leer ninguna de las dos cosas.
-    const visible = (id: string, mostrar: boolean) =>
-      map.setLayoutProperty(id, 'visibility', mostrar ? 'visible' : 'none')
-    visible('departamentos-relleno', view === 'departamentos')
-    // El contorno queda en las DOS vistas: es lo que le da ubicación a un punto.
-    visible('departamentos-borde', true)
-    visible('municipios', view === 'puntos')
-    visible('focos', view === 'puntos')
-    visible('seleccionado', view === 'puntos')
-
-    // En la coropleta el COLOR es el mapa: el terreno del mapa base se mezcla con
-    // el relleno y deja de leerse cuál es cuál (visto en vivo — la escala de
-    // conteos quedaba ahogada bajo el verde del relieve). Se apaga todo lo que
-    // pinta superficie y quedan sólo el agua y los nombres, que dan referencia
-    // sin competir. Vuelve entero con los puntos, donde sí sirve para ubicar un
-    // círculo.
-    const DETALLE = ['roads', 'buildings', 'landuse', 'landcover', 'earth', 'pois', 'address']
-    for (const capa of map.getStyle().layers) {
-      if (DETALLE.some((prefijo) => capa.id.startsWith(prefijo))) {
-        visible(capa.id, view === 'puntos')
-      }
-    }
-  }, [view, geometry.data])
 
   const [conBasemap, setConBasemap] = useState<boolean | null>(null)
   useEffect(() => {
@@ -289,7 +263,11 @@ export function IncidentMap({
         source: 'hechos',
         filter: ['==', ['get', 'hotspot'], true],
         paint: {
-          'circle-radius': ['+', ['get', 'radius'], 9],
+          'circle-radius': [
+            '+',
+            ['*', ['get', 'radius'], ['interpolate', ['linear'], ['zoom'], 4, 0.7, 6, 1, 9, 1.4]],
+            9,
+          ],
           'circle-color': foco,
           'circle-opacity': 0.18,
           'circle-stroke-width': 1,
@@ -303,7 +281,16 @@ export function IncidentMap({
         type: 'circle',
         source: 'hechos',
         paint: {
-          'circle-radius': ['get', 'radius'],
+          // El radio del dato, ajustado por zoom. A nivel país los círculos de
+          // municipios vecinos se solapan hasta volverse una mancha (el Valle de
+          // Aburrá son cuatro pegados); al acercarse hay sitio y pueden crecer.
+          // La proporción ENTRE círculos no cambia: el factor multiplica a todos
+          // por igual, así que el área sigue diciendo lo mismo.
+          'circle-radius': [
+            '*',
+            ['get', 'radius'],
+            ['interpolate', ['linear'], ['zoom'], 4, 0.7, 6, 1, 9, 1.4],
+          ],
           'circle-color': ['case', ['get', 'anomaly'], anomalia, marca],
           'circle-opacity': 0.75,
           // El anillo blanco despega los círculos que se solapan (el Valle de
@@ -319,7 +306,11 @@ export function IncidentMap({
         source: 'hechos',
         filter: ['==', ['get', 'selected'], true],
         paint: {
-          'circle-radius': ['+', ['get', 'radius'], 5],
+          'circle-radius': [
+            '+',
+            ['*', ['get', 'radius'], ['interpolate', ['linear'], ['zoom'], 4, 0.7, 6, 1, 9, 1.4]],
+            5,
+          ],
           'circle-color': 'transparent',
           'circle-stroke-width': 2,
           'circle-stroke-color': marca,
@@ -378,6 +369,10 @@ export function IncidentMap({
         onSelectDepartmentRef.current(nombre === selectedDepartmentRef.current ? undefined : nombre)
       })
 
+      // El estilo ya tiene todas sus capas: es el momento seguro para dejar
+      // visible sólo lo de la vista actual.
+      applyVisibility(map, viewRef.current)
+
       map.on('click', 'municipios', (event) => {
         const feature = event.features?.[0]
         if (!feature) return
@@ -414,6 +409,23 @@ export function IncidentMap({
     const source = map?.getSource('hechos') as maplibregl.GeoJSONSource | undefined
     source?.setData(pendingDataRef.current)
   }, [collection, maxCount, selectedMunicipalityCode])
+
+  /**
+   * HALLAZGO REAL (reportado por el cliente): al entrar al modo lámina el mapa se
+   * DESMONTA, y al volver se construye uno nuevo. Este efecto llegaba antes de
+   * que el estilo tuviera sus capas, salía temprano por el `getLayer` y no volvía
+   * a correr —la vista no había cambiado—, así que TODAS las capas quedaban
+   * visibles: los polígonos de departamentos y los círculos superpuestos, que al
+   * acercar el zoom son ilegibles.
+   *
+   * <p>Por eso la visibilidad se aplica desde una función y se llama también al
+   * terminar de cargar el estilo, que es el único momento en que existen con
+   * seguridad todas las capas.
+   */
+  useEffect(() => {
+    viewRef.current = view
+    applyVisibility(mapRef.current, view)
+  }, [view, geometry.data, conBasemap])
 
   const sinUbicar = total - mappedTotal
 
@@ -496,6 +508,34 @@ export function IncidentMap({
       </p>
     </section>
   )
+}
+
+/**
+ * Las dos vistas son excluyentes: superponerlas convierte el mapa en un adorno
+ * del que ya no se puede leer ninguna de las dos cosas.
+ */
+function applyVisibility(map: maplibregl.Map | null, view: 'puntos' | 'departamentos'): void {
+  if (!map || !map.getLayer('departamentos-relleno')) return
+  const visible = (id: string, mostrar: boolean) =>
+    map.setLayoutProperty(id, 'visibility', mostrar ? 'visible' : 'none')
+
+  visible('departamentos-relleno', view === 'departamentos')
+  // El contorno queda en las DOS vistas: es lo que le da ubicación a un punto.
+  visible('departamentos-borde', true)
+  visible('municipios', view === 'puntos')
+  visible('focos', view === 'puntos')
+  visible('seleccionado', view === 'puntos')
+
+  // En la coropleta el COLOR es el mapa: el terreno del mapa base se mezcla con el
+  // relleno y deja de leerse cuál es cuál. Se apaga todo lo que pinta superficie y
+  // quedan sólo el agua y los nombres, que dan referencia sin competir. Vuelve
+  // entero con los puntos, donde sí sirve para ubicar un círculo.
+  const DETALLE = ['roads', 'buildings', 'landuse', 'landcover', 'earth', 'pois', 'address']
+  for (const capa of map.getStyle().layers) {
+    if (DETALLE.some((prefijo) => capa.id.startsWith(prefijo))) {
+      visible(capa.id, view === 'puntos')
+    }
+  }
 }
 
 function Leyenda({ color, texto }: { color: string; texto: string }) {
