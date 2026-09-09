@@ -280,3 +280,31 @@ test('S13.FE.01: un HOTLINE_OPERATOR no entra al observatorio ni lo ve en el men
   await expect(page).toHaveURL(/\/\?denied=OBSERVATORY/)
   await expect(page.getByRole('link', { name: 'Observatorio' })).toBeHidden()
 })
+
+test('S13.FE.01: el archivo se elige con un BOTÓN visible, no con el control crudo del navegador', async ({ page }) => {
+  await mockSession(page, ANALYST_SESSION)
+  await mockActiveSnapshot(page, SNAPSHOT)
+  await page.route('**/api/v1/observatory/profiles', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([PROFILE]) }),
+  )
+
+  await page.goto('/observatorio/cargue')
+
+  // El input nativo se dibuja como texto suelto y nadie lo lee como pulsable
+  // (reportado por el cliente). Delante va un botón de verdad.
+  await expect(page.getByText('Seleccionar archivo')).toBeVisible()
+  await expect(page.getByText('Ningún archivo seleccionado')).toBeVisible()
+
+  // Pero el input SIGUE ahí, enfocable y con su nombre accesible: el teclado y
+  // los lectores de pantalla lo necesitan.
+  await page.getByLabel('Archivo').setInputFiles({
+    name: 'DELITO EXTORSION - SECUESTRO.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    buffer: Buffer.from('PK-fake-xlsx'),
+  })
+
+  // Elegido el archivo, el botón cambia de intención y el nombre queda a la vista:
+  // saber qué se va a cargar es parte de la decisión de confirmar el corte.
+  await expect(page.getByText('Cambiar archivo')).toBeVisible()
+  await expect(page.getByText('DELITO EXTORSION - SECUESTRO.xlsx')).toBeVisible()
+})

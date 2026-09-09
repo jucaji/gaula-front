@@ -1,7 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, FileSpreadsheet } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileSpreadsheet,
+  Upload,
+} from "lucide-react";
 import { customFetch } from "@/api/client";
 import { Button } from "@/design-system/primitives/Button";
 import { Input } from "@/design-system/primitives/Input";
@@ -285,10 +290,22 @@ function ObservatoryImportPage() {
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-xs text-text-secondary">
-            Archivo (.xlsx)
+          {/*
+            El input de archivo del navegador se dibuja como texto suelto
+            ("Seleccionar archivo · Sin archivos seleccionados") y nadie lo lee
+            como algo que se pueda pulsar (reportado por el cliente). Se oculta el
+            control nativo y se pone un BOTÓN de verdad delante.
+
+            El input no se quita ni se reemplaza por un `onClick`: sigue en el
+            DOM, enfocable y asociado a su etiqueta, así que el teclado y los
+            lectores de pantalla lo siguen encontrando. El `peer-focus-visible`
+            traslada el anillo de foco al botón, que es lo que se ve.
+          */}
+          <div className="flex flex-col gap-1 text-xs text-text-secondary">
+            <span id="archivo-etiqueta">Archivo (.xlsx)</span>
             <input
               ref={fileInputRef}
+              id="archivo"
               type="file"
               accept=".xlsx"
               aria-label="Archivo"
@@ -297,16 +314,36 @@ function ObservatoryImportPage() {
                 setPreview(null);
                 setJob(null);
               }}
-              className="min-h-[var(--tap-min)] text-sm text-text-primary"
+              className="peer sr-only"
             />
-          </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <label
+                htmlFor="archivo"
+                className="inline-flex min-h-[var(--tap-min)] cursor-pointer items-center gap-2 rounded-sm border border-border-strong bg-surface-raised px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-surface-sunken peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-focus-ring sm:min-h-0"
+              >
+                <Upload size={16} strokeWidth={1.5} aria-hidden />
+                {fileName ? "Cambiar archivo" : "Seleccionar archivo"}
+              </label>
 
-          {fileName && (
-            <p className="flex items-center gap-2 text-2xs text-text-muted">
-              <FileSpreadsheet size={14} strokeWidth={1.5} aria-hidden />{" "}
-              {fileName}
-            </p>
-          )}
+              {/* El nombre va JUNTO al botón: saber qué archivo está cargado es
+                  parte de la decisión de confirmar el corte. */}
+              {fileName ? (
+                <span className="flex min-w-0 items-center gap-2 text-2xs text-text-primary">
+                  <FileSpreadsheet
+                    size={14}
+                    strokeWidth={1.5}
+                    className="shrink-0 text-text-muted"
+                    aria-hidden
+                  />
+                  <span className="truncate">{fileName}</span>
+                </span>
+              ) : (
+                <span className="text-2xs text-text-muted">
+                  Ningún archivo seleccionado
+                </span>
+              )}
+            </div>
+          </div>
 
           <div className="flex items-center gap-2">
             <Button
