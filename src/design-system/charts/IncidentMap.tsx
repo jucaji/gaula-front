@@ -99,8 +99,9 @@ export function IncidentMap({
   const onSelectDepartmentRef = useRef(onSelectDepartment)
   const selectedMunicipalityCodeRef = useRef(selectedMunicipalityCode)
   const selectedDepartmentRef = useRef(selectedDepartment)
-  // El último GeoJSON conocido, para que la fuente nazca ya con él.
+  // El último GeoJSON conocido de cada capa, para que su fuente nazca ya con él.
   const pendingDataRef = useRef<FeatureCollection>(emptyCollection())
+  const pendingDepartmentsRef = useRef<FeatureCollection>(emptyCollection())
   useEffect(() => {
     onSelectRef.current = onSelect
     onSelectDepartmentRef.current = onSelectDepartment
@@ -161,7 +162,15 @@ export function IncidentMap({
     }
   }, [geometry.data, byDepartment, theme, selectedDepartment])
 
+  /**
+   * Mismo patrón que la capa de hechos, y por el mismo hallazgo: la geometría
+   * llega en su propia consulta y el mapa se recrea al saber si hay mapa base.
+   * Si la actualización cae entre medias, `setData` no encuentra la fuente y se
+   * pierde en silencio — el mapa se quedaba SIN coropleta, con la capa visible y
+   * cero features (visto en vivo). Guardándola, la fuente nace con el dato.
+   */
   useEffect(() => {
+    pendingDepartmentsRef.current = departmentCollection
     const map = mapRef.current
     const source = map?.getSource('departamentos') as maplibregl.GeoJSONSource | undefined
     source?.setData(departmentCollection)
@@ -180,6 +189,19 @@ export function IncidentMap({
     visible('municipios', view === 'puntos')
     visible('focos', view === 'puntos')
     visible('seleccionado', view === 'puntos')
+
+    // En la coropleta el COLOR es el mapa: el terreno del mapa base se mezcla con
+    // el relleno y deja de leerse cuál es cuál (visto en vivo — la escala de
+    // conteos quedaba ahogada bajo el verde del relieve). Se apaga todo lo que
+    // pinta superficie y quedan sólo el agua y los nombres, que dan referencia
+    // sin competir. Vuelve entero con los puntos, donde sí sirve para ubicar un
+    // círculo.
+    const DETALLE = ['roads', 'buildings', 'landuse', 'landcover', 'earth', 'pois', 'address']
+    for (const capa of map.getStyle().layers) {
+      if (DETALLE.some((prefijo) => capa.id.startsWith(prefijo))) {
+        visible(capa.id, view === 'puntos')
+      }
+    }
   }, [view, geometry.data])
 
   const [conBasemap, setConBasemap] = useState<boolean | null>(null)
@@ -233,14 +255,16 @@ export function IncidentMap({
     map.on('load', () => {
       // La coropleta va DEBAJO de los puntos: son dos lecturas del mismo dato y
       // la de abajo no puede tapar la de arriba.
-      map.addSource('departamentos', { type: 'geojson', data: emptyCollection() })
+      map.addSource('departamentos', { type: 'geojson', data: pendingDepartmentsRef.current })
       map.addLayer({
         id: 'departamentos-relleno',
         type: 'fill',
         source: 'departamentos',
         paint: {
           'fill-color': ['case', ['==', ['get', 'count'], -1], 'transparent', ['get', 'color']],
-          'fill-opacity': 0.75,
+          // Opaco: con el terreno apagado debajo, media tinta sólo serviría para
+          // desteñir la escala.
+          'fill-opacity': 0.92,
         },
       })
       map.addLayer({
