@@ -263,10 +263,16 @@ export function IncidentMap({
         source: 'hechos',
         filter: ['==', ['get', 'hotspot'], true],
         paint: {
+          // `zoom` SÓLO es válido en el nivel superior de un `interpolate`: dentro
+          // de un `*` MapLibre rechaza la capa entera y la deja sin crear, sin más
+          // rastro que un error en consola (hallazgo real: desaparecieron los tres
+          // círculos a la vez). Por eso el factor se aplica en cada parada.
           'circle-radius': [
-            '+',
-            ['*', ['get', 'radius'], ['interpolate', ['linear'], ['zoom'], 4, 0.7, 6, 1, 9, 1.4]],
-            9,
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            4, ['+', ['get', 'radius'], 9],
+            9, ['+', ['*', ['get', 'radius'], 1.3], 9],
           ],
           'circle-color': foco,
           'circle-opacity': 0.18,
@@ -281,15 +287,17 @@ export function IncidentMap({
         type: 'circle',
         source: 'hechos',
         paint: {
-          // El radio del dato, ajustado por zoom. A nivel país los círculos de
-          // municipios vecinos se solapan hasta volverse una mancha (el Valle de
-          // Aburrá son cuatro pegados); al acercarse hay sitio y pueden crecer.
-          // La proporción ENTRE círculos no cambia: el factor multiplica a todos
-          // por igual, así que el área sigue diciendo lo mismo.
+          // El radio del dato, con un crecimiento suave al acercar. NO se encoge
+          // a nivel país: probando con 0.7 los círculos quedaron casi invisibles
+          // sobre el mapa base, que es peor que el solapamiento que intentaba
+          // evitar. La proporción ENTRE círculos no cambia -- el factor multiplica
+          // a todos por igual --, así que el área sigue diciendo lo mismo.
           'circle-radius': [
-            '*',
-            ['get', 'radius'],
-            ['interpolate', ['linear'], ['zoom'], 4, 0.7, 6, 1, 9, 1.4],
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            4, ['get', 'radius'],
+            9, ['*', ['get', 'radius'], 1.3],
           ],
           'circle-color': ['case', ['get', 'anomaly'], anomalia, marca],
           'circle-opacity': 0.75,
@@ -307,9 +315,11 @@ export function IncidentMap({
         filter: ['==', ['get', 'selected'], true],
         paint: {
           'circle-radius': [
-            '+',
-            ['*', ['get', 'radius'], ['interpolate', ['linear'], ['zoom'], 4, 0.7, 6, 1, 9, 1.4]],
-            5,
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            4, ['+', ['get', 'radius'], 5],
+            9, ['+', ['*', ['get', 'radius'], 1.3], 5],
           ],
           'circle-color': 'transparent',
           'circle-stroke-width': 2,
