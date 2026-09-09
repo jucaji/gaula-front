@@ -1,9 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
+import { Protocol } from 'pmtiles'
+import { layers as basemapLayers, namedFlavor } from '@protomaps/basemaps'
 import { getCategoricalPalette, getSequentialPalette, getVizSurface } from '@/design-system/charts/palette'
 import { useDepartmentGeometry } from '@/lib/catalog/useDepartmentGeometry'
 import { useResolvedTheme } from '@/lib/theme/useResolvedTheme'
 import type { MapPoint } from '@/lib/observatory/types'
+
+/** El archivo del mapa base, servido por el propio backend (ver infra/basemap). */
+const BASEMAP_URL = '/basemap/colombia-z10.pmtiles'
+
+/**
+ * El protocolo `pmtiles://` se registra UNA vez por página: MapLibre lo guarda
+ * en un registro global, y volver a registrarlo en cada montaje del mapa deja
+ * manejadores colgando.
+ */
+let protocoloRegistrado = false
+function ensurePmtilesProtocol(): void {
+  if (protocoloRegistrado) return
+  const protocol = new Protocol()
+  maplibregl.addProtocol('pmtiles', protocol.tile)
+  protocoloRegistrado = true
+}
+
+/**
+ * ¿Está el mapa base desplegado? Se pregunta UNA vez y se recuerda: el archivo
+ * es un artefacto de despliegue y no aparece a mitad de sesión.
+ *
+ * <p>Sin él la consola no se rompe: se dibuja el fondo plano con los límites
+ * departamentales, que vienen de la base. Es degradación honesta — se ve menos,
+ * no se rompe nada.
+ */
+let basemapDisponible: Promise<boolean> | null = null
+function checkBasemap(): Promise<boolean> {
+  basemapDisponible ??= fetch(BASEMAP_URL, { method: 'HEAD', credentials: 'include' })
+    .then((response) => response.ok)
+    .catch(() => false)
+  return basemapDisponible
+}
 
 /**
  * SPEC-0807: el mapa del registro nacional.
@@ -148,23 +182,50 @@ export function IncidentMap({
     visible('seleccionado', view === 'puntos')
   }, [view, geometry.data])
 
+  const [conBasemap, setConBasemap] = useState<boolean | null>(null)
   useEffect(() => {
-    if (!containerRef.current) return
+    let vigente = true
+    void checkBasemap().then((disponible) => {
+      if (vigente) setConBasemap(disponible)
+    })
+    return () => {
+      vigente = false
+    }
+  }, [])
+
+  useEffect(() => {
+    // Se espera a saber si hay mapa base antes de construir: recrear el mapa
+    // después haría parpadear la pantalla en cada carga.
+    if (!containerRef.current || conBasemap === null) return
     ensureMaplibreCss()
+    ensurePmtilesProtocol()
     const marca = colorMarca
     const foco = colorFoco
     const anomalia = colorAnomalia
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: {
-        version: 8,
-        sources: {},
-        layers: [{ id: 'background', type: 'background', paint: { 'background-color': getVizSurface(theme) } }],
-      },
+      style: conBasemap
+        ? {
+            version: 8,
+            // Las fuentes de las etiquetas también son locales: sin glyphs el
+            // mapa se dibuja mudo, sin un solo nombre.
+            glyphs: '/basemap/glyphs/{fontstack}/{range}.pbf',
+            sources: { protomaps: { type: 'vector', url: `pmtiles://${window.location.origin}${BASEMAP_URL}` } },
+            layers: basemapLayers('protomaps', namedFlavor(theme === 'dark' ? 'dark' : 'light'), { lang: 'es' }),
+          }
+        : {
+            version: 8,
+            sources: {},
+            layers: [{ id: 'background', type: 'background', paint: { 'background-color': getVizSurface(theme) } }],
+          },
       center: [-74.3, 4.6],
       zoom: 4.4,
-      attributionControl: false,
+      // La atribución es OBLIGATORIA: las teselas derivan de OpenStreetMap, que
+      // se distribuye bajo ODbL. No es un adorno que se pueda quitar.
+      attributionControl: conBasemap
+        ? { compact: true, customAttribution: '© OpenStreetMap · Protomaps' }
+        : false,
     })
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
     mapRef.current = map
@@ -307,8 +368,8 @@ export function IncidentMap({
       map.remove()
       mapRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- el estilo se recrea sólo al cambiar de tema; los datos se actualizan abajo sin recrear el mapa
-  }, [theme])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- el estilo se recrea al cambiar de tema o al saber si hay mapa base; los datos se actualizan abajo sin recrear el mapa
+  }, [theme, conBasemap])
 
   /**
    * HALLAZGO REAL (verificado en vivo, 2026-09-08): el mapa marcaba los focos

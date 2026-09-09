@@ -39,6 +39,10 @@ export default defineConfig({
       '/api': { target: 'http://localhost:8080', changeOrigin: true },
       '/oauth2': { target: 'http://localhost:8080', changeOrigin: true },
       '/login': { target: 'http://localhost:8080', changeOrigin: true },
+      // SPEC-0807: el mapa base (PMTiles y glyphs) lo sirve el backend, no Vite:
+      // son 24 MB que no tienen por qué estar en `public/`, y así el camino de
+      // desarrollo es el mismo que el de producción.
+      '/basemap': { target: 'http://localhost:8080', changeOrigin: true },
       // HALLAZGO (sin resolver, sólo en este entorno de dos servidores de
       // dev): el POST a `/logout` (CSRF-protegido) responde 403 "Invalid
       // CORS request" -- viene de `DefaultCorsProcessor` de Spring, que ve
