@@ -46,7 +46,191 @@ import { customFetch } from '../../client';
 
 
 
-export type searchResponse200 = {
+export type findByIdResponse200 = {
+  data: VehicleResponse
+  status: 200
+}
+    
+export type findByIdResponseSuccess = (findByIdResponse200) & {
+  headers: Headers;
+};
+;
+
+export type findByIdResponse = (findByIdResponseSuccess)
+
+export const getFindByIdUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/vehicles/${vehicleId}`
+}
+
+export const findById = async (vehicleId: string, options?: RequestInit): Promise<findByIdResponse> => {
+  
+  return customFetch<findByIdResponse>(getFindByIdUrl(vehicleId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getFindByIdQueryKey = (vehicleId?: string,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}`
+    ] as const;
+    }
+
+    
+export const getFindByIdQueryOptions = <TData = Awaited<ReturnType<typeof findById>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFindByIdQueryKey(vehicleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof findById>>> = () => findById(vehicleId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof findById>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FindByIdQueryResult = NonNullable<Awaited<ReturnType<typeof findById>>>
+export type FindByIdQueryError = unknown
+
+
+export function useFindById<TData = Awaited<ReturnType<typeof findById>>, TError = unknown>(
+ vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findById>>,
+          TError,
+          Awaited<ReturnType<typeof findById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFindById<TData = Awaited<ReturnType<typeof findById>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof findById>>,
+          TError,
+          Awaited<ReturnType<typeof findById>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFindById<TData = Awaited<ReturnType<typeof findById>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFindById<TData = Awaited<ReturnType<typeof findById>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFindByIdQueryOptions(vehicleId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type updateResponse200 = {
+  data: VehicleResponse
+  status: 200
+}
+    
+export type updateResponseSuccess = (updateResponse200) & {
+  headers: Headers;
+};
+;
+
+export type updateResponse = (updateResponseSuccess)
+
+export const getUpdateUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/vehicles/${vehicleId}`
+}
+
+export const update = async (vehicleId: string,
+    updateVehicleRequest: UpdateVehicleRequest, options?: RequestInit): Promise<updateResponse> => {
+  
+  return customFetch<updateResponse>(getUpdateUrl(vehicleId),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      updateVehicleRequest,)
+  }
+);}
+
+
+
+
+export const getUpdateMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update>>, TError,{vehicleId: string;data: UpdateVehicleRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof update>>, TError,{vehicleId: string;data: UpdateVehicleRequest}, TContext> => {
+
+const mutationKey = ['update'];
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof update>>, {vehicleId: string;data: UpdateVehicleRequest}> = (props) => {
+          const {vehicleId,data} = props ?? {};
+
+          return  update(vehicleId,data,)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMutationResult = NonNullable<Awaited<ReturnType<typeof update>>>
+    export type UpdateMutationBody = UpdateVehicleRequest
+    export type UpdateMutationError = unknown
+
+    export const useUpdate = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update>>, TError,{vehicleId: string;data: UpdateVehicleRequest}, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof update>>,
+        TError,
+        {vehicleId: string;data: UpdateVehicleRequest},
+        TContext
+      > => {
+
+      const mutationOptions = getUpdateMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    export type searchResponse200 = {
   data: PageResponseVehicleResponse
   status: 200
 }
@@ -699,190 +883,6 @@ const {mutation: mutationOptions} = options ?
       > => {
 
       const mutationOptions = getAssignMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    export type findById1Response200 = {
-  data: VehicleResponse
-  status: 200
-}
-    
-export type findById1ResponseSuccess = (findById1Response200) & {
-  headers: Headers;
-};
-;
-
-export type findById1Response = (findById1ResponseSuccess)
-
-export const getFindById1Url = (vehicleId: string,) => {
-
-
-  
-
-  return `/api/v1/vehicles/${vehicleId}`
-}
-
-export const findById1 = async (vehicleId: string, options?: RequestInit): Promise<findById1Response> => {
-  
-  return customFetch<findById1Response>(getFindById1Url(vehicleId),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-
-
-export const getFindById1QueryKey = (vehicleId?: string,) => {
-    return [
-    `/api/v1/vehicles/${vehicleId}`
-    ] as const;
-    }
-
-    
-export const getFindById1QueryOptions = <TData = Awaited<ReturnType<typeof findById1>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById1>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getFindById1QueryKey(vehicleId);
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof findById1>>> = () => findById1(vehicleId, );
-
-      
-
-      
-
-   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof findById1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type FindById1QueryResult = NonNullable<Awaited<ReturnType<typeof findById1>>>
-export type FindById1QueryError = unknown
-
-
-export function useFindById1<TData = Awaited<ReturnType<typeof findById1>>, TError = unknown>(
- vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById1>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof findById1>>,
-          TError,
-          Awaited<ReturnType<typeof findById1>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFindById1<TData = Awaited<ReturnType<typeof findById1>>, TError = unknown>(
- vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById1>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof findById1>>,
-          TError,
-          Awaited<ReturnType<typeof findById1>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useFindById1<TData = Awaited<ReturnType<typeof findById1>>, TError = unknown>(
- vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById1>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useFindById1<TData = Awaited<ReturnType<typeof findById1>>, TError = unknown>(
- vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof findById1>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getFindById1QueryOptions(vehicleId,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-export type update2Response200 = {
-  data: VehicleResponse
-  status: 200
-}
-    
-export type update2ResponseSuccess = (update2Response200) & {
-  headers: Headers;
-};
-;
-
-export type update2Response = (update2ResponseSuccess)
-
-export const getUpdate2Url = (vehicleId: string,) => {
-
-
-  
-
-  return `/api/v1/vehicles/${vehicleId}`
-}
-
-export const update2 = async (vehicleId: string,
-    updateVehicleRequest: UpdateVehicleRequest, options?: RequestInit): Promise<update2Response> => {
-  
-  return customFetch<update2Response>(getUpdate2Url(vehicleId),
-  {      
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      updateVehicleRequest,)
-  }
-);}
-
-
-
-
-export const getUpdate2MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update2>>, TError,{vehicleId: string;data: UpdateVehicleRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof update2>>, TError,{vehicleId: string;data: UpdateVehicleRequest}, TContext> => {
-
-const mutationKey = ['update2'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof update2>>, {vehicleId: string;data: UpdateVehicleRequest}> = (props) => {
-          const {vehicleId,data} = props ?? {};
-
-          return  update2(vehicleId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type Update2MutationResult = NonNullable<Awaited<ReturnType<typeof update2>>>
-    export type Update2MutationBody = UpdateVehicleRequest
-    export type Update2MutationError = unknown
-
-    export const useUpdate2 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update2>>, TError,{vehicleId: string;data: UpdateVehicleRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof update2>>,
-        TError,
-        {vehicleId: string;data: UpdateVehicleRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getUpdate2MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

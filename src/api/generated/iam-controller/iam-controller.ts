@@ -148,19 +148,19 @@ export function useHistory<TData = Awaited<ReturnType<typeof history>>, TError =
 
 
 
-export type update1Response200 = {
+export type update2Response200 = {
   data: AccessPolicyResponse
   status: 200
 }
     
-export type update1ResponseSuccess = (update1Response200) & {
+export type update2ResponseSuccess = (update2Response200) & {
   headers: Headers;
 };
 ;
 
-export type update1Response = (update1ResponseSuccess)
+export type update2Response = (update2ResponseSuccess)
 
-export const getUpdate1Url = () => {
+export const getUpdate2Url = () => {
 
 
   
@@ -168,9 +168,9 @@ export const getUpdate1Url = () => {
   return `/api/v1/admin/access-policies`
 }
 
-export const update1 = async (updateAccessPolicyRequest: UpdateAccessPolicyRequest, options?: RequestInit): Promise<update1Response> => {
+export const update2 = async (updateAccessPolicyRequest: UpdateAccessPolicyRequest, options?: RequestInit): Promise<update2Response> => {
   
-  return customFetch<update1Response>(getUpdate1Url(),
+  return customFetch<update2Response>(getUpdate2Url(),
   {      
     ...options,
     method: 'PUT',
@@ -183,11 +183,11 @@ export const update1 = async (updateAccessPolicyRequest: UpdateAccessPolicyReque
 
 
 
-export const getUpdate1MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update1>>, TError,{data: UpdateAccessPolicyRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof update1>>, TError,{data: UpdateAccessPolicyRequest}, TContext> => {
+export const getUpdate2MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update2>>, TError,{data: UpdateAccessPolicyRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof update2>>, TError,{data: UpdateAccessPolicyRequest}, TContext> => {
 
-const mutationKey = ['update1'];
+const mutationKey = ['update2'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -197,10 +197,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof update1>>, {data: UpdateAccessPolicyRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof update2>>, {data: UpdateAccessPolicyRequest}> = (props) => {
           const {data} = props ?? {};
 
-          return  update1(data,)
+          return  update2(data,)
         }
 
         
@@ -208,20 +208,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type Update1MutationResult = NonNullable<Awaited<ReturnType<typeof update1>>>
-    export type Update1MutationBody = UpdateAccessPolicyRequest
-    export type Update1MutationError = unknown
+    export type Update2MutationResult = NonNullable<Awaited<ReturnType<typeof update2>>>
+    export type Update2MutationBody = UpdateAccessPolicyRequest
+    export type Update2MutationError = unknown
 
-    export const useUpdate1 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update1>>, TError,{data: UpdateAccessPolicyRequest}, TContext>, }
+    export const useUpdate2 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof update2>>, TError,{data: UpdateAccessPolicyRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof update1>>,
+        Awaited<ReturnType<typeof update2>>,
         TError,
         {data: UpdateAccessPolicyRequest},
         TContext
       > => {
 
-      const mutationOptions = getUpdate1MutationOptions(options);
+      const mutationOptions = getUpdate2MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
