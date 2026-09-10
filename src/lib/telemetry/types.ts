@@ -60,6 +60,9 @@ export interface FleetSnapshotResponse {
 /** Una fila de la instantánea, ya desempaquetada a objeto. */
 export interface FleetPosition {
   vehicleId: string
+  /** La placa. Puede faltar si `resource` ya no conoce el vehículo. */
+  plate: string | null
+  vehicleType: string | null
   territorialUnitId: string
   latitude: number | null
   longitude: number | null
@@ -98,6 +101,7 @@ export interface PositionFixResponse {
 
 export interface VehicleTelemetryResponse {
   vehicleId: string
+  plate: string | null
   trackingState: TrackingState
   providerCode: string | null
   capabilities: ProviderCapabilities
@@ -157,6 +161,8 @@ export function unpackFleetSnapshot(snapshot: FleetSnapshotResponse): FleetPosit
   const index = (name: string) => snapshot.fields.indexOf(name)
   const i = {
     vehicleId: index('vehicleId'),
+    plate: index('plate'),
+    vehicleType: index('vehicleType'),
     territorialUnitId: index('territorialUnitId'),
     lat: index('lat'),
     lon: index('lon'),
@@ -173,6 +179,8 @@ export function unpackFleetSnapshot(snapshot: FleetSnapshotResponse): FleetPosit
 
   return snapshot.rows.map((row) => ({
     vehicleId: row[i.vehicleId] as string,
+    plate: (row[i.plate] as string | null) ?? null,
+    vehicleType: (row[i.vehicleType] as string | null) ?? null,
     territorialUnitId: row[i.territorialUnitId] as string,
     latitude: (row[i.lat] as number | null) ?? null,
     longitude: (row[i.lon] as number | null) ?? null,

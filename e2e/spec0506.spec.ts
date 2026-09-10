@@ -29,8 +29,9 @@ const ADMIN_STAFF = {
 }
 
 const FIELDS = [
-  'vehicleId', 'territorialUnitId', 'lat', 'lon', 'speedKph', 'speedAvailability',
-  'speedSource', 'state', 'reason', 'recordedAt', 'ageSeconds', 'stale', 'simulated',
+  'vehicleId', 'plate', 'vehicleType', 'territorialUnitId', 'lat', 'lon', 'speedKph',
+  'speedAvailability', 'speedSource', 'state', 'reason', 'recordedAt', 'ageSeconds',
+  'stale', 'simulated',
 ]
 
 const VEHICLE_MOVING = '11111111-1111-1111-1111-111111111111'
@@ -46,14 +47,15 @@ function snapshot() {
     truncated: false,
     total: 4,
     rows: [
-      [VEHICLE_MOVING, UNIT, 4.6512, -74.0721, 62.5, 'SUPPORTED', 'REPORTED', 'MOVING',
-        'REPORTED_SPEED_ABOVE_THRESHOLD', new Date().toISOString(), 8, false, false],
+      [VEHICLE_MOVING, 'OBG101', 'CAMIONETA', UNIT, 4.6512, -74.0721, 62.5, 'SUPPORTED', 'REPORTED',
+        'MOVING', 'REPORTED_SPEED_ABOVE_THRESHOLD', new Date().toISOString(), 8, false, false],
       // El caso que importa: proveedor que NO entrega velocidad.
-      [VEHICLE_NO_SPEED, UNIT, 4.6612, -74.0821, null, 'NOT_AVAILABLE', 'NONE', 'UNDETERMINED',
-        'NO_SPEED_AND_NO_PRIOR_FIX', new Date().toISOString(), 12, false, true],
-      [VEHICLE_OFFLINE, UNIT, 4.6712, -74.0921, null, 'NOT_AVAILABLE', 'NONE', 'NO_SIGNAL',
-        'SIGNAL_LOST', new Date(Date.now() - 3_600_000).toISOString(), 3600, true, false],
-      [VEHICLE_NEVER, UNIT, null, null, null, 'NOT_AVAILABLE', 'NONE', 'NEVER_REPORTED',
+      [VEHICLE_NO_SPEED, 'OBG102', 'CAMIONETA', UNIT, 4.6612, -74.0821, null, 'NOT_AVAILABLE', 'NONE',
+        'UNDETERMINED', 'NO_SPEED_AND_NO_PRIOR_FIX', new Date().toISOString(), 12, false, true],
+      [VEHICLE_OFFLINE, 'OBG103', 'MOTOCICLETA', UNIT, 4.6712, -74.0921, null, 'NOT_AVAILABLE', 'NONE',
+        'NO_SIGNAL', 'SIGNAL_LOST', new Date(Date.now() - 3_600_000).toISOString(), 3600, true, false],
+      // Sin placa: un vehículo que `resource` ya no conoce sigue en el mapa.
+      [VEHICLE_NEVER, null, null, UNIT, null, null, null, 'NOT_AVAILABLE', 'NONE', 'NEVER_REPORTED',
         'NO_DEVICE_ENROLLED', null, null, false, false],
     ],
   }
@@ -99,6 +101,22 @@ test.describe('SPEC-0506: comando de flota', () => {
     await expect(lista).toContainText('Sin señal')
     await expect(lista).toContainText('Nunca reportó')
     await expect(lista).toContainText('Sin ninguna posición registrada')
+  })
+
+  test('cada vehículo se identifica por su PLACA, no por un UUID recortado', async ({ page }) => {
+    await mockConsole(page, COMMANDER)
+    await page.goto('/flota')
+
+    const lista = page.getByRole('list', { name: 'Vehículos' })
+    // El defecto que esto previene: con identificadores consecutivos, recortar
+    // el UUID a ocho caracteres hacía que TODOS los vehículos se vieran igual
+    // -- «00000000» -- y el requisito de identificarlos quedaba sin cumplir.
+    await expect(lista).toContainText('OBG101')
+    await expect(lista).toContainText('OBG102')
+    await expect(lista).toContainText('OBG103')
+    // Y sin placa se muestra el identificador abreviado, no un guion mudo: un
+    // vehículo que `resource` ya no conoce sigue estando y hay que señalarlo.
+    await expect(lista).toContainText('44444444…')
   })
 
   test('CA-8: el dato simulado se anuncia', async ({ page }) => {

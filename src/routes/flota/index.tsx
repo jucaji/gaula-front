@@ -74,10 +74,25 @@ function FleetCommandPage() {
     })
   }, [fleet.data, search.estado, search.q])
 
-  // Sin catálogo de placas todavía: se muestra un identificador corto y estable
-  // en vez de un UUID de 36 caracteres, que en una lista es ilegible. Cuando
-  // `ResourceApi` alimente placas a la instantánea, esto es lo único que cambia.
-  const labelFor = (vehicleId: string) => vehicleId.slice(0, 8).toUpperCase()
+  // La PLACA, que es como un operador nombra un vehículo por radio.
+  //
+  // Antes se recortaba el UUID a ocho caracteres, y con identificadores
+  // consecutivos los seis vehículos se veían los seis como «00000000»:
+  // indistinguibles, con el requisito de identificación sin cumplir. Se vio
+  // mirando la consola, no en una prueba -- los datos mockeados del E2E tenían
+  // UUID bien separados.
+  const plateById = useMemo(() => {
+    const map = new Map<string, string>()
+    fleet.data?.positions.forEach((position) => {
+      if (position.plate) map.set(position.vehicleId, position.plate)
+    })
+    return map
+  }, [fleet.data])
+
+  // Sin placa se muestra el identificador, no un guion: un vehículo que
+  // `resource` ya no conoce sigue estando en el mapa y hay que poder señalarlo.
+  const labelFor = (vehicleId: string) =>
+    plateById.get(vehicleId) ?? `${vehicleId.slice(0, 8).toUpperCase()}…`
 
   const setSearch = (patch: Partial<typeof search>) =>
     void navigate({ search: (previous) => ({ ...previous, ...patch }) })
