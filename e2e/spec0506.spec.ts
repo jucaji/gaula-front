@@ -62,7 +62,7 @@ function snapshot() {
 async function mockConsole(page: Page, session: Record<string, unknown>) {
   await page.route('**/api/v1/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) }))
-  await page.route('**/api/v1/config/map', (route) =>
+  await page.route('**/api/v1/telemetry/map-config', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',

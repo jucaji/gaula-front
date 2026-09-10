@@ -18,7 +18,7 @@ import type { MapProviderConfig } from './types'
 export function useMapConfig() {
   return useQuery<MapProviderConfig>({
     queryKey: ['config', 'map'],
-    queryFn: () => customFetch<MapProviderConfig>('/api/v1/config/map'),
+    queryFn: () => customFetch<MapProviderConfig>('/api/v1/telemetry/map-config'),
     staleTime: Infinity,
     gcTime: Infinity,
     networkMode: 'always',
