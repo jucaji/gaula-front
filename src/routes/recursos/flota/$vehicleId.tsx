@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { customFetch } from '@/api/client'
@@ -11,6 +11,23 @@ import {
   VehicleDevicePanel,
   VehicleServiceStatusPanel,
 } from '@/design-system/domain/VehicleAdminPanels'
+import { FleetNav } from '@/design-system/patterns/FleetNav'
+import { VehicleSummaryCard } from '@/design-system/domain/VehicleSummaryCard'
+import { VehicleLocationPanel } from '@/design-system/domain/VehicleLocationPanel'
+import {
+  AssignmentHistoryPanel,
+  FuelHistoryPanel,
+  MaintenancePanel,
+  VehicleTimelinePanel,
+} from '@/design-system/domain/VehicleHistory'
+import {
+  useAssignmentHistory,
+  useDevices,
+  useFuelHistory,
+  useMaintenanceOrders,
+  useTerritorialUnits,
+  useVehicleEvents,
+} from '@/lib/fleet/useFleetAdmin'
 import type { Vehicle } from '@/lib/fleet/types'
 
 export const Route = createFileRoute('/recursos/flota/$vehicleId')({
@@ -22,12 +39,13 @@ export const Route = createFileRoute('/recursos/flota/$vehicleId')({
   component: VehicleDetailPage,
 })
 
-const STATUS_LABEL: Record<string, string> = {
-  AVAILABLE: 'Disponible',
-  IN_MISSION: 'En misión',
-  MAINTENANCE: 'En mantenimiento',
-  OUT_OF_SERVICE: 'Fuera de servicio',
-}
+type TabId = 'resumen' | 'historial' | 'ubicacion'
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'resumen', label: 'Resumen' },
+  { id: 'historial', label: 'Historial' },
+  { id: 'ubicacion', label: 'Ubicación' },
+]
 
 function useVehicle(vehicleId: string) {
   return useQuery({
@@ -45,6 +63,16 @@ function VehicleDetailPage() {
   const { can } = Route.useRouteContext()
   const canManage = can('UPDATE', 'FLEET')
   const canManageDevices = can('UPDATE', 'TRACKING_DEVICE')
+  // La ubicación va detrás de SU propio recurso: la unidad administrativa
+  // gestiona la flota y no ve la operación (docs/04 §2.4). Sin permiso, la
+  // pestaña no existe y la consulta ni se hace.
+  const canSeeLocation = can('READ', 'VEHICLE_TELEMETRY')
+  const [activeTab, setTab] = useState<TabId>('resumen')
+  const units = useTerritorialUnits()
+  const devices = useDevices(canManageDevices)
+  const hasDevice = canManageDevices && devices.data
+    ? (devices.data.content ?? []).some((device) => device.vehicleId === vehicleId)
+    : null
 
   const [driverId, setDriverId] = useState('')
   const [caseFileId, setCaseFileId] = useState('')
@@ -136,14 +164,52 @@ function VehicleDetailPage() {
   const isInMission = data.status === 'IN_MISSION'
 
   return (
-    <div className="max-w-xl">
-      <h1 className="text-lg font-semibold text-text-primary">{data.plate}</h1>
-      <p className="text-sm text-text-secondary">
-        {[data.vehicleType, data.make, data.model, data.modelYear].filter(Boolean).join(' ')} · {data.odometerKm?.toLocaleString('es-CO')} km
-      </p>
-      <p className="mt-1 text-sm font-medium text-text-primary">Estado: {STATUS_LABEL[data.status ?? ''] ?? data.status}</p>
+    <div className="flex flex-col gap-4">
+      <FleetNav />
 
-      {actionError && <p className="mt-3 text-sm text-critical">{actionError}</p>}
+      {/* `accent-hover` y no `accent`: pine-600 sobre la superficie de la página
+          se queda por debajo del 4.5:1 de WCAG AA. Es la tercera vez que este
+          mismo token se cuela (ver AppShell, S14.FE.05). */}
+      <Link
+        to="/recursos/flota"
+        search={{ page: 0, size: 20 }}
+        // `min-h-[var(--tap-min)]` porque es un enlace suelto, no uno incrustado
+        // en una frase: WCAG 2.5.8 sólo exime a los segundos, y un dedo no acierta
+        // 19 px de alto.
+        className="inline-flex min-h-[var(--tap-min)] w-fit items-center text-sm text-accent-hover underline"
+      >
+        ← Volver al inventario
+      </Link>
+
+      {/* SPEC-0508: la tarjeta que faltaba. Antes había que abrir el formulario
+          de corrección para ver la marca o el modelo -- una consulta convertida
+          en un amago de edición. */}
+      <VehicleSummaryCard vehicle={data as Vehicle} units={units.data ?? []} hasDevice={hasDevice} />
+
+      <nav className="flex gap-1 border-b border-border" aria-label="Secciones de la ficha">
+        {TABS.filter((tab) => tab.id !== 'ubicacion' || canSeeLocation).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setTab(tab.id)}
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+            className={`flex min-h-[var(--tap-min)] items-center border-b-2 px-3 py-2 text-sm transition-colors duration-instant ${
+              activeTab === tab.id
+                ? 'border-accent text-text-primary'
+                : 'border-transparent text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      {actionError && <p className="text-sm text-critical">{actionError}</p>}
+
+      {activeTab === 'historial' && <HistoryTab vehicleId={vehicleId} />}
+      {activeTab === 'ubicacion' && canSeeLocation && <VehicleLocationPanel vehicleId={vehicleId} />}
+
+      <div className={activeTab === 'resumen' ? 'max-w-xl' : 'hidden'}>
 
       {/* SPEC-0507: lo que faltaba -- administrar el vehículo, no sólo operarlo.
           Cada panel se dibuja sólo si el rol lo alcanza (docs/04 §2.4). */}
@@ -244,6 +310,49 @@ function VehicleDetailPage() {
           </div>
         </div>
       )}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * SPEC-0508: la historia del vehículo, en un solo sitio.
+ *
+ * <p>Las cuatro consultas se piden juntas porque se leen juntas: quien entra a
+ * esta pestaña quiere entender qué le ha pasado al vehículo, no elegir entre
+ * cuatro listas.
+ */
+function HistoryTab({ vehicleId }: { vehicleId: string }) {
+  const events = useVehicleEvents(vehicleId)
+  const fuel = useFuelHistory(vehicleId)
+  const maintenance = useMaintenanceOrders(vehicleId)
+  const assignments = useAssignmentHistory(vehicleId)
+
+  return (
+    <div className="flex flex-col gap-6">
+      <section>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Línea de tiempo</h2>
+        {events.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+        {events.data && <VehicleTimelinePanel events={events.data.content ?? []} />}
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Combustible</h2>
+        {fuel.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+        {fuel.data && <FuelHistoryPanel history={fuel.data} />}
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Mantenimiento</h2>
+        {maintenance.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+        {maintenance.data && <MaintenancePanel orders={maintenance.data} />}
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-sm font-semibold text-text-primary">Asignaciones</h2>
+        {assignments.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+        {assignments.data && <AssignmentHistoryPanel assignments={assignments.data} />}
+      </section>
     </div>
   )
 }

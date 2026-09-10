@@ -9,11 +9,10 @@ import type { FleetAssignmentResponse, VehicleResponse } from '@/api/generated/m
 import { FleetNav } from '@/design-system/patterns/FleetNav'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { DataTable } from '@/design-system/primitives/DataTable'
-import { Input } from '@/design-system/primitives/Input'
 import { Button } from '@/design-system/primitives/Button'
 import { VehicleForm } from '@/design-system/domain/VehicleForm'
-import { useFleetMutations, useTerritorialUnits } from '@/lib/fleet/useFleetAdmin'
-import { EMPTY_VEHICLE_FORM, isVehicleFormComplete, type VehicleFormValues } from '@/lib/fleet/types'
+import { useDevices, useFleetMutations, useTerritorialUnits } from '@/lib/fleet/useFleetAdmin'
+import { EMPTY_VEHICLE_FORM, isVehicleFormComplete, type TerritorialUnit, type VehicleFormValues } from '@/lib/fleet/types'
 
 const VEHICLE_STATUSES = ['AVAILABLE', 'IN_MISSION', 'MAINTENANCE', 'OUT_OF_SERVICE'] as const
 
@@ -76,29 +75,79 @@ function useAssignments() {
   })
 }
 
-const columns: ColumnDef<VehicleResponse, unknown>[] = [
-  {
-    id: 'plate',
-    accessorKey: 'plate',
-    header: 'Placa',
+/**
+ * SPEC-0508 CA-9/CA-10: las columnas dejan de esconder lo que importa.
+ *
+ * <p>Se construyen dentro del componente porque dos de ellas dependen de datos
+ * que se consultan aparte: el NOMBRE de la unidad territorial (antes se mostraba
+ * el UUID) y si el vehículo tiene GPS inscrito — la columna que responde «¿por
+ * qué éste no sale en el mapa?» sin ir a preguntarlo a otra pantalla.
+ */
+function buildColumns(
+  units: TerritorialUnit[],
+  vehicleIdsWithDevice: Set<string> | null,
+): ColumnDef<VehicleResponse, unknown>[] {
+  const columns: ColumnDef<VehicleResponse, unknown>[] = [
+    {
+      id: 'plate',
+      accessorKey: 'plate',
+      header: 'Placa',
+      cell: ({ row }) =>
+        row.original.id ? (
+          <Link to="/recursos/flota/$vehicleId" params={{ vehicleId: row.original.id }} className="hover:underline">
+            {row.original.plate}
+          </Link>
+        ) : (
+          row.original.plate ?? '—'
+        ),
+    },
+    { id: 'vehicleType', accessorKey: 'vehicleType', header: 'Tipo', cell: ({ getValue }) => getValue<string>() ?? '—' },
+    {
+      id: 'model',
+      header: 'Marca / modelo',
+      cell: ({ row }) => [row.original.make, row.original.model, row.original.modelYear].filter(Boolean).join(' ') || '—',
+    },
+    {
+      id: 'territorialUnit',
+      header: 'Unidad',
+      cell: ({ row }) => {
+        const unit = units.find((candidate) => candidate.id === row.original.territorialUnitId)
+        return unit ? unit.name : '—'
+      },
+    },
+    { id: 'status', accessorKey: 'status', header: 'Estado', cell: ({ getValue }) => STATUS_LABEL[getValue<string>() ?? ''] ?? '—' },
+    { id: 'odometerKm', accessorKey: 'odometerKm', header: 'Odómetro (km)', cell: ({ getValue }) => (getValue<number>() ?? 0).toLocaleString('es-CO') },
+  ]
+
+  // Sólo para quien administra equipos: para los demás la columna diría
+  // siempre lo mismo, porque el backend no les entrega el inventario de GPS.
+  if (vehicleIdsWithDevice !== null) {
+    columns.push({
+      id: 'gps',
+      header: 'GPS',
+      cell: ({ row }) => (row.original.id && vehicleIdsWithDevice.has(row.original.id) ? 'Inscrito' : 'Sin equipo'),
+    })
+  }
+
+  columns.push({
+    id: 'ficha',
+    header: '',
     cell: ({ row }) =>
       row.original.id ? (
-        <Link to="/recursos/flota/$vehicleId" params={{ vehicleId: row.original.id }} className="hover:underline">
-          {row.original.plate}
+        // La placa ya era enlace, pero nada lo indicaba: el cliente contó que
+        // llegó a la ficha «adivinando».
+        <Link
+          to="/recursos/flota/$vehicleId"
+          params={{ vehicleId: row.original.id }}
+          className="text-accent-hover underline"
+        >
+          Ver ficha
         </Link>
-      ) : (
-        row.original.plate ?? '—'
-      ),
-  },
-  { id: 'vehicleType', accessorKey: 'vehicleType', header: 'Tipo', cell: ({ getValue }) => getValue<string>() ?? '—' },
-  {
-    id: 'model',
-    header: 'Marca / modelo',
-    cell: ({ row }) => [row.original.make, row.original.model, row.original.modelYear].filter(Boolean).join(' ') || '—',
-  },
-  { id: 'status', accessorKey: 'status', header: 'Estado', cell: ({ getValue }) => STATUS_LABEL[getValue<string>() ?? ''] ?? '—' },
-  { id: 'odometerKm', accessorKey: 'odometerKm', header: 'Odómetro (km)', cell: ({ getValue }) => (getValue<number>() ?? 0).toLocaleString('es-CO') },
-]
+      ) : null,
+  })
+
+  return columns
+}
 
 const assignmentColumns: ColumnDef<FleetAssignmentResponse, unknown>[] = [
   { id: 'plate', accessorKey: 'plate', header: 'Placa', cell: ({ getValue }) => getValue<string>() ?? '—' },
@@ -167,8 +216,17 @@ function FleetPage() {
   const navigate = Route.useNavigate()
   const vehicles = useVehicles(search)
   const assignments = useAssignments()
-  const canCreate = Route.useRouteContext().can('CREATE', 'FLEET')
+  const { can } = Route.useRouteContext()
+  const canCreate = can('CREATE', 'FLEET')
+  const canSeeDevices = can('READ', 'TRACKING_DEVICE')
   const hasFilters = Boolean(search.status) || Boolean(search.territorialUnitId)
+  const units = useTerritorialUnits()
+  const devices = useDevices(canSeeDevices)
+
+  const vehicleIdsWithDevice = canSeeDevices && devices.data
+    ? new Set((devices.data.content ?? []).map((device) => device.vehicleId).filter((id): id is string => Boolean(id)))
+    : null
+  const columns = buildColumns(units.data ?? [], vehicleIdsWithDevice)
   const [registering, setRegistering] = useState(false)
 
   return (
@@ -204,12 +262,21 @@ function FleetPage() {
             </select>
           </label>
           <label className="flex flex-col gap-1 text-xs text-text-secondary">
-            Unidad territorial (id)
-            <Input
-              size="sm"
+            Unidad territorial
+            {/* Se elige de una lista, no se teclea: un UUID en un campo de texto
+                no es un filtro, es una adivinanza (SPEC-0508 CA-9). */}
+            <select
               value={search.territorialUnitId ?? ''}
               onChange={(event) => void navigate({ search: (prev) => ({ ...prev, territorialUnitId: event.target.value || undefined, page: 0 }) })}
-            />
+              className="h-[var(--control-height-sm)] rounded-sm border border-border-strong bg-surface px-2 text-xs text-text-primary"
+            >
+              <option value="">Todas</option>
+              {(units.data ?? []).map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
 

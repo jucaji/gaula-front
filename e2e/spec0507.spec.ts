@@ -48,6 +48,13 @@ const VEHICLE = {
   version: 3,
 }
 
+const COMMANDER = {
+  userId: '00000000-0000-0000-0000-000000000205',
+  displayName: 'Mayor Peláez Rincón',
+  roles: ['UNIT_COMMANDER'],
+  territorialUnitId: UNIT_A,
+}
+
 const UNITS = [
   { id: UNIT_A, code: 'BOG', name: 'GAULA Bogotá', departmentCode: '11' },
   { id: UNIT_B, code: 'MED', name: 'GAULA Medellín', departmentCode: '05' },
@@ -63,6 +70,45 @@ const DEVICES = {
       deviceId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', providerCode: 'SIMULATOR',
       externalDeviceId: 'IMEI-901', label: null, status: 'DECOMMISSIONED', installedAt: null,
       vehicleId: null, plate: null,
+    },
+  ],
+  totalElements: 2,
+}
+
+const FUEL_HISTORY = {
+  // Dos cargas: la primera SIN rendimiento (no hay tramo anterior), la segunda con él.
+  records: [
+    {
+      id: 'f2', loadedAt: '2026-09-09T12:00:00Z', liters: 40, cost: 210000, odometerKm: 1400,
+      efficiencyStatus: 'CALCULATED', kilometersPerLiter: 10, distanceKm: 400,
+    },
+    {
+      id: 'f1', loadedAt: '2026-09-01T12:00:00Z', liters: 40, cost: null, odometerKm: 1000,
+      efficiencyStatus: 'NO_PREVIOUS_LOAD', kilometersPerLiter: null, distanceKm: 0,
+    },
+  ],
+  averageKmPerLiter: 10,
+  calculableTramos: 1,
+  loadsWithoutCost: 1,
+}
+
+const MAINTENANCE = [
+  {
+    id: 'm1', vehicleId: VEHICLE_ID, orderType: 'PREVENTIVE', status: 'OPEN',
+    description: 'cambio de aceite', cost: null, openedAt: '2026-09-05T12:00:00Z', closedAt: null,
+  },
+]
+
+const EVENTS = {
+  content: [
+    {
+      id: 'e2', type: 'TRANSFERRED', occurredAt: '2026-09-08T12:00:00Z', actorId: null,
+      summary: 'Trasladado de GAULA Militar Bogotá D.C. a GAULA Militar Antioquia. Motivo: reorganización',
+      details: {},
+    },
+    {
+      id: 'e1', type: 'REGISTERED', occurredAt: '2026-09-01T12:00:00Z', actorId: null,
+      summary: 'Vehículo OBG101 dado de alta en el inventario.', details: {},
     },
   ],
   totalElements: 2,
@@ -88,6 +134,15 @@ async function mockConsole(page: Page, session: Record<string, unknown>) {
   })
   await page.route('**/api/v1/telemetry/devices*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(DEVICES) }))
+  // SPEC-0508: la ficha consulta la historia del vehículo.
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/fuel`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(FUEL_HISTORY) }))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/maintenance-orders`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MAINTENANCE) }))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assignments`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/events*`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(EVENTS) }))
 }
 
 test.describe('SPEC-0507: gestión de flota', () => {
@@ -267,6 +322,122 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await expect(page).not.toHaveURL(/status=/)
   })
 
+  // ---------------------------------------------------------------------
+  // SPEC-0508: la ficha muestra qué es el vehículo y qué le ha pasado.
+  // ---------------------------------------------------------------------
+
+  test('SPEC-0508 CA: la ficha muestra los datos sin abrir ningún formulario', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+
+    // El cliente contó que llegó a estos datos «adivinando»: estaban detrás del
+    // formulario de corrección.
+    const card = page.getByRole('region', { name: 'Datos del vehículo' })
+    await expect(card.getByText('Toyota')).toBeVisible()
+    await expect(card.getByText('Hilux')).toBeVisible()
+    await expect(card.getByText('12.000 km')).toBeVisible()
+    await expect(card.getByText('GAULA Bogotá (BOG)')).toBeVisible()
+  })
+
+  test('SPEC-0508 CA-2: la primera carga NO muestra un rendimiento de cero', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.getByRole('button', { name: 'Historial' }).click()
+
+    const tanqueos = page.getByRole('list', { name: 'Tanqueos' })
+    await expect(tanqueos.getByText('10 km/l')).toBeVisible()
+    // Y el que no se puede calcular lo dice, con su razón.
+    await expect(tanqueos.getByText(/Primera carga registrada/)).toBeVisible()
+    // `exact`: sin él, «10 km/l» contiene «0 km/l» y la prueba pasaría sola.
+    await expect(tanqueos.getByText('0 km/l', { exact: true })).toHaveCount(0)
+  })
+
+  test('SPEC-0508: el promedio dice sobre cuántos tramos se calculó', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.getByRole('button', { name: 'Historial' }).click()
+
+    // Un promedio sin su denominador no se puede juzgar.
+    await expect(page.getByText('Sobre 1 tramo calculables', { exact: false })).toBeVisible()
+  })
+
+  test('SPEC-0508 CA-4/CA-6: mantenimiento y traslado se pueden volver a ver', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.getByRole('button', { name: 'Historial' }).click()
+
+    await expect(page.getByRole('list', { name: 'Órdenes de mantenimiento' })
+      .getByText('cambio de aceite')).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Línea de tiempo' })
+      .getByText(/Trasladado de GAULA Militar Bogotá D.C. a GAULA Militar Antioquia/)).toBeVisible()
+  })
+
+  test('SPEC-0508 CA-7: la unidad administrativa no tiene pestaña de ubicación', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+    let telemetriaPedida = false
+    await page.route(`**/api/v1/telemetry/vehicles/${VEHICLE_ID}`, (route) => {
+      telemetriaPedida = true
+      return route.fulfill({ status: 403, contentType: 'application/json', body: '{}' })
+    })
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+
+    await expect(page.getByRole('button', { name: 'Ubicación' })).toHaveCount(0)
+    // Y no es un `display:none`: la consulta ni siquiera se intenta.
+    expect(telemetriaPedida).toBe(false)
+  })
+
+  test('SPEC-0508 CA-8: un comandante sí ve dónde está, en la misma ficha', async ({ page }) => {
+    await mockConsole(page, COMMANDER)
+    await page.route(`**/api/v1/telemetry/vehicles/${VEHICLE_ID}`, (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          vehicleId: VEHICLE_ID, plate: 'OBG101', trackingState: 'ACTIVE', providerCode: 'SIMULATOR',
+          capabilities: { fields: {}, nominalIntervalSeconds: { availability: 'UNKNOWN', value: null },
+            pushCapable: false, pullCapable: true },
+          lastFix: {
+            vehicleId: VEHICLE_ID, latitude: 4.6512, longitude: -74.0721,
+            recordedAt: '2026-09-10T12:00:00Z', receivedAt: '2026-09-10T12:00:05Z', transportLagSeconds: 5,
+            speedKph: { availability: 'NOT_AVAILABLE', value: null },
+            headingDegrees: { availability: 'NOT_AVAILABLE', value: null },
+            altitudeMeters: { availability: 'NOT_AVAILABLE', value: null },
+            accuracyMeters: { availability: 'NOT_AVAILABLE', value: null },
+            ignitionOn: { availability: 'UNKNOWN', value: null },
+            odometerKm: { availability: 'NOT_AVAILABLE', value: null },
+          },
+          movement: {
+            state: 'UNDETERMINED', reason: 'NO_SPEED_AND_NO_PRIOR_FIX',
+            speedKph: { availability: 'NOT_AVAILABLE', value: null }, speedSource: 'NONE',
+            observedAt: '2026-09-10T12:00:00Z', ageSeconds: 30, stale: false,
+          },
+          simulated: true,
+        }),
+      }))
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.getByRole('button', { name: 'Ubicación' }).click()
+
+    await expect(page.getByText('4.65120, -74.07210')).toBeVisible()
+    await expect(page.getByText('Simulado')).toBeVisible()
+  })
+
+  test('SPEC-0508 CA-9/CA-10: el inventario muestra la unidad por nombre y si tiene GPS', async ({ page }) => {
+    await mockConsole(page, SYSTEM_ADMIN)
+
+    await page.goto('/recursos/flota')
+
+    await expect(page.getByRole('cell', { name: 'GAULA Bogotá' })).toBeVisible()
+    // Ninguno de los equipos del mock está vinculado a este vehículo.
+    await expect(page.getByRole('cell', { name: 'Sin equipo' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Ver ficha' })).toBeVisible()
+  })
+
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
     await mockConsole(page, SYSTEM_ADMIN)
     await page.goto(`/recursos/flota/${VEHICLE_ID}`)
@@ -276,6 +447,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
     const serious = results.violations.filter((violation) =>
       violation.impact === 'serious' || violation.impact === 'critical')
 
-    expect(serious.map((violation) => `${violation.id}: ${violation.help}`)).toEqual([])
+    expect(serious.flatMap((violation) => violation.nodes.map((node) => `${violation.id}: ${node.html}`)))
+      .toEqual([])
   })
 })

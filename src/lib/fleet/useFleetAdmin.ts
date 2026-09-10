@@ -1,6 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
-import type { TerritorialUnit, TrackingDevice, Vehicle, VehicleFormValues } from './types'
+import type {
+  FuelHistory,
+  MaintenanceOrder,
+  TerritorialUnit,
+  TrackingDevice,
+  Vehicle,
+  VehicleAssignmentRecord,
+  VehicleEvent,
+  VehicleFormValues,
+} from './types'
 import { modelYearOf } from './types'
 
 interface Page<T> {
@@ -30,10 +39,13 @@ export function useVehicle(vehicleId: string) {
   })
 }
 
-export function useDevices() {
+export function useDevices(enabled = true) {
   return useQuery({
     queryKey: ['telemetry', 'devices'],
     queryFn: () => customFetch<Page<TrackingDevice>>('/api/v1/telemetry/devices?page=0&size=100'),
+    // Sin permiso de equipos, la consulta ni se intenta: el backend devolvería
+    // 403 y la consola pintaría un error por preguntar algo que ya sabía.
+    enabled,
     networkMode: 'always',
     retry: false,
   })
@@ -169,4 +181,51 @@ export function useDeviceMutations() {
   })
 
   return { registerDevice, renameDevice, decommissionDevice, enroll, withdraw }
+}
+
+// --- SPEC-0508: la historia del vehículo ---
+
+/**
+ * Las cuatro consultas de historia comparten `staleTime`: son hechos pasados,
+ * no un tablero en vivo. Refrescarlas cada pocos segundos sólo gastaría red.
+ */
+const HISTORY_OPTIONS = { staleTime: 30_000, networkMode: 'always', retry: false } as const
+
+export function useFuelHistory(vehicleId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'fuel'],
+    queryFn: () => customFetch<FuelHistory>(`/api/v1/vehicles/${vehicleId}/fuel`),
+    enabled,
+    ...HISTORY_OPTIONS,
+  })
+}
+
+export function useMaintenanceOrders(vehicleId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'maintenance'],
+    queryFn: () => customFetch<MaintenanceOrder[]>(`/api/v1/vehicles/${vehicleId}/maintenance-orders`),
+    enabled,
+    ...HISTORY_OPTIONS,
+  })
+}
+
+export function useAssignmentHistory(vehicleId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'assignments'],
+    queryFn: () => customFetch<VehicleAssignmentRecord[]>(`/api/v1/vehicles/${vehicleId}/assignments`),
+    enabled,
+    ...HISTORY_OPTIONS,
+  })
+}
+
+export function useVehicleEvents(vehicleId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'events'],
+    queryFn: () =>
+      customFetch<{ content?: VehicleEvent[]; totalElements?: number }>(
+        `/api/v1/vehicles/${vehicleId}/events?page=0&size=50`,
+      ),
+    enabled,
+    ...HISTORY_OPTIONS,
+  })
 }

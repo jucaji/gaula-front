@@ -111,3 +111,93 @@ export function isVehicleFormComplete(values: VehicleFormValues, mode: 'create' 
   const base = values.plate.trim() !== '' && values.vehicleType.trim() !== ''
   return mode === 'create' ? base && values.territorialUnitId !== '' : base
 }
+
+// --- SPEC-0508: la historia del vehículo ---
+
+export const EFFICIENCY_STATUSES = ['CALCULATED', 'NO_PREVIOUS_LOAD', 'ODOMETER_DID_NOT_ADVANCE'] as const
+export type EfficiencyStatus = (typeof EFFICIENCY_STATUSES)[number]
+
+/**
+ * Cómo se lee un rendimiento que no se pudo calcular.
+ *
+ * <p>Cada caso dice POR QUÉ, y ninguno dice «0». Un cero afirmaría que el
+ * vehículo recorrió 0 km con esos litros — una afirmación fuerte y casi siempre
+ * falsa (misma regla que en telemetría: un cero no es «no hay dato»).
+ */
+export const EFFICIENCY_EXPLANATION: Record<Exclude<EfficiencyStatus, 'CALCULATED'>, string> = {
+  NO_PREVIOUS_LOAD: 'Primera carga registrada: todavía no hay un tramo con el que compararla.',
+  ODOMETER_DID_NOT_ADVANCE:
+    'El odómetro no avanzó entre esta carga y la anterior. O se registró mal, o el vehículo tanqueó dos veces sin moverse.',
+}
+
+export interface FuelRecord {
+  id: string
+  loadedAt: string
+  liters: number
+  cost?: number | null
+  odometerKm: number
+  efficiencyStatus: EfficiencyStatus
+  kilometersPerLiter?: number | null
+  distanceKm: number
+}
+
+export interface FuelHistory {
+  records: FuelRecord[]
+  averageKmPerLiter?: number | null
+  calculableTramos: number
+  loadsWithoutCost: number
+}
+
+export const MAINTENANCE_TYPE_LABEL: Record<string, string> = {
+  PREVENTIVE: 'Preventivo',
+  CORRECTIVE: 'Correctivo',
+}
+
+export const MAINTENANCE_STATUS_LABEL: Record<string, string> = {
+  OPEN: 'Abierta',
+  CLOSED: 'Cerrada',
+}
+
+export interface MaintenanceOrder {
+  id: string
+  vehicleId: string
+  orderType: string
+  status: string
+  description: string
+  cost?: number | null
+  openedAt: string
+  closedAt?: string | null
+}
+
+export interface VehicleAssignmentRecord {
+  id: string
+  vehicleId: string
+  caseFileId?: string | null
+  driverId: string
+  assignedFrom: string
+  assignedTo?: string | null
+  purpose?: string | null
+}
+
+export interface VehicleEvent {
+  id: string
+  type: string
+  occurredAt: string
+  actorId?: string | null
+  summary: string
+  details: Record<string, string>
+}
+
+/** El tono de cada hecho. El texto lo redacta el servidor; aquí sólo se le da forma. */
+export const EVENT_TONE: Record<string, 'neutral' | 'active' | 'alert' | 'critical'> = {
+  REGISTERED: 'active',
+  CORRECTED: 'neutral',
+  TRANSFERRED: 'alert',
+  DECOMMISSIONED: 'critical',
+  RETURNED_TO_SERVICE: 'active',
+  ASSIGNED: 'active',
+  RELEASED: 'neutral',
+  FUEL_RECORDED: 'neutral',
+  MAINTENANCE_OPENED: 'alert',
+  MAINTENANCE_CLOSED: 'neutral',
+}

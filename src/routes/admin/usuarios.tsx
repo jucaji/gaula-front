@@ -138,7 +138,7 @@ function AdminUsersPage() {
         El alta ocurre sola en el primer login, <strong className="text-text-primary">sin ningún rol</strong>:
         los roles se conceden aquí, tocando las etiquetas de la columna «Roles». Un rol concedido surte efecto
         cuando la persona vuelve a iniciar sesión. Para definir hasta dónde llega cada rol, vaya a{' '}
-        <Link to="/admin/roles" className="text-accent underline">
+        <Link to="/admin/roles" className="text-accent-hover underline">
           Roles
         </Link>
         .

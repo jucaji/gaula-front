@@ -81,7 +81,7 @@ function AdminRolesPage() {
         Aquí se define <strong className="text-text-primary">hasta dónde llega cada rol</strong>: qué alcance tiene
         sobre cada recurso. Para decidir <strong className="text-text-primary">qué rol tiene una persona</strong>,
         vaya a{' '}
-        <Link to="/admin/usuarios" className="text-accent underline">
+        <Link to="/admin/usuarios" className="text-accent-hover underline">
           Usuarios
         </Link>
         .

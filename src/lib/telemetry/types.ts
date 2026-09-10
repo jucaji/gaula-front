@@ -195,3 +195,18 @@ export function unpackFleetSnapshot(snapshot: FleetSnapshotResponse): FleetPosit
     simulated: Boolean(row[i.simulated]),
   }))
 }
+
+/** Por qué el sistema afirma lo que afirma sobre el movimiento. Vive aquí para que la ficha y la consola lo digan igual. */
+export const REASON_LABEL: Record<string, string> = {
+  NO_DEVICE_ENROLLED: 'No tiene equipo GPS inscrito',
+  NO_FIX_RECEIVED: 'Tiene equipo, pero nunca llegó una primera posición',
+  SIGNAL_LOST: 'Dejó de reportar hace más de lo esperado',
+  IGNITION_OFF: 'El contacto está apagado',
+  REPORTED_SPEED_ABOVE_THRESHOLD: 'El equipo reporta velocidad de marcha',
+  REPORTED_SPEED_BELOW_THRESHOLD: 'El equipo reporta una velocidad por debajo del umbral',
+  DERIVED_SPEED_ABOVE_THRESHOLD: 'Se desplazó entre dos posiciones',
+  DERIVED_SPEED_BELOW_THRESHOLD: 'Apenas se desplazó entre dos posiciones',
+  DERIVED_BELOW_JITTER: 'Se movió menos que el error de medición del GPS',
+  DERIVATION_WINDOW_TOO_SHORT: 'Las dos últimas posiciones están demasiado juntas para calcular',
+  NO_SPEED_AND_NO_PRIOR_FIX: 'El proveedor no entrega velocidad y no hay posición anterior con la que calcularla',
+}
