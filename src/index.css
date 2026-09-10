@@ -23,9 +23,11 @@ html {
  * 0 1px 2px / 6 %". La sombra faltaba en toda la consola.
  *
  * Va aquí y no en cada componente porque es una regla del SISTEMA: todo lo que
- * se declara superficie elevada es nivel 2 por definición. En oscuro el token
- * vale `none` — allí la separación la dan los tres grises, y una sombra negra
- * sobre negro no aporta nada.
+ * se declara superficie elevada es nivel 2 por definición.
+ *
+ * En oscuro el token dejó de valer `none` (2026-09-10): la profundidad allí no
+ * la da la sombra sino la LUZ, con un filo claro de 1 px arriba. Ver el
+ * comentario del token en semantic.css.
  */
 .bg-surface-raised {
   box-shadow: var(--shadow-raised);

@@ -209,7 +209,17 @@ function VehicleDetailPage() {
       {activeTab === 'historial' && <HistoryTab vehicleId={vehicleId} />}
       {activeTab === 'ubicacion' && canSeeLocation && <VehicleLocationPanel vehicleId={vehicleId} />}
 
-      <div className={activeTab === 'resumen' ? 'max-w-xl' : 'hidden'}>
+      {/* Rejilla, no columna: las tarjetas de acción son independientes entre
+          sí y caben en paralelo. En una columna estrecha —como estaba— la
+          pantalla dejaba media ventana vacía y obligaba a bajar para ver que
+          existían. Se mantiene una sola columna en pantallas angostas. */}
+      <div
+        className={
+          activeTab === 'resumen'
+            ? 'grid grid-cols-1 items-start gap-4 md:grid-cols-2 xl:grid-cols-3'
+            : 'hidden'
+        }
+      >
 
       {/* SPEC-0507: lo que faltaba -- administrar el vehículo, no sólo operarlo.
           Cada panel se dibuja sólo si el rol lo alcanza (docs/04 §2.4). */}
@@ -223,7 +233,7 @@ function VehicleDetailPage() {
       {canManageDevices && <VehicleDevicePanel vehicle={data as Vehicle} />}
 
       {isAvailable && (
-        <div className="mt-4 flex flex-col gap-2 rounded-sm border border-border-strong p-3">
+        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
           <h2 className="text-sm font-semibold text-text-primary">Asignar</h2>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
             Conductor (id) *
@@ -246,7 +256,7 @@ function VehicleDetailPage() {
       )}
 
       {isInMission && (
-        <div className="mt-4 flex flex-col gap-2 rounded-sm border border-border-strong p-3">
+        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
           <h2 className="text-sm font-semibold text-text-primary">Liberar</h2>
           <label className="flex items-center gap-2 text-sm text-text-primary">
             <input type="checkbox" checked={sendToMaintenance} onChange={(event) => setSendToMaintenance(event.target.checked)} />
@@ -261,7 +271,7 @@ function VehicleDetailPage() {
       )}
 
       {data.status !== 'OUT_OF_SERVICE' && (
-        <div className="mt-4 flex flex-col gap-2 rounded-sm border border-border-strong p-3">
+        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
           <h2 className="text-sm font-semibold text-text-primary">Registrar combustible</h2>
           <div className="flex gap-2">
             <label className="flex flex-1 flex-col gap-1 text-sm text-text-primary">
@@ -286,7 +296,7 @@ function VehicleDetailPage() {
       )}
 
       {data.status !== 'OUT_OF_SERVICE' && (
-        <div className="mt-4 flex flex-col gap-2 rounded-sm border border-border-strong p-3">
+        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
           <h2 className="text-sm font-semibold text-text-primary">Abrir orden de mantenimiento</h2>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
             Tipo
@@ -329,30 +339,35 @@ function HistoryTab({ vehicleId }: { vehicleId: string }) {
   const assignments = useAssignmentHistory(vehicleId)
 
   return (
-    <div className="flex flex-col gap-6">
+    // Dos columnas en pantallas anchas. La línea de tiempo va a la izquierda y
+    // ocupa el alto que necesite; el resto se apila a su lado en vez de
+    // empujarla mil píxeles hacia abajo.
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
       <section>
         <h2 className="mb-2 text-sm font-semibold text-text-primary">Línea de tiempo</h2>
         {events.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
         {events.data && <VehicleTimelinePanel events={events.data.content ?? []} />}
       </section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-text-primary">Combustible</h2>
-        {fuel.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
-        {fuel.data && <FuelHistoryPanel history={fuel.data} />}
-      </section>
+      <div className="flex flex-col gap-6">
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-text-primary">Combustible</h2>
+          {fuel.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+          {fuel.data && <FuelHistoryPanel history={fuel.data} />}
+        </section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-text-primary">Mantenimiento</h2>
-        {maintenance.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
-        {maintenance.data && <MaintenancePanel orders={maintenance.data} />}
-      </section>
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-text-primary">Mantenimiento</h2>
+          {maintenance.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+          {maintenance.data && <MaintenancePanel orders={maintenance.data} />}
+        </section>
 
-      <section>
-        <h2 className="mb-2 text-sm font-semibold text-text-primary">Asignaciones</h2>
-        {assignments.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
-        {assignments.data && <AssignmentHistoryPanel assignments={assignments.data} />}
-      </section>
+        <section>
+          <h2 className="mb-2 text-sm font-semibold text-text-primary">Asignaciones</h2>
+          {assignments.isLoading && <p className="text-sm text-text-secondary">Cargando…</p>}
+          {assignments.data && <AssignmentHistoryPanel assignments={assignments.data} />}
+        </section>
+      </div>
     </div>
   )
 }

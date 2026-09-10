@@ -121,7 +121,25 @@
   --color-surface-sunken: #101317;
   --color-border: var(--color-slate-800);
   --color-border-strong: var(--color-slate-700);
-  --shadow-raised: none;
+  /*
+   * CORRECCIÓN (2026-09-10, reportada por el cliente: «me gustaría que la
+   * tarjeta tuviese efecto profundidad»).
+   *
+   * Aquí decía `none`, con el argumento de que «una sombra negra sobre negro no
+   * aporta nada». El argumento era medio cierto y por eso el resultado era
+   * plano: una sombra NEGRA no aporta, pero la profundidad en oscuro no la da
+   * la sombra — la da la LUZ. Un filo claro de 1 px en el borde superior es
+   * como se lee «esto está por encima» cuando el lienzo ya es oscuro, porque
+   * imita el canto iluminado de una superficie levantada.
+   *
+   * Sigue sin ser una nube difusa, que es lo que docs/06 §4 prohíbe: son dos
+   * líneas de 1 px y una sombra corta que sólo asienta la tarjeta sobre el
+   * lienzo. El mecanismo cambia con el tema; la regla —nada de sombras
+   * difusas— no.
+   */
+  --shadow-raised:
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 1px 2px rgb(0 0 0 / 0.45);
   --color-text-primary: var(--color-slate-50);
   --color-text-secondary: var(--color-slate-300);
   --color-text-muted: var(--color-slate-400);
@@ -151,7 +169,13 @@
     --color-surface-sunken: #101317;
     --color-border: var(--color-slate-800);
     --color-border-strong: var(--color-slate-700);
-    --shadow-raised: none;
+    /* Gemelo del bloque `[data-theme='dark']`: ver allí el porqué del filo
+       claro. Los dos tienen que declarar lo mismo, y `semanticTokens.test.ts`
+       falla si se separan — que es como este token se quedó en `none` para
+       quien usa el tema del sistema mientras el otro bloque ya decía otra cosa. */
+    --shadow-raised:
+      inset 0 1px 0 rgb(255 255 255 / 0.06),
+      0 1px 2px rgb(0 0 0 / 0.45);
     --color-text-primary: var(--color-slate-50);
     --color-text-secondary: var(--color-slate-300);
     --color-text-muted: var(--color-slate-400);

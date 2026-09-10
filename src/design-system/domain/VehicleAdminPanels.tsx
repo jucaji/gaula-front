@@ -5,7 +5,15 @@ import { VehicleForm } from '@/design-system/domain/VehicleForm'
 import { useDeviceMutations, useDevices, useFleetMutations, useTerritorialUnits } from '@/lib/fleet/useFleetAdmin'
 import { DEVICE_STATUS_LABEL, isVehicleFormComplete, vehicleToForm, type TrackingDevice, type Vehicle, type VehicleFormValues } from '@/lib/fleet/types'
 
-const CARD = 'mt-4 flex flex-col gap-3 rounded-sm border border-border-strong p-3'
+/**
+ * Cada acción es una tarjeta de nivel 2 (docs/06 §4): superficie elevada, borde
+ * de 1 px y la sombra que el sistema aplica a `bg-surface-raised`.
+ *
+ * <p>Sin `mt-*`: la separación la pone la rejilla que las coloca. Cuando cada
+ * tarjeta traía su propio margen, sólo podían apilarse en una columna — que es
+ * justo lo que hacía la pantalla desperdiciar media ventana.
+ */
+const CARD = 'flex h-fit flex-col gap-3 rounded-md border border-border-strong bg-surface-raised p-4'
 
 function errorOf(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback

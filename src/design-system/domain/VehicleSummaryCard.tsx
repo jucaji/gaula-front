@@ -40,7 +40,15 @@ export function VehicleSummaryCard({ vehicle, units, hasDevice }: Props) {
   const unit = units.find((candidate) => candidate.id === vehicle.territorialUnitId)
 
   return (
-    <section className="rounded-sm border border-border-strong bg-surface-raised p-4" aria-label="Datos del vehículo">
+    <section
+      // `rounded-md` y borde fuerte: es la superficie de nivel 2 del sistema
+      // (docs/06 §4), y la sombra se la aplica `bg-surface-raised` por regla
+      // global. En oscuro esa sombra dejó de ser `none` para que la tarjeta se
+      // despegue del lienzo — lo pidió el cliente y está argumentado en el
+      // token.
+      className="rounded-md border border-border-strong bg-surface-raised p-5"
+      aria-label="Datos del vehículo"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-text-primary">{vehicle.plate ?? 'Vehículo sin placa'}</h2>
@@ -55,7 +63,9 @@ export function VehicleSummaryCard({ vehicle, units, hasDevice }: Props) {
         )}
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+      {/* Hasta seis columnas en pantallas anchas: son seis datos cortos, y en
+          tres columnas dejaban una franja vacía a la derecha. */}
+      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3 xl:grid-cols-6">
         <Field label="Tipo" value={vehicle.vehicleType ?? null} />
         <Field label="Marca" value={vehicle.make ?? null} />
         <Field label="Modelo" value={vehicle.model ?? null} />

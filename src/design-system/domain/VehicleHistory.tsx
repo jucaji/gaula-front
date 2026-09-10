@@ -13,7 +13,7 @@ import {
   type VehicleEvent,
 } from '@/lib/fleet/types'
 
-const CARD = 'rounded-sm border border-border-strong p-3'
+const CARD = 'rounded-md border border-border-strong bg-surface-raised p-3'
 
 function money(value?: number | null): string {
   return value == null ? 'Sin costo registrado' : value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
