@@ -61,7 +61,11 @@ function snapshot() {
   }
 }
 
-async function mockConsole(page: Page, session: Record<string, unknown>) {
+async function mockConsole(
+  page: Page,
+  session: Record<string, unknown>,
+  mapa: { provider: string; apiKey: string | null } = { provider: 'GOOGLE', apiKey: null },
+) {
   await page.route('**/api/v1/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) }))
   await page.route('**/api/v1/telemetry/map-config', (route) =>
@@ -71,7 +75,12 @@ async function mockConsole(page: Page, session: Record<string, unknown>) {
       // Sin clave: el mapa degrada a su marcador de posición. Es el mismo
       // camino que recorrería un despliegue aislado (docs/08 §5), así que
       // probarlo aquí prueba algo real, no sólo evita cargar el SDK.
-      body: JSON.stringify({ provider: 'GOOGLE', apiKey: null, mapId: null, configured: false }),
+      body: JSON.stringify({
+        provider: mapa.provider,
+        apiKey: mapa.apiKey,
+        mapId: null,
+        configured: Boolean(mapa.apiKey),
+      }),
     }))
   await page.route('**/api/v1/telemetry/positions*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(snapshot()) }))
@@ -162,6 +171,36 @@ test.describe('SPEC-0506: comando de flota', () => {
     // Gestiona la flota y no ve la operación: la guarda de ruta la devuelve.
     await expect(page).not.toHaveURL(/\/flota$/)
     await expect(page.getByRole('link', { name: 'Comando de flota' })).toHaveCount(0)
+  })
+
+  test('el proveedor cartográfico se cambia por configuración, sin tocar la consola', async ({ page }) => {
+    // Un puerto con un solo adaptador es una hipótesis; con dos es un hecho.
+    // MapLibre además no necesita clave ni internet: es el que queda si la
+    // sede resulta ser un despliegue aislado (docs/08 §5).
+    await mockConsole(page, COMMANDER, { provider: 'MAPLIBRE', apiKey: null })
+    await page.goto('/flota')
+
+    await expect(page.getByRole('list', { name: 'Vehículos' })).toBeVisible()
+    // Con MapLibre NO aplica el mensaje de «falta la clave»: no la necesita.
+    await expect(page.getByText(/El mapa no está configurado/)).toHaveCount(0)
+    // Sin WebGL en un navegador sin cabeza, degrada diciéndolo en vez de
+    // romper la pantalla -- que es también lo correcto en un puesto sin
+    // aceleración gráfica.
+    await expect(
+      page.getByRole('application', { name: 'Mapa de la flota' })
+        .or(page.getByText(/No se pudo dibujar el mapa/)),
+    ).toBeVisible()
+  })
+
+  test('un proveedor no reconocido lo DICE, en vez de caer a otro en silencio', async ({ page }) => {
+    await mockConsole(page, COMMANDER, { provider: 'CARTOGRAFIA_INVENTADA', apiKey: null })
+    await page.goto('/flota')
+
+    // Caer a un default haría que un error de configuración se viera como si
+    // funcionara -- y con el mapa equivocado debajo.
+    await expect(page.getByText(/Proveedor de mapa no reconocido/)).toBeVisible()
+    await expect(page.getByText(/GOOGLE y MAPLIBRE/)).toBeVisible()
+    await expect(page.getByRole('list', { name: 'Vehículos' })).toBeVisible()
   })
 
   test('accesibilidad: sin violaciones serias', async ({ page }) => {

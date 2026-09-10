@@ -8,7 +8,7 @@ import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { FleetSummary } from '@/design-system/domain/FleetSummary'
 import { VehicleList } from '@/design-system/domain/VehicleList'
 import { VehicleDetailsPanel } from '@/design-system/domain/VehicleDetailsPanel'
-import { GoogleFleetMap } from '@/design-system/maps/GoogleFleetMap'
+import { FleetMap } from '@/design-system/maps/FleetMap'
 import { MOVEMENT_STYLE } from '@/design-system/maps/FleetMapPort'
 import { useFleetPositions, FLEET_REFRESH_MS } from '@/lib/telemetry/useFleetPositions'
 import { useVehicleTelemetry } from '@/lib/telemetry/useVehicleTelemetry'
@@ -192,7 +192,7 @@ function FleetCommandPage() {
         </div>
 
         <div className="min-h-0">
-          <GoogleFleetMap
+          <FleetMap
             positions={positions}
             selectedVehicleId={selectedVehicleId}
             onSelect={(vehicleId) => setSearch({ vehiculo: vehicleId ?? undefined })}
