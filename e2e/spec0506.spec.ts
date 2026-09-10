@@ -170,7 +170,12 @@ test.describe('SPEC-0506: comando de flota', () => {
 
     // Gestiona la flota y no ve la operación: la guarda de ruta la devuelve.
     await expect(page).not.toHaveURL(/\/flota$/)
-    await expect(page.getByRole('link', { name: 'Comando de flota' })).toHaveCount(0)
+    // Flota es un solo módulo con dos secciones, y este rol sólo alcanza una:
+    // la pestaña «Comando» no debe existir para él -- ofrecer lo que el backend
+    // va a denegar es peor que no ofrecerlo. Con una sola sección visible la
+    // barra entera se oculta, así que se comprueba por el enlace.
+    await expect(page.getByRole('link', { name: 'Comando', exact: true })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Flota' })).toHaveAttribute('href', '/recursos/flota')
   })
 
   test('el proveedor cartográfico se cambia por configuración, sin tocar la consola', async ({ page }) => {

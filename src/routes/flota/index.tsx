@@ -5,6 +5,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
+import { FleetNav } from '@/design-system/patterns/FleetNav'
 import { FleetSummary } from '@/design-system/domain/FleetSummary'
 import { VehicleList } from '@/design-system/domain/VehicleList'
 import { VehicleDetailsPanel } from '@/design-system/domain/VehicleDetailsPanel'
@@ -103,6 +104,7 @@ function FleetCommandPage() {
 
   return (
     <div className="flex h-full flex-col gap-3">
+      <FleetNav />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold text-text-primary">Comando de flota</h1>

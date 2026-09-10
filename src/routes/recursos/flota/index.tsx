@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { customFetch } from '@/api/client'
 import type { FleetAssignmentResponse, VehicleResponse } from '@/api/generated/models'
+import { FleetNav } from '@/design-system/patterns/FleetNav'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { DataTable } from '@/design-system/primitives/DataTable'
 import { Input } from '@/design-system/primitives/Input'
@@ -110,6 +111,7 @@ function FleetPage() {
   return (
     <div className="flex h-full flex-col gap-6">
       <div>
+        <FleetNav />
         <h1 className="text-lg font-semibold text-text-primary">Flota</h1>
 
         <div className="mt-4 flex items-end gap-3">

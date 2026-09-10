@@ -8,12 +8,13 @@ import {
   BarChart3,
   Database,
   Truck,
-  Radar,
   ShieldCheck,
   UserCircle,
 } from 'lucide-react'
 import type { Session } from '@/lib/auth/session'
 import { can } from '@/lib/permissions'
+import type { RoleCode } from '@/lib/auth/roles'
+import { firstFleetSectionFor } from '@/lib/fleetSections'
 import { LogoutButton } from './LogoutButton'
 import { ThemeToggle } from './ThemeToggle'
 import { DensityToggle } from './DensityToggle'
@@ -22,28 +23,51 @@ interface NavItem {
   to: string
   label: string
   icon: typeof PhoneCall
-  resource: string
+  /**
+   * Los recursos que dan acceso a este módulo. Basta con alcanzar UNO.
+   *
+   * <p>Existe porque Flota tiene dos secciones con permisos distintos
+   * (docs/04 §2.4): la unidad administrativa ve el inventario y no la
+   * operación; un analista, al revés. Con un solo recurso, la entrada del menú
+   * habría que duplicarla o esconderla a la mitad de quienes sí tienen algo que
+   * ver ahí.
+   */
+  resources: string[]
+  /** Para módulos con secciones: adónde llevar según lo que el rol alcance. */
+  landing?: (roles: RoleCode[]) => string | null
 }
 
 // docs/07 §2: la misma lista de rutas, filtrada por lo que el rol puede ver.
 const NAV_ITEMS: NavItem[] = [
-  { to: '/recepcion/llamadas', label: 'Recepción', icon: PhoneCall, resource: 'CALL' },
-  { to: '/casos', label: 'Casos', icon: FolderOpen, resource: 'CASE_FILE' },
-  { to: '/campo', label: 'Campo', icon: MapPinned, resource: 'CASE_FILE' },
-  { to: '/reportes', label: 'Reportes', icon: FileText, resource: 'OPERATIONAL_REPORT' },
-  { to: '/analitica', label: 'Analítica', icon: BarChart3, resource: 'ANALYTICS' },
-  { to: '/tableros', label: 'Observatorio', icon: Database, resource: 'OBSERVATORY' },
-  // Dos entradas de flota y no una, y es la doctrina hecha navegación
-  // (docs/04 §2.4): `/recursos/flota` es el inventario administrativo, y
-  // `/flota` es dónde están los vehículos. La unidad administrativa ve la
-  // primera y no la segunda, porque gestiona la flota y no la operación.
-  { to: '/recursos/flota', label: 'Flota', icon: Truck, resource: 'FLEET' },
-  { to: '/flota', label: 'Comando de flota', icon: Radar, resource: 'VEHICLE_TELEMETRY' },
-  { to: '/admin/usuarios', label: 'Administración', icon: ShieldCheck, resource: 'ADMIN' },
+  { to: '/recepcion/llamadas', label: 'Recepción', icon: PhoneCall, resources: ['CALL'] },
+  { to: '/casos', label: 'Casos', icon: FolderOpen, resources: ['CASE_FILE'] },
+  { to: '/campo', label: 'Campo', icon: MapPinned, resources: ['CASE_FILE'] },
+  { to: '/reportes', label: 'Reportes', icon: FileText, resources: ['OPERATIONAL_REPORT'] },
+  { to: '/analitica', label: 'Analítica', icon: BarChart3, resources: ['ANALYTICS'] },
+  { to: '/tableros', label: 'Observatorio', icon: Database, resources: ['OBSERVATORY'] },
+  // UNA entrada de flota con dos secciones dentro, no dos módulos separados:
+  // inventario (quién tiene qué vehículo) y comando (dónde están) son el mismo
+  // módulo mirado desde dos sitios. Los permisos siguen siendo distintos
+  // (docs/04 §2.4) y por eso el destino depende del rol: la unidad
+  // administrativa entra al inventario, un analista al comando.
+  {
+    to: '/recursos/flota',
+    label: 'Flota',
+    icon: Truck,
+    resources: ['FLEET', 'VEHICLE_TELEMETRY'],
+    landing: firstFleetSectionFor,
+  },
+  { to: '/admin/usuarios', label: 'Administración', icon: ShieldCheck, resources: ['ADMIN'] },
 ]
 
 export function AppShell({ children, session }: { children: ReactNode; session: Session }) {
-  const visibleItems = NAV_ITEMS.filter((item) => can('READ', item.resource, session.roles))
+  const visibleItems = NAV_ITEMS
+    .filter((item) => item.resources.some((resource) => can('READ', resource, session.roles)))
+    // El destino de un módulo con secciones es la PRIMERA que el rol alcanza.
+    // Llevar a todos al inventario mandaría al analista a una pantalla que el
+    // backend le deniega -- ofrecer lo que se va a negar es peor que no
+    // ofrecerlo.
+    .map((item) => ({ ...item, to: item.landing?.(session.roles) ?? item.to }))
 
   return (
     // HALLAZGO REAL (2026-09-08, midiendo la consola a 375 px): la barra lateral
