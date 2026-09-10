@@ -31,7 +31,7 @@ import type {
   LinkCriminalReportRequest,
   OpenCaseFileRequest,
   PageResponseCaseFileResponse,
-  Search2Params
+  Search3Params
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -39,19 +39,19 @@ import { customFetch } from '../../client';
 
 
 
-export type search2Response200 = {
+export type search3Response200 = {
   data: PageResponseCaseFileResponse
   status: 200
 }
     
-export type search2ResponseSuccess = (search2Response200) & {
+export type search3ResponseSuccess = (search3Response200) & {
   headers: Headers;
 };
 ;
 
-export type search2Response = (search2ResponseSuccess)
+export type search3Response = (search3ResponseSuccess)
 
-export const getSearch2Url = (params: Search2Params,) => {
+export const getSearch3Url = (params: Search3Params,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -66,9 +66,9 @@ export const getSearch2Url = (params: Search2Params,) => {
   return stringifiedParams.length > 0 ? `/api/v1/case-files?${stringifiedParams}` : `/api/v1/case-files`
 }
 
-export const search2 = async (params: Search2Params, options?: RequestInit): Promise<search2Response> => {
+export const search3 = async (params: Search3Params, options?: RequestInit): Promise<search3Response> => {
   
-  return customFetch<search2Response>(getSearch2Url(params),
+  return customFetch<search3Response>(getSearch3Url(params),
   {      
     ...options,
     method: 'GET'
@@ -81,66 +81,66 @@ export const search2 = async (params: Search2Params, options?: RequestInit): Pro
 
 
 
-export const getSearch2QueryKey = (params?: Search2Params,) => {
+export const getSearch3QueryKey = (params?: Search3Params,) => {
     return [
     `/api/v1/case-files`, ...(params ? [params]: [])
     ] as const;
     }
 
     
-export const getSearch2QueryOptions = <TData = Awaited<ReturnType<typeof search2>>, TError = unknown>(params: Search2Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search2>>, TError, TData>>, }
+export const getSearch3QueryOptions = <TData = Awaited<ReturnType<typeof search3>>, TError = unknown>(params: Search3Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search3>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getSearch2QueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getSearch3QueryKey(params);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof search2>>> = () => search2(params, );
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof search3>>> = () => search3(params, );
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof search2>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof search3>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type Search2QueryResult = NonNullable<Awaited<ReturnType<typeof search2>>>
-export type Search2QueryError = unknown
+export type Search3QueryResult = NonNullable<Awaited<ReturnType<typeof search3>>>
+export type Search3QueryError = unknown
 
 
-export function useSearch2<TData = Awaited<ReturnType<typeof search2>>, TError = unknown>(
- params: Search2Params, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof search2>>, TError, TData>> & Pick<
+export function useSearch3<TData = Awaited<ReturnType<typeof search3>>, TError = unknown>(
+ params: Search3Params, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof search3>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof search2>>,
+          Awaited<ReturnType<typeof search3>>,
           TError,
-          Awaited<ReturnType<typeof search2>>
+          Awaited<ReturnType<typeof search3>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearch2<TData = Awaited<ReturnType<typeof search2>>, TError = unknown>(
- params: Search2Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search2>>, TError, TData>> & Pick<
+export function useSearch3<TData = Awaited<ReturnType<typeof search3>>, TError = unknown>(
+ params: Search3Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search3>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof search2>>,
+          Awaited<ReturnType<typeof search3>>,
           TError,
-          Awaited<ReturnType<typeof search2>>
+          Awaited<ReturnType<typeof search3>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useSearch2<TData = Awaited<ReturnType<typeof search2>>, TError = unknown>(
- params: Search2Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search2>>, TError, TData>>, }
+export function useSearch3<TData = Awaited<ReturnType<typeof search3>>, TError = unknown>(
+ params: Search3Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search3>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useSearch2<TData = Awaited<ReturnType<typeof search2>>, TError = unknown>(
- params: Search2Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search2>>, TError, TData>>, }
+export function useSearch3<TData = Awaited<ReturnType<typeof search3>>, TError = unknown>(
+ params: Search3Params, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof search3>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getSearch2QueryOptions(params,options)
+  const queryOptions = getSearch3QueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

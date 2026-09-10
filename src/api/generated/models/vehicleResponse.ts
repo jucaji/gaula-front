@@ -16,4 +16,5 @@ export interface VehicleResponse {
   territorialUnitId?: string;
   status?: string;
   odometerKm?: number;
+  version?: number;
 }

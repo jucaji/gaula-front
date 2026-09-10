@@ -22,6 +22,7 @@ import type {
 
 import type {
   CrimeTypeResponse,
+  DepartmentGeometryResponse,
   GetReferralGuidelinesParams,
   ModusOperandiResponse,
   MunicipalityResponse,
@@ -363,6 +364,112 @@ export function useSearchModusOperandi<TData = Awaited<ReturnType<typeof searchM
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSearchModusOperandiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type departmentGeometryResponse200 = {
+  data: DepartmentGeometryResponse[]
+  status: 200
+}
+    
+export type departmentGeometryResponseSuccess = (departmentGeometryResponse200) & {
+  headers: Headers;
+};
+;
+
+export type departmentGeometryResponse = (departmentGeometryResponseSuccess)
+
+export const getDepartmentGeometryUrl = () => {
+
+
+  
+
+  return `/api/v1/catalog/departments/geometry`
+}
+
+export const departmentGeometry = async ( options?: RequestInit): Promise<departmentGeometryResponse> => {
+  
+  return customFetch<departmentGeometryResponse>(getDepartmentGeometryUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getDepartmentGeometryQueryKey = () => {
+    return [
+    `/api/v1/catalog/departments/geometry`
+    ] as const;
+    }
+
+    
+export const getDepartmentGeometryQueryOptions = <TData = Awaited<ReturnType<typeof departmentGeometry>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof departmentGeometry>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDepartmentGeometryQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof departmentGeometry>>> = () => departmentGeometry();
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof departmentGeometry>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type DepartmentGeometryQueryResult = NonNullable<Awaited<ReturnType<typeof departmentGeometry>>>
+export type DepartmentGeometryQueryError = unknown
+
+
+export function useDepartmentGeometry<TData = Awaited<ReturnType<typeof departmentGeometry>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof departmentGeometry>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof departmentGeometry>>,
+          TError,
+          Awaited<ReturnType<typeof departmentGeometry>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDepartmentGeometry<TData = Awaited<ReturnType<typeof departmentGeometry>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof departmentGeometry>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof departmentGeometry>>,
+          TError,
+          Awaited<ReturnType<typeof departmentGeometry>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useDepartmentGeometry<TData = Awaited<ReturnType<typeof departmentGeometry>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof departmentGeometry>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useDepartmentGeometry<TData = Awaited<ReturnType<typeof departmentGeometry>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof departmentGeometry>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getDepartmentGeometryQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

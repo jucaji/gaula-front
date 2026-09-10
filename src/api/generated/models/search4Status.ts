@@ -11,9 +11,8 @@ export type Search4Status = typeof Search4Status[keyof typeof Search4Status];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Search4Status = {
-  PENDING: 'PENDING',
-  PARSED: 'PARSED',
-  NEEDS_REVIEW: 'NEEDS_REVIEW',
-  FAILED: 'FAILED',
-  DISCARDED: 'DISCARDED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  CLOSED_AS_CASE: 'CLOSED_AS_CASE',
+  CLOSED_AS_REFERRAL: 'CLOSED_AS_REFERRAL',
+  CLOSED_NO_ACTION: 'CLOSED_NO_ACTION',
 } as const;

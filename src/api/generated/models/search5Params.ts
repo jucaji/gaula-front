@@ -5,8 +5,10 @@
  * Sistema de información operacional del GAULA, Ejército Nacional de Colombia.
  * OpenAPI spec version: v1
  */
+import type { Search5Status } from './search5Status';
+import type { Pageable } from './pageable';
 
 export type Search5Params = {
-page?: number;
-size?: number;
+status?: Search5Status;
+pageable: Pageable;
 };

@@ -140,19 +140,19 @@ export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unkno
 
 
 
-export type register3Response201 = {
+export type register4Response201 = {
   data: PersonOfInterestResponse
   status: 201
 }
     
-export type register3ResponseSuccess = (register3Response201) & {
+export type register4ResponseSuccess = (register4Response201) & {
   headers: Headers;
 };
 ;
 
-export type register3Response = (register3ResponseSuccess)
+export type register4Response = (register4ResponseSuccess)
 
-export const getRegister3Url = (trackingNumber: string,) => {
+export const getRegister4Url = (trackingNumber: string,) => {
 
 
   
@@ -160,10 +160,10 @@ export const getRegister3Url = (trackingNumber: string,) => {
   return `/api/v1/case-files/${trackingNumber}/persons`
 }
 
-export const register3 = async (trackingNumber: string,
-    registerPersonOfInterestRequest: RegisterPersonOfInterestRequest, options?: RequestInit): Promise<register3Response> => {
+export const register4 = async (trackingNumber: string,
+    registerPersonOfInterestRequest: RegisterPersonOfInterestRequest, options?: RequestInit): Promise<register4Response> => {
   
-  return customFetch<register3Response>(getRegister3Url(trackingNumber),
+  return customFetch<register4Response>(getRegister4Url(trackingNumber),
   {      
     ...options,
     method: 'POST',
@@ -176,11 +176,11 @@ export const register3 = async (trackingNumber: string,
 
 
 
-export const getRegister3MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register3>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof register3>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext> => {
+export const getRegister4MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext> => {
 
-const mutationKey = ['register3'];
+const mutationKey = ['register4'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -190,10 +190,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register3>>, {trackingNumber: string;data: RegisterPersonOfInterestRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register4>>, {trackingNumber: string;data: RegisterPersonOfInterestRequest}> = (props) => {
           const {trackingNumber,data} = props ?? {};
 
-          return  register3(trackingNumber,data,)
+          return  register4(trackingNumber,data,)
         }
 
         
@@ -201,20 +201,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type Register3MutationResult = NonNullable<Awaited<ReturnType<typeof register3>>>
-    export type Register3MutationBody = RegisterPersonOfInterestRequest
-    export type Register3MutationError = unknown
+    export type Register4MutationResult = NonNullable<Awaited<ReturnType<typeof register4>>>
+    export type Register4MutationBody = RegisterPersonOfInterestRequest
+    export type Register4MutationError = unknown
 
-    export const useRegister3 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register3>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
+    export const useRegister4 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof register3>>,
+        Awaited<ReturnType<typeof register4>>,
         TError,
         {trackingNumber: string;data: RegisterPersonOfInterestRequest},
         TContext
       > => {
 
-      const mutationOptions = getRegister3MutationOptions(options);
+      const mutationOptions = getRegister4MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

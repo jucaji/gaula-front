@@ -11,8 +11,11 @@ export type Search3Status = typeof Search3Status[keyof typeof Search3Status];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const Search3Status = {
-  IN_PROGRESS: 'IN_PROGRESS',
-  CLOSED_AS_CASE: 'CLOSED_AS_CASE',
-  CLOSED_AS_REFERRAL: 'CLOSED_AS_REFERRAL',
-  CLOSED_NO_ACTION: 'CLOSED_NO_ACTION',
+  RECEIVED: 'RECEIVED',
+  UNDER_VERIFICATION: 'UNDER_VERIFICATION',
+  IN_OPERATION: 'IN_OPERATION',
+  RESULT_RECORDED: 'RESULT_RECORDED',
+  PROSECUTED: 'PROSECUTED',
+  CLOSED: 'CLOSED',
+  CLOSED_WITHOUT_MERIT: 'CLOSED_WITHOUT_MERIT',
 } as const;

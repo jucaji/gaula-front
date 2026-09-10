@@ -6,12 +6,11 @@
  * OpenAPI spec version: v1
  */
 import type { Search3Status } from './search3Status';
-import type { Search3Jurisdiction } from './search3Jurisdiction';
 import type { Pageable } from './pageable';
 
 export type Search3Params = {
 status?: Search3Status;
-jurisdiction?: Search3Jurisdiction;
-operatorId?: string;
+municipalityCode?: string;
+crimeTypeCode?: string;
 pageable: Pageable;
 };

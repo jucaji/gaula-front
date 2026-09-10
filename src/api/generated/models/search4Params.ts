@@ -6,9 +6,12 @@
  * OpenAPI spec version: v1
  */
 import type { Search4Status } from './search4Status';
+import type { Search4Jurisdiction } from './search4Jurisdiction';
 import type { Pageable } from './pageable';
 
 export type Search4Params = {
 status?: Search4Status;
+jurisdiction?: Search4Jurisdiction;
+operatorId?: string;
 pageable: Pageable;
 };
