@@ -127,12 +127,12 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await expect(page.getByRole('button', { name: 'Registrar vehículo' })).toHaveCount(0)
   })
 
-  test('CA-4: corregir manda la versión que está en pantalla en el If-Match', async ({ page }) => {
+  test('CA-4: corregir manda la versión que está en pantalla en el If-Match (por PUT)', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
     let ifMatch: string | null = null
     let patched: Record<string, unknown> | null = null
     await page.route(`**/api/v1/vehicles/${VEHICLE_ID}`, async (route) => {
-      if (route.request().method() !== 'PATCH') return route.fallback()
+      if (route.request().method() !== 'PUT') return route.fallback()
       ifMatch = route.request().headers()['if-match'] ?? null
       patched = JSON.parse(route.request().postData() ?? '{}')
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(VEHICLE) })

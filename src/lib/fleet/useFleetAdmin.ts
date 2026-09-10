@@ -76,7 +76,10 @@ export function useFleetMutations(vehicleId?: string) {
   const update = useMutation({
     mutationFn: ({ values, version }: { values: VehicleFormValues; version: number }) =>
       customFetch<Vehicle>(`/api/v1/vehicles/${vehicleId}`, {
-        method: 'PATCH',
+        // PUT: el cuerpo reemplaza el bloque de características completo, y el
+        // formulario siempre lo manda entero. Un PATCH prometería cambios
+        // parciales que este endpoint no hace.
+        method: 'PUT',
         // CA-4: la versión que ESTE actor tiene en pantalla, no una recién
         // leída del servidor -- releerla convertiría el control de concurrencia
         // en una formalidad que siempre pasa.
