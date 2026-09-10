@@ -236,6 +236,37 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await expect(page).not.toHaveURL(/\/recursos\/equipos$/)
   })
 
+  test('un vacío por alcance NO dice «ajuste los filtros»', async ({ page }) => {
+    await mockConsole(page, FIELD_OFFICER)
+    // Un oficial de campo sin vehículos asignados: la lista vuelve vacía y la
+    // causa NO son los filtros, que ni siquiera están puestos.
+    await page.route('**/api/v1/vehicles?*', (route) =>
+      route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ content: [], totalElements: 0 }),
+      }))
+
+    await page.goto('/recursos/flota')
+
+    await expect(page.getByText(/Ajuste los filtros/)).toHaveCount(0)
+    await expect(page.getByText(/sólo los vehículos que su rol alcanza/)).toBeVisible()
+  })
+
+  test('con un filtro puesto, el vacío sí es del filtro y se ofrece quitarlo', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+    await page.route('**/api/v1/vehicles?*', (route) =>
+      route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ content: [], totalElements: 0 }),
+      }))
+
+    await page.goto('/recursos/flota?status=OUT_OF_SERVICE')
+
+    await expect(page.getByText('Ningún vehículo coincide con este filtro')).toBeVisible()
+    await page.getByRole('button', { name: 'Quitar filtros' }).click()
+    await expect(page).not.toHaveURL(/status=/)
+  })
+
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
     await mockConsole(page, SYSTEM_ADMIN)
     await page.goto(`/recursos/flota/${VEHICLE_ID}`)

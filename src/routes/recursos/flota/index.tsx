@@ -168,6 +168,7 @@ function FleetPage() {
   const vehicles = useVehicles(search)
   const assignments = useAssignments()
   const canCreate = Route.useRouteContext().can('CREATE', 'FLEET')
+  const hasFilters = Boolean(search.status) || Boolean(search.territorialUnitId)
   const [registering, setRegistering] = useState(false)
 
   return (
@@ -215,7 +216,28 @@ function FleetPage() {
         {vehicles.isLoading && <p className="mt-4 text-sm text-text-secondary">Cargando…</p>}
         {vehicles.isError && <p className="mt-4 text-sm text-critical">No se pudo cargar la flota.</p>}
         {vehicles.data?.content && vehicles.data.content.length === 0 && (
-          <EmptyState title="No hay vehículos con este filtro" description="Ajuste los filtros para ver la flota disponible." />
+          // docs/06 §8.8: un vacío tiene que explicarse, y no puede inventarse
+          // la causa. Con filtro puestos, la causa probable es el filtro y se
+          // ofrece quitarlo. SIN filtros, decir «ajuste los filtros» es falso y
+          // manda a perder el tiempo: lo que hay es una lista acotada al
+          // alcance de quien mira (docs/04 §4), y eso es lo que hay que decir.
+          hasFilters ? (
+            <EmptyState
+              title="Ningún vehículo coincide con este filtro"
+              description="Pruebe con otro estado o quite el filtro de unidad."
+              action={
+                <Button variant="secondary" size="sm"
+                        onClick={() => void navigate({ search: () => ({ page: 0, size: search.size }) })}>
+                  Quitar filtros
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              title="Aquí no aparece ningún vehículo"
+              description="Esta lista muestra sólo los vehículos que su rol alcanza. O no hay ninguno registrado en su unidad, o su rol no alcanza la flota; un administrador puede revisarlo en Administración › Usuarios."
+            />
+          )
         )}
         {vehicles.data?.content && vehicles.data.content.length > 0 && (
           <div className="mt-4 h-[400px]">

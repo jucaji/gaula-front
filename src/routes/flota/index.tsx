@@ -180,7 +180,10 @@ function FleetCommandPage() {
               description={
                 search.estado
                   ? `No hay vehículos en estado «${MOVEMENT_STYLE[search.estado].label}».`
-                  : 'No hay vehículos inscritos en telemetría todavía.'
+                  // Sin filtro, afirmar «no hay vehículos inscritos» era
+                  // inventarse la causa: la consulta viene acotada al alcance
+                  // de quien mira, y puede estar vacía por eso (docs/06 §8.8).
+                  : 'Esta consola muestra sólo los vehículos que su rol alcanza. O ninguno está inscrito en telemetría, o su rol no alcanza ninguno.'
               }
             />
           ) : (
