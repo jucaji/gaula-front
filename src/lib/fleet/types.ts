@@ -188,6 +188,26 @@ export interface VehicleEvent {
   details: Record<string, string>
 }
 
+/**
+ * Cómo se nombra cada hecho en pantalla.
+ *
+ * <p>El RESUMEN lo redacta el servidor; esta etiqueta es la del tipo, y sin ella
+ * la línea de tiempo mostraba `FUEL_RECORDED` en mayúsculas y en inglés — el
+ * vocabulario interno asomando en la cara del usuario.
+ */
+export const EVENT_TYPE_LABEL: Record<string, string> = {
+  REGISTERED: 'Alta',
+  CORRECTED: 'Corrección',
+  TRANSFERRED: 'Traslado',
+  DECOMMISSIONED: 'Baja',
+  RETURNED_TO_SERVICE: 'Reactivación',
+  ASSIGNED: 'Asignación',
+  RELEASED: 'Liberación',
+  FUEL_RECORDED: 'Combustible',
+  MAINTENANCE_OPENED: 'Mantenimiento',
+  MAINTENANCE_CLOSED: 'Mantenimiento',
+}
+
 /** El tono de cada hecho. El texto lo redacta el servidor; aquí sólo se le da forma. */
 export const EVENT_TONE: Record<string, 'neutral' | 'active' | 'alert' | 'critical'> = {
   REGISTERED: 'active',

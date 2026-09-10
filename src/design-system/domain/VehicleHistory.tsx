@@ -4,6 +4,7 @@ import { formatDateTime } from '@/lib/format/formatDateTime'
 import {
   EFFICIENCY_EXPLANATION,
   EVENT_TONE,
+  EVENT_TYPE_LABEL,
   MAINTENANCE_STATUS_LABEL,
   MAINTENANCE_TYPE_LABEL,
   type FuelHistory,
@@ -54,7 +55,8 @@ export function FuelHistoryPanel({ history }: { history: FuelHistory }) {
               </p>
               {/* Un promedio sin su denominador no se puede juzgar. */}
               <p className="text-xs text-text-secondary">
-                Sobre {history.calculableTramos} {history.calculableTramos === 1 ? 'tramo' : 'tramos'} calculables
+                Sobre {history.calculableTramos}{' '}
+                {history.calculableTramos === 1 ? 'tramo calculable' : 'tramos calculables'}
               </p>
             </>
           )}
@@ -186,7 +188,7 @@ export function VehicleTimelinePanel({ events }: { events: VehicleEvent[] }) {
         {events.map((event) => (
           <li key={event.id} className={`${CARD} flex flex-wrap items-baseline justify-between gap-2`}>
             <div className="flex items-baseline gap-2">
-              <Badge tone={EVENT_TONE[event.type] ?? 'neutral'}>{event.type}</Badge>
+              <Badge tone={EVENT_TONE[event.type] ?? 'neutral'}>{EVENT_TYPE_LABEL[event.type] ?? event.type}</Badge>
               <p className="text-sm text-text-primary">{event.summary}</p>
             </div>
             <p className="text-xs text-text-secondary">{formatDateTime(event.occurredAt)}</p>

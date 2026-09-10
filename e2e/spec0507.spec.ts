@@ -361,7 +361,9 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await page.getByRole('button', { name: 'Historial' }).click()
 
     // Un promedio sin su denominador no se puede juzgar.
-    await expect(page.getByText('Sobre 1 tramo calculables', { exact: false })).toBeVisible()
+    // «tramo calculable», en singular: la primera versión decía «1 tramo
+    // calculables», visto en la pantalla real.
+    await expect(page.getByText('Sobre 1 tramo calculable', { exact: false })).toBeVisible()
   })
 
   test('SPEC-0508 CA-4/CA-6: mantenimiento y traslado se pueden volver a ver', async ({ page }) => {
@@ -372,8 +374,12 @@ test.describe('SPEC-0507: gestión de flota', () => {
 
     await expect(page.getByRole('list', { name: 'Órdenes de mantenimiento' })
       .getByText('cambio de aceite')).toBeVisible()
-    await expect(page.getByRole('list', { name: 'Línea de tiempo' })
-      .getByText(/Trasladado de GAULA Militar Bogotá D.C. a GAULA Militar Antioquia/)).toBeVisible()
+    const linea = page.getByRole('list', { name: 'Línea de tiempo' })
+    await expect(linea.getByText(/Trasladado de GAULA Militar Bogotá D.C. a GAULA Militar Antioquia/)).toBeVisible()
+    // El tipo se nombra en español: `TRANSFERRED` en la cara del usuario era el
+    // vocabulario interno asomando.
+    await expect(linea.getByText('Traslado')).toBeVisible()
+    await expect(linea.getByText('TRANSFERRED')).toHaveCount(0)
   })
 
   test('SPEC-0508 CA-7: la unidad administrativa no tiene pestaña de ubicación', async ({ page }) => {
