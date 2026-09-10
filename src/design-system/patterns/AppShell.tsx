@@ -8,6 +8,7 @@ import {
   BarChart3,
   Database,
   Truck,
+  Radar,
   ShieldCheck,
   UserCircle,
 } from 'lucide-react'
@@ -32,7 +33,12 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/reportes', label: 'Reportes', icon: FileText, resource: 'OPERATIONAL_REPORT' },
   { to: '/analitica', label: 'Analítica', icon: BarChart3, resource: 'ANALYTICS' },
   { to: '/tableros', label: 'Observatorio', icon: Database, resource: 'OBSERVATORY' },
+  // Dos entradas de flota y no una, y es la doctrina hecha navegación
+  // (docs/04 §2.4): `/recursos/flota` es el inventario administrativo, y
+  // `/flota` es dónde están los vehículos. La unidad administrativa ve la
+  // primera y no la segunda, porque gestiona la flota y no la operación.
   { to: '/recursos/flota', label: 'Flota', icon: Truck, resource: 'FLEET' },
+  { to: '/flota', label: 'Comando de flota', icon: Radar, resource: 'VEHICLE_TELEMETRY' },
   { to: '/admin/usuarios', label: 'Administración', icon: ShieldCheck, resource: 'ADMIN' },
 ]
 

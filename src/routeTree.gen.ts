@@ -22,6 +22,7 @@ import { Route as CampoTrackingNumberRouteImport } from './routes/campo/$trackin
 import { Route as CasosIndexRouteImport } from './routes/casos/index'
 import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackingNumber'
 import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
+import { Route as FlotaIndexRouteImport } from './routes/flota/index'
 import { Route as ObservatorioCargueRouteImport } from './routes/observatorio/cargue'
 import { Route as ObservatorioHechosRouteImport } from './routes/observatorio/hechos'
 import { Route as RecepcionIndexRouteImport } from './routes/recepcion/index'
@@ -103,6 +104,11 @@ const CasosTrackingNumberRoute = CasosTrackingNumberRouteImport.update({
 const CasosNuevoRoute = CasosNuevoRouteImport.update({
   id: '/casos/nuevo',
   path: '/casos/nuevo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlotaIndexRoute = FlotaIndexRouteImport.update({
+  id: '/flota/',
+  path: '/flota/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ObservatorioCargueRoute = ObservatorioCargueRouteImport.update({
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/analitica/': typeof AnaliticaIndexRoute
   '/campo/': typeof CampoIndexRoute
   '/casos/': typeof CasosIndexRoute
+  '/flota/': typeof FlotaIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
   '/reportes/': typeof ReportesIndexRoute
   '/tableros/': typeof TablerosIndexRoute
@@ -246,6 +253,7 @@ export interface FileRoutesByTo {
   '/analitica': typeof AnaliticaIndexRoute
   '/campo': typeof CampoIndexRoute
   '/casos': typeof CasosIndexRoute
+  '/flota': typeof FlotaIndexRoute
   '/recepcion': typeof RecepcionIndexRoute
   '/reportes': typeof ReportesIndexRoute
   '/tableros': typeof TablerosIndexRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/analitica/': typeof AnaliticaIndexRoute
   '/campo/': typeof CampoIndexRoute
   '/casos/': typeof CasosIndexRoute
+  '/flota/': typeof FlotaIndexRoute
   '/recepcion/': typeof RecepcionIndexRoute
   '/reportes/': typeof ReportesIndexRoute
   '/tableros/': typeof TablerosIndexRoute
@@ -313,6 +322,7 @@ export interface FileRouteTypes {
     | '/analitica/'
     | '/campo/'
     | '/casos/'
+    | '/flota/'
     | '/recepcion/'
     | '/reportes/'
     | '/tableros/'
@@ -345,6 +355,7 @@ export interface FileRouteTypes {
     | '/analitica'
     | '/campo'
     | '/casos'
+    | '/flota'
     | '/recepcion'
     | '/reportes'
     | '/tableros'
@@ -377,6 +388,7 @@ export interface FileRouteTypes {
     | '/analitica/'
     | '/campo/'
     | '/casos/'
+    | '/flota/'
     | '/recepcion/'
     | '/reportes/'
     | '/tableros/'
@@ -410,6 +422,7 @@ export interface RootRouteChildren {
   AnaliticaIndexRoute: typeof AnaliticaIndexRoute
   CampoIndexRoute: typeof CampoIndexRoute
   CasosIndexRoute: typeof CasosIndexRoute
+  FlotaIndexRoute: typeof FlotaIndexRoute
   RecepcionIndexRoute: typeof RecepcionIndexRoute
   ReportesIndexRoute: typeof ReportesIndexRoute
   TablerosIndexRoute: typeof TablerosIndexRoute
@@ -514,6 +527,13 @@ declare module '@tanstack/react-router' {
       path: '/casos/nuevo'
       fullPath: '/casos/nuevo'
       preLoaderRoute: typeof CasosNuevoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flota/': {
+      id: '/flota/'
+      path: '/flota'
+      fullPath: '/flota/'
+      preLoaderRoute: typeof FlotaIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/observatorio/cargue': {
@@ -658,6 +678,7 @@ const rootRouteChildren: RootRouteChildren = {
   AnaliticaIndexRoute: AnaliticaIndexRoute,
   CampoIndexRoute: CampoIndexRoute,
   CasosIndexRoute: CasosIndexRoute,
+  FlotaIndexRoute: FlotaIndexRoute,
   RecepcionIndexRoute: RecepcionIndexRoute,
   ReportesIndexRoute: ReportesIndexRoute,
   TablerosIndexRoute: TablerosIndexRoute,

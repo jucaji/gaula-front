@@ -70,6 +70,15 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
     CREATE: ['INTELLIGENCE_ANALYST', 'SYSTEM_ADMIN'],
     UPDATE: ['INTELLIGENCE_ANALYST', 'SYSTEM_ADMIN'],
   },
+  // SPEC-0506, y aquí el espejo NO copia a FLEET a propósito. La posición de
+  // un vehículo viaja sobre otro resource_type porque docs/04 §2.4 dice que
+  // ADMIN_STAFF administra la flota y NO ve la operación: si esta lista
+  // incluyera a ADMIN_STAFF, el menú le ofrecería una pantalla que el backend
+  // le va a denegar -- y ofrecer lo que se va a negar es peor que no ofrecerlo.
+  // La autoridad real sigue siendo iam.access_policy (V37).
+  VEHICLE_TELEMETRY: ['UNIT_COMMANDER', 'FIELD_OFFICER', 'INTELLIGENCE_ANALYST'],
+  // Dar de alta un equipo GPS es configuración del sistema, no operación.
+  TRACKING_DEVICE: ['SYSTEM_ADMIN'],
   ADMIN: ['SYSTEM_ADMIN'],
 }
 

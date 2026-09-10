@@ -29,6 +29,43 @@ export function formatDuration(fromIso: string, toIso: string): string {
   return 'menos de un minuto'
 }
 
+/**
+ * "hace 12 segundos", "hace 18 minutos" -- CON el prefijo, a diferencia de
+ * `formatDuration`, que lo quita a propósito porque allí la duración es una
+ * columna ("5 minutos"), no una frase.
+ *
+ * SPEC-0506 CA-15: en la consola de flota la antigüedad de una posición ES
+ * información operativa. Un comandante decide distinto ante "hace 12
+ * segundos" que ante "hace 18 minutos", y la diferencia entre ambas se pierde
+ * si sólo se muestra la hora absoluta.
+ */
+export function formatRelativeToNow(iso: string | undefined, now: Date = new Date()): string {
+  if (!iso) return '—'
+  const seconds = (now.getTime() - new Date(iso).getTime()) / 1000
+  if (seconds < 0) return 'ahora'
+  if (seconds < 10) return 'hace un momento'
+  if (seconds < 60) return `hace ${Math.round(seconds)} segundos`
+  for (const [unit, unitSeconds] of UNITS) {
+    if (seconds >= unitSeconds) {
+      return RELATIVE.format(-Math.round(seconds / unitSeconds), unit)
+    }
+  }
+  return 'hace un momento'
+}
+
+/** La misma antigüedad a partir de segundos ya calculados por el backend. */
+export function formatAgeSeconds(seconds: number | null | undefined): string {
+  if (seconds === null || seconds === undefined) return '—'
+  if (seconds < 10) return 'hace un momento'
+  if (seconds < 60) return `hace ${Math.round(seconds)} segundos`
+  for (const [unit, unitSeconds] of UNITS) {
+    if (seconds >= unitSeconds) {
+      return RELATIVE.format(-Math.round(seconds / unitSeconds), unit)
+    }
+  }
+  return 'hace un momento'
+}
+
 const CURRENCY_COP = new Intl.NumberFormat('es-CO', {
   style: 'currency',
   currency: 'COP',
