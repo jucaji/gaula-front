@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -95,7 +95,12 @@ function AdminUsersPage() {
                   type="button"
                   disabled={pendingUserId === user.id}
                   onClick={() => toggleRole(user, role)}
-                  className="disabled:opacity-50"
+                  // `aria-pressed` porque esto es un interruptor, no una acción:
+                  // sin él, un lector de pantalla lee «UNIT_COMMANDER» y no dice
+                  // si lo tiene o no -- que es justo el dato.
+                  aria-pressed={active}
+                  aria-label={active ? `Revocar ${role}` : `Otorgar ${role}`}
+                  className="rounded-sm transition-opacity duration-instant hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50"
                   title={active ? `Revocar ${role}` : `Otorgar ${role}`}
                 >
                   <Badge tone={active ? 'active' : 'neutral'}>{role}</Badge>
@@ -129,8 +134,14 @@ function AdminUsersPage() {
     <div className="flex h-full flex-col">
       <AdminNav />
       <h1 className="text-lg font-semibold text-text-primary">Administración de usuarios</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        El alta ocurre sola en el primer login. Aquí se edita rol, unidad operativa y estado.
+      <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+        El alta ocurre sola en el primer login, <strong className="text-text-primary">sin ningún rol</strong>:
+        los roles se conceden aquí, tocando las etiquetas de la columna «Roles». Un rol concedido surte efecto
+        cuando la persona vuelve a iniciar sesión. Para definir hasta dónde llega cada rol, vaya a{' '}
+        <Link to="/admin/roles" className="text-accent underline">
+          Roles
+        </Link>
+        .
       </p>
 
       {isLoading && <p className="mt-4 text-sm text-text-secondary">Cargando…</p>}

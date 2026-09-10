@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { customFetch } from '@/api/client'
@@ -73,7 +73,20 @@ function AdminRolesPage() {
     <div>
       <AdminNav />
       <h1 className="text-lg font-semibold text-text-primary">Matriz de acceso</h1>
-      <p className="mt-1 max-w-2xl rounded-sm border border-alert bg-surface-sunken px-3 py-2 text-sm text-alert">
+      {/* Las dos pantallas se confunden, y con razón: las dos hablan de roles.
+          Ésta dice qué puede un ROL; «Usuarios» dice qué rol tiene una PERSONA.
+          Sin esta línea, quien viene a dar un permiso a alguien se queda aquí
+          cambiando alcances que no le van a servir. */}
+      <p className="mt-1 max-w-2xl text-sm text-text-secondary">
+        Aquí se define <strong className="text-text-primary">hasta dónde llega cada rol</strong>: qué alcance tiene
+        sobre cada recurso. Para decidir <strong className="text-text-primary">qué rol tiene una persona</strong>,
+        vaya a{' '}
+        <Link to="/admin/usuarios" className="text-accent underline">
+          Usuarios
+        </Link>
+        .
+      </p>
+      <p className="mt-2 max-w-2xl rounded-sm border border-alert bg-surface-sunken px-3 py-2 text-sm text-alert">
         Esta matriz es una hipótesis del proveedor por validar, no un hecho verificado en campo. Editarla no requiere
         desplegar, pero cada cambio queda auditado.
       </p>
