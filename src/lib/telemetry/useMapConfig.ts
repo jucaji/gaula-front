@@ -19,8 +19,13 @@ export function useMapConfig() {
   return useQuery<MapProviderConfig>({
     queryKey: ['config', 'map'],
     queryFn: () => customFetch<MapProviderConfig>('/api/v1/telemetry/map-config'),
-    staleTime: Infinity,
+    // NO `Infinity`, y es la otra mitad del mismo defecto: con la caché
+    // eterna, cambiar el proveedor en el servidor no se veía hasta cerrar la
+    // pestaña. Cinco minutos evitan pedirlo en cada render y dejan que una
+    // recarga refleje la realidad.
+    staleTime: 5 * 60_000,
     gcTime: Infinity,
+    refetchOnMount: true,
     networkMode: 'always',
     retry: false,
   })
