@@ -53,7 +53,17 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
   // `MaintenanceController` sólo exigen `isAuthenticated()`, sin restricción
   // de rol -- se amplía a los roles con uso operativo real de la flota
   // (FIELD_OFFICER la consulta/asigna en campo, UNIT_COMMANDER la supervisa).
-  FLEET: ['ADMIN_STAFF', 'SYSTEM_ADMIN', 'FIELD_OFFICER', 'UNIT_COMMANDER'],
+  // SPEC-0507: deja de ser una lista plana y pasa a ser por acción, porque la
+  // matriz del backend (V38) NUNCA fue plana: SYSTEM_ADMIN y FIELD_OFFICER sólo
+  // leen. Mientras esto fue un arreglo, la consola le ofrecía a un oficial de
+  // campo el botón de registrar un vehículo que el backend le iba a denegar.
+  FLEET: {
+    READ: ['ADMIN_STAFF', 'SYSTEM_ADMIN', 'FIELD_OFFICER', 'UNIT_COMMANDER'],
+    CREATE: ['ADMIN_STAFF'],
+    UPDATE: ['ADMIN_STAFF', 'UNIT_COMMANDER'],
+    DELETE: ['ADMIN_STAFF', 'UNIT_COMMANDER'],
+    EXPORT: [],
+  },
   // S12.FE.01, verificado contra el backend real: `ExternalDataRequestController`
   // sólo exige `isAuthenticated()`, sin restricción de rol -- se limita a los
   // roles con uso real de inteligencia (INTELLIGENCE_ANALYST envía/recibe,

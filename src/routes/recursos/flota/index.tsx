@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { z } from 'zod'
 import type { ColumnDef } from '@tanstack/react-table'
 import { customFetch } from '@/api/client'
@@ -8,6 +10,10 @@ import { FleetNav } from '@/design-system/patterns/FleetNav'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { DataTable } from '@/design-system/primitives/DataTable'
 import { Input } from '@/design-system/primitives/Input'
+import { Button } from '@/design-system/primitives/Button'
+import { VehicleForm } from '@/design-system/domain/VehicleForm'
+import { useFleetMutations, useTerritorialUnits } from '@/lib/fleet/useFleetAdmin'
+import { EMPTY_VEHICLE_FORM, isVehicleFormComplete, type VehicleFormValues } from '@/lib/fleet/types'
 
 const VEHICLE_STATUSES = ['AVAILABLE', 'IN_MISSION', 'MAINTENANCE', 'OUT_OF_SERVICE'] as const
 
@@ -102,17 +108,83 @@ const assignmentColumns: ColumnDef<FleetAssignmentResponse, unknown>[] = [
   { id: 'assignedFrom', accessorKey: 'assignedFrom', header: 'Desde', cell: ({ getValue }) => (getValue<string>() ? new Date(getValue<string>()).toLocaleString('es-CO') : '—') },
 ]
 
+/**
+ * SPEC-0507 CA-13: el alta de un vehículo, dentro de la propia pantalla.
+ *
+ * <p>Un panel en línea y no un diálogo modal: registrar un vehículo se hace
+ * mirando la lista —para no repetir una placa que ya está— y un modal la tapa.
+ */
+function RegisterVehiclePanel({ onDone }: { onDone: () => void }) {
+  const [values, setValues] = useState<VehicleFormValues>(EMPTY_VEHICLE_FORM)
+  const units = useTerritorialUnits()
+  const { register } = useFleetMutations()
+
+  async function submit() {
+    await register.mutateAsync(values)
+    setValues(EMPTY_VEHICLE_FORM)
+    onDone()
+  }
+
+  return (
+    <form
+      className="mt-4 flex flex-col gap-3 rounded-sm border border-border-strong bg-surface-raised p-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        void submit()
+      }}
+    >
+      <h2 className="text-sm font-semibold text-text-primary">Registrar vehículo</h2>
+
+      <VehicleForm values={values} onChange={setValues} units={units.data ?? []} mode="create"
+                   disabled={register.isPending} />
+
+      {units.isError && (
+        <p className="text-sm text-critical">
+          No se pudieron cargar las unidades territoriales; sin ellas no se puede registrar.
+        </p>
+      )}
+      {register.isError && (
+        <p className="text-sm text-critical">
+          {register.error instanceof Error ? register.error.message : 'No se pudo registrar el vehículo.'}
+        </p>
+      )}
+
+      <div className="flex gap-2">
+        <Button type="submit" variant="primary" size="sm" loading={register.isPending}
+                disabled={!isVehicleFormComplete(values, 'create')}>
+          Registrar
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={onDone}>
+          Cancelar
+        </Button>
+      </div>
+    </form>
+  )
+}
+
 function FleetPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const vehicles = useVehicles(search)
   const assignments = useAssignments()
+  const canCreate = Route.useRouteContext().can('CREATE', 'FLEET')
+  const [registering, setRegistering] = useState(false)
 
   return (
     <div className="flex h-full flex-col gap-6">
       <div>
         <FleetNav />
-        <h1 className="text-lg font-semibold text-text-primary">Flota</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-lg font-semibold text-text-primary">Flota</h1>
+          {canCreate && !registering && (
+            <Button variant="primary" size="sm" onClick={() => setRegistering(true)}>
+              <Plus className="size-4" aria-hidden="true" />
+              Registrar vehículo
+            </Button>
+          )}
+        </div>
+
+        {registering && <RegisterVehiclePanel onDone={() => setRegistering(false)} />}
 
         <div className="mt-4 flex items-end gap-3">
           <label className="flex flex-col gap-1 text-xs text-text-secondary">

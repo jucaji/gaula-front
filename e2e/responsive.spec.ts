@@ -68,7 +68,7 @@ const RUTAS = [
   '/', '/casos', '/casos/nuevo', '/campo', '/recepcion', '/recepcion/llamadas',
   '/reportes', '/reportes/nuevo', '/reportes/revision', '/analitica', '/analitica/carga-147',
   '/observatorio/hechos', '/observatorio/cargue', '/tableros', '/tableros/extorsion',
-  '/tableros/secuestro', '/tableros/boletin', '/recursos/flota', '/flota',
+  '/tableros/secuestro', '/tableros/boletin', '/recursos/flota', '/flota', '/recursos/equipos',
   '/admin/usuarios', '/admin/roles', '/admin/catalogos', '/admin/auditoria',
 ]
 

@@ -5,6 +5,13 @@ import { customFetch } from '@/api/client'
 import type { VehicleResponse } from '@/api/generated/models'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
+import {
+  CorrectVehiclePanel,
+  TransferVehiclePanel,
+  VehicleDevicePanel,
+  VehicleServiceStatusPanel,
+} from '@/design-system/domain/VehicleAdminPanels'
+import type { Vehicle } from '@/lib/fleet/types'
 
 export const Route = createFileRoute('/recursos/flota/$vehicleId')({
   beforeLoad: ({ context }) => {
@@ -25,7 +32,7 @@ const STATUS_LABEL: Record<string, string> = {
 function useVehicle(vehicleId: string) {
   return useQuery({
     queryKey: ['resource', 'vehicles', vehicleId],
-    queryFn: () => customFetch<VehicleResponse>(`/api/v1/vehicles/${vehicleId}`),
+    queryFn: () => customFetch<VehicleResponse & { version?: number }>(`/api/v1/vehicles/${vehicleId}`),
     networkMode: 'always',
     retry: false,
   })
@@ -35,6 +42,9 @@ function VehicleDetailPage() {
   const { vehicleId } = Route.useParams()
   const queryClient = useQueryClient()
   const vehicle = useVehicle(vehicleId)
+  const { can } = Route.useRouteContext()
+  const canManage = can('UPDATE', 'FLEET')
+  const canManageDevices = can('UPDATE', 'TRACKING_DEVICE')
 
   const [driverId, setDriverId] = useState('')
   const [caseFileId, setCaseFileId] = useState('')
@@ -134,6 +144,17 @@ function VehicleDetailPage() {
       <p className="mt-1 text-sm font-medium text-text-primary">Estado: {STATUS_LABEL[data.status ?? ''] ?? data.status}</p>
 
       {actionError && <p className="mt-3 text-sm text-critical">{actionError}</p>}
+
+      {/* SPEC-0507: lo que faltaba -- administrar el vehículo, no sólo operarlo.
+          Cada panel se dibuja sólo si el rol lo alcanza (docs/04 §2.4). */}
+      {canManage && (
+        <>
+          <CorrectVehiclePanel vehicle={data as Vehicle} />
+          <TransferVehiclePanel vehicle={data as Vehicle} />
+          <VehicleServiceStatusPanel vehicle={data as Vehicle} />
+        </>
+      )}
+      {canManageDevices && <VehicleDevicePanel vehicle={data as Vehicle} />}
 
       {isAvailable && (
         <div className="mt-4 flex flex-col gap-2 rounded-sm border border-border-strong p-3">

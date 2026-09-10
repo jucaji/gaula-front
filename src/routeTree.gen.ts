@@ -27,6 +27,7 @@ import { Route as ObservatorioCargueRouteImport } from './routes/observatorio/ca
 import { Route as ObservatorioHechosRouteImport } from './routes/observatorio/hechos'
 import { Route as RecepcionIndexRouteImport } from './routes/recepcion/index'
 import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamadas'
+import { Route as RecursosEquiposRouteImport } from './routes/recursos/equipos'
 import { Route as ReportesIndexRouteImport } from './routes/reportes/index'
 import { Route as ReportesReportIdRouteImport } from './routes/reportes/$reportId'
 import { Route as ReportesNuevoRouteImport } from './routes/reportes/nuevo'
@@ -131,6 +132,11 @@ const RecepcionLlamadasRoute = RecepcionLlamadasRouteImport.update({
   path: '/recepcion/llamadas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecursosEquiposRoute = RecursosEquiposRouteImport.update({
+  id: '/recursos/equipos',
+  path: '/recursos/equipos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReportesIndexRoute = ReportesIndexRouteImport.update({
   id: '/reportes/',
   path: '/reportes/',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/observatorio/cargue': typeof ObservatorioCargueRoute
   '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
+  '/recursos/equipos': typeof RecursosEquiposRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
   '/tableros/boletin': typeof TablerosBoletinRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/observatorio/cargue': typeof ObservatorioCargueRoute
   '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
+  '/recursos/equipos': typeof RecursosEquiposRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
   '/tableros/boletin': typeof TablerosBoletinRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/observatorio/cargue': typeof ObservatorioCargueRoute
   '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
+  '/recursos/equipos': typeof RecursosEquiposRoute
   '/reportes/$reportId': typeof ReportesReportIdRoute
   '/reportes/nuevo': typeof ReportesNuevoRoute
   '/tableros/boletin': typeof TablerosBoletinRoute
@@ -316,6 +325,7 @@ export interface FileRouteTypes {
     | '/observatorio/cargue'
     | '/observatorio/hechos'
     | '/recepcion/llamadas'
+    | '/recursos/equipos'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
     | '/tableros/boletin'
@@ -349,6 +359,7 @@ export interface FileRouteTypes {
     | '/observatorio/cargue'
     | '/observatorio/hechos'
     | '/recepcion/llamadas'
+    | '/recursos/equipos'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
     | '/tableros/boletin'
@@ -382,6 +393,7 @@ export interface FileRouteTypes {
     | '/observatorio/cargue'
     | '/observatorio/hechos'
     | '/recepcion/llamadas'
+    | '/recursos/equipos'
     | '/reportes/$reportId'
     | '/reportes/nuevo'
     | '/tableros/boletin'
@@ -416,6 +428,7 @@ export interface RootRouteChildren {
   ObservatorioCargueRoute: typeof ObservatorioCargueRoute
   ObservatorioHechosRoute: typeof ObservatorioHechosRoute
   RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
+  RecursosEquiposRoute: typeof RecursosEquiposRoute
   ReportesReportIdRoute: typeof ReportesReportIdRoute
   ReportesNuevoRoute: typeof ReportesNuevoRoute
   TablerosBoletinRoute: typeof TablerosBoletinRoute
@@ -564,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecepcionLlamadasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recursos/equipos': {
+      id: '/recursos/equipos'
+      path: '/recursos/equipos'
+      fullPath: '/recursos/equipos'
+      preLoaderRoute: typeof RecursosEquiposRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reportes/': {
       id: '/reportes/'
       path: '/reportes'
@@ -672,6 +692,7 @@ const rootRouteChildren: RootRouteChildren = {
   ObservatorioCargueRoute: ObservatorioCargueRoute,
   ObservatorioHechosRoute: ObservatorioHechosRoute,
   RecepcionLlamadasRoute: RecepcionLlamadasRoute,
+  RecursosEquiposRoute: RecursosEquiposRoute,
   ReportesReportIdRoute: ReportesReportIdRoute,
   ReportesNuevoRoute: ReportesNuevoRoute,
   TablerosBoletinRoute: TablerosBoletinRoute,

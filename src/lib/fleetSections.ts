@@ -19,6 +19,10 @@ import type { RoleCode } from '@/lib/auth/roles'
 export const FLEET_SECTIONS = [
   { to: '/recursos/flota', label: 'Inventario', resource: 'FLEET' },
   { to: '/flota', label: 'Comando', resource: 'VEHICLE_TELEMETRY' },
+  // SPEC-0507: los equipos GPS son configuración del sistema y viven tras otro
+  // recurso (SYSTEM_ADMIN). Están aquí y no en Administración porque es en la
+  // flota donde se usan: se registra un equipo para vincularlo a un vehículo.
+  { to: '/recursos/equipos', label: 'Equipos GPS', resource: 'TRACKING_DEVICE' },
 ] as const
 
 /** La primera sección que este rol alcanza, o `null` si no alcanza ninguna. */
