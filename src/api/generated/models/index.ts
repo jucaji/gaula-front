@@ -243,6 +243,7 @@ export * from './updateReportDraftRequest';
 export * from './updateReportDraftRequestPayload';
 export * from './updateVehicleRequest';
 export * from './variationResponse';
+export * from './vehicleAddressResponse';
 export * from './vehicleAssignmentResponse';
 export * from './vehicleEventResponse';
 export * from './vehicleEventResponseDetails';

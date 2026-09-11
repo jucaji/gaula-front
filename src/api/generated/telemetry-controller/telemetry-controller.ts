@@ -27,6 +27,7 @@ import type {
   PageResponsePositionFixResponse,
   PageResponseTripResponse,
   TripsParams,
+  VehicleAddressResponse,
   VehicleTelemetryResponse
 } from '.././models';
 
@@ -372,6 +373,112 @@ export function useHistory1<TData = Awaited<ReturnType<typeof history1>>, TError
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getHistory1QueryOptions(vehicleId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type vehicleAddressResponse200 = {
+  data: VehicleAddressResponse
+  status: 200
+}
+    
+export type vehicleAddressResponseSuccess = (vehicleAddressResponse200) & {
+  headers: Headers;
+};
+;
+
+export type vehicleAddressResponse = (vehicleAddressResponseSuccess)
+
+export const getVehicleAddressUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/telemetry/vehicles/${vehicleId}/address`
+}
+
+export const vehicleAddress = async (vehicleId: string, options?: RequestInit): Promise<vehicleAddressResponse> => {
+  
+  return customFetch<vehicleAddressResponse>(getVehicleAddressUrl(vehicleId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getVehicleAddressQueryKey = (vehicleId?: string,) => {
+    return [
+    `/api/v1/telemetry/vehicles/${vehicleId}/address`
+    ] as const;
+    }
+
+    
+export const getVehicleAddressQueryOptions = <TData = Awaited<ReturnType<typeof vehicleAddress>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof vehicleAddress>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getVehicleAddressQueryKey(vehicleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof vehicleAddress>>> = () => vehicleAddress(vehicleId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof vehicleAddress>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type VehicleAddressQueryResult = NonNullable<Awaited<ReturnType<typeof vehicleAddress>>>
+export type VehicleAddressQueryError = unknown
+
+
+export function useVehicleAddress<TData = Awaited<ReturnType<typeof vehicleAddress>>, TError = unknown>(
+ vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof vehicleAddress>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof vehicleAddress>>,
+          TError,
+          Awaited<ReturnType<typeof vehicleAddress>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useVehicleAddress<TData = Awaited<ReturnType<typeof vehicleAddress>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof vehicleAddress>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof vehicleAddress>>,
+          TError,
+          Awaited<ReturnType<typeof vehicleAddress>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useVehicleAddress<TData = Awaited<ReturnType<typeof vehicleAddress>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof vehicleAddress>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useVehicleAddress<TData = Awaited<ReturnType<typeof vehicleAddress>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof vehicleAddress>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getVehicleAddressQueryOptions(vehicleId,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
