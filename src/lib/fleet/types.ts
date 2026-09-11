@@ -29,6 +29,8 @@ export interface Vehicle {
   odometerKm: number
   /** El `If-Match` del PATCH sale de aquí (SPEC-0507 CA-4). */
   version: number
+  /** SPEC-0509: por qué requiere mirarse (misión o mantenimiento vencidos), o nada. */
+  attention?: string | null
 }
 
 export interface TerritorialUnit {
@@ -227,4 +229,56 @@ export interface Driver {
   id: string
   displayName: string
   rank?: string | null
+}
+
+// --- SPEC-0509: estados operativos ---
+
+/** Un tipo de misión del catálogo que gobierna el cliente. `active` false = archivado. */
+export interface MissionType {
+  id: string
+  name: string
+  description?: string | null
+  active: boolean
+}
+
+export interface CurrentMission {
+  assignmentId: string
+  driverId: string
+  driverName?: string | null
+  missionTypeName?: string | null
+  caseTrackingNumber?: string | null
+  purpose?: string | null
+  since: string
+  expectedEndAt?: string | null
+  overdue: boolean
+}
+
+export interface OpenOrder {
+  orderId: string
+  orderType: string
+  description: string
+  openedAt: string
+  expectedExitAt?: string | null
+  cost?: number | null
+  overdue: boolean
+}
+
+/**
+ * El porqué del estado de un vehículo (SPEC-0509 Decisión 4).
+ *
+ * <p>Sólo viaja lo que corresponde al estado: `mission` vacío si no está en
+ * misión, `openOrders` vacío si no está en el taller.
+ */
+export interface VehicleSituation {
+  vehicleId: string
+  status: VehicleStatus
+  mission?: CurrentMission | null
+  openOrders: OpenOrder[]
+  decommissionReason?: string | null
+}
+
+/** Por qué un vehículo requiere mirarse en el inventario. */
+export const ATTENTION_LABEL: Record<string, string> = {
+  MISSION_OVERDUE: 'Misión vencida',
+  MAINTENANCE_OVERDUE: 'Mantenimiento vencido',
 }

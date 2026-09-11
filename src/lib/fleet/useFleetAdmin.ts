@@ -3,6 +3,8 @@ import { customFetch } from '@/api/client'
 import type {
   Driver,
   FuelHistory,
+  MissionType,
+  VehicleSituation,
   MaintenanceOrder,
   TerritorialUnit,
   TrackingDevice,
@@ -248,4 +250,115 @@ export function useAssignableDrivers(enabled = true) {
     networkMode: 'always',
     retry: false,
   })
+}
+
+// --- SPEC-0509: estados operativos ---
+
+export function useMissionTypes(enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'mission-types'],
+    queryFn: () => customFetch<MissionType[]>('/api/v1/mission-types'),
+    enabled,
+    staleTime: 5 * 60_000,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+/**
+ * El catálogo de tipos de misión (SPEC-0509 Decisión 3).
+ *
+ * <p>`remove` devuelve lo que pasó de verdad —`DELETED` o `ARCHIVED`—, porque
+ * la pantalla tiene que poder decir «se archivó porque lo usan misiones
+ * anteriores» en vez de dejar creer que desapareció.
+ */
+export function useMissionTypeMutations() {
+  const queryClient = useQueryClient()
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['resource', 'mission-types'] })
+
+  const create = useMutation({
+    mutationFn: (input: { name: string; description?: string }) =>
+      customFetch<MissionType>('/api/v1/mission-types', {
+        method: 'POST',
+        body: JSON.stringify({ name: input.name.trim(), description: input.description?.trim() || undefined }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  const edit = useMutation({
+    mutationFn: (input: { id: string; name: string; description?: string }) =>
+      customFetch<MissionType>(`/api/v1/mission-types/${input.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: input.name.trim(), description: input.description?.trim() || undefined }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  const remove = useMutation({
+    mutationFn: (id: string) =>
+      customFetch<{ outcome: 'DELETED' | 'ARCHIVED' }>(`/api/v1/mission-types/${id}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+
+  return { create, edit, remove }
+}
+
+export function useVehicleSituation(vehicleId: string) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'situation'],
+    queryFn: () => customFetch<VehicleSituation>(`/api/v1/vehicles/${vehicleId}/situation`),
+    staleTime: 10_000,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+/**
+ * Los actos que CAMBIAN el estado (SPEC-0509 Decisión 1). No hay «cambiar
+ * estado» a secas: cada estado sale del acto que lo justifica.
+ */
+export function useOperationalActions(vehicleId: string) {
+  const queryClient = useQueryClient()
+  // Todo lo del vehículo: estado, situación, historial e inventario.
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['resource', 'vehicles'] })
+
+  const assign = useMutation({
+    mutationFn: (input: {
+      driverId: string
+      missionTypeId: string
+      caseFileId?: string
+      purpose?: string
+      expectedEndAt?: string
+    }) =>
+      customFetch(`/api/v1/vehicles/${vehicleId}/assign`, { method: 'POST', body: JSON.stringify(input) }),
+    onSuccess: invalidate,
+  })
+
+  const endMission = useMutation({
+    mutationFn: (input: {
+      closingNote?: string
+      returnOdometerKm?: number
+      sendToMaintenance: boolean
+      workshopReason?: string
+    }) =>
+      customFetch(`/api/v1/vehicles/${vehicleId}/release`, { method: 'POST', body: JSON.stringify(input) }),
+    onSuccess: invalidate,
+  })
+
+  const openOrder = useMutation({
+    mutationFn: (input: { orderType: 'PREVENTIVE' | 'CORRECTIVE'; description: string; expectedExitAt?: string }) =>
+      customFetch(`/api/v1/vehicles/${vehicleId}/maintenance-orders`, { method: 'POST', body: JSON.stringify(input) }),
+    onSuccess: invalidate,
+  })
+
+  const closeOrder = useMutation({
+    mutationFn: (input: { orderId: string; cost?: number; closingNote: string }) =>
+      customFetch(`/api/v1/maintenance-orders/${input.orderId}/close`, {
+        method: 'POST',
+        body: JSON.stringify({ cost: input.cost, closingNote: input.closingNote }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  return { assign, endMission, openOrder, closeOrder }
 }

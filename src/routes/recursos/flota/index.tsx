@@ -11,8 +11,10 @@ import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { DataTable } from '@/design-system/primitives/DataTable'
 import { Button } from '@/design-system/primitives/Button'
 import { VehicleForm } from '@/design-system/domain/VehicleForm'
+import { MissionTypesDialog } from '@/design-system/domain/MissionTypesDialog'
+import { Badge } from '@/design-system/primitives/Badge'
 import { useDevices, useFleetMutations, useTerritorialUnits } from '@/lib/fleet/useFleetAdmin'
-import { EMPTY_VEHICLE_FORM, isVehicleFormComplete, type TerritorialUnit, type VehicleFormValues } from '@/lib/fleet/types'
+import { ATTENTION_LABEL, EMPTY_VEHICLE_FORM, isVehicleFormComplete, type TerritorialUnit, type VehicleFormValues } from '@/lib/fleet/types'
 
 const VEHICLE_STATUSES = ['AVAILABLE', 'IN_MISSION', 'MAINTENANCE', 'OUT_OF_SERVICE'] as const
 
@@ -115,7 +117,23 @@ function buildColumns(
         return unit ? unit.name : '—'
       },
     },
-    { id: 'status', accessorKey: 'status', header: 'Estado', cell: ({ getValue }) => STATUS_LABEL[getValue<string>() ?? ''] ?? '—' },
+    {
+      id: 'status',
+      accessorKey: 'status',
+      header: 'Estado',
+      // SPEC-0509: el inventario avisa cuando una misión o un mantenimiento
+      // pasó de su fecha estimada, en vez de que el usuario tenga que preguntar.
+      cell: ({ row }) => (
+        <span className="flex flex-wrap items-center gap-1">
+          {STATUS_LABEL[row.original.status ?? ''] ?? '—'}
+          {(row.original as { attention?: string | null }).attention && (
+            <Badge tone="critical">
+              {ATTENTION_LABEL[(row.original as { attention?: string | null }).attention ?? ''] ?? 'Requiere atención'}
+            </Badge>
+          )}
+        </span>
+      ),
+    },
     { id: 'odometerKm', accessorKey: 'odometerKm', header: 'Odómetro (km)', cell: ({ getValue }) => (getValue<number>() ?? 0).toLocaleString('es-CO') },
   ]
 
@@ -236,10 +254,13 @@ function FleetPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-lg font-semibold text-text-primary">Flota</h1>
           {canCreate && !registering && (
+            <div className="flex items-center gap-2">
+              <MissionTypesDialog />
             <Button variant="primary" size="sm" onClick={() => setRegistering(true)}>
               <Plus className="size-4" aria-hidden="true" />
               Registrar vehículo
             </Button>
+            </div>
           )}
         </div>
 

@@ -13,6 +13,7 @@ import {
 } from '@/design-system/domain/VehicleAdminPanels'
 import { FleetNav } from '@/design-system/patterns/FleetNav'
 import { VehicleSummaryCard } from '@/design-system/domain/VehicleSummaryCard'
+import { VehicleSituationPanel } from '@/design-system/domain/VehicleSituationPanel'
 import { VehicleLocationPanel } from '@/design-system/domain/VehicleLocationPanel'
 import {
   AssignmentHistoryPanel,
@@ -22,7 +23,6 @@ import {
 } from '@/design-system/domain/VehicleHistory'
 import {
   useAssignmentHistory,
-  useAssignableDrivers,
   useDevices,
   useFuelHistory,
   useMaintenanceOrders,
@@ -71,20 +71,13 @@ function VehicleDetailPage() {
   const [activeTab, setTab] = useState<TabId>('resumen')
   const units = useTerritorialUnits()
   const devices = useDevices(canManageDevices)
-  const drivers = useAssignableDrivers(canManage)
   const hasDevice = canManageDevices && devices.data
     ? (devices.data.content ?? []).some((device) => device.vehicleId === vehicleId)
     : null
 
-  const [driverId, setDriverId] = useState('')
-  const [caseReference, setCaseReference] = useState('')
-  const [purpose, setPurpose] = useState('')
-  const [sendToMaintenance, setSendToMaintenance] = useState(false)
   const [liters, setLiters] = useState('')
   const [cost, setCost] = useState('')
   const [odometerKm, setOdometerKm] = useState('')
-  const [orderType, setOrderType] = useState<'PREVENTIVE' | 'CORRECTIVE'>('PREVENTIVE')
-  const [orderDescription, setOrderDescription] = useState('')
   const [actionError, setActionError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -115,38 +108,6 @@ function VehicleDetailPage() {
    * responde 400 a eso, pero el arreglo de fondo es no pedir un dato que nadie
    * tiene a mano.
    */
-  async function handleAssign() {
-    if (!driverId.trim()) return
-
-    await run(async () => {
-      let caseFileId: string | undefined
-      if (caseReference.trim()) {
-        const caso = await customFetch<{ id?: string }>(
-          `/api/v1/case-files/${encodeURIComponent(caseReference.trim())}`,
-        )
-        caseFileId = caso.id
-      }
-
-      return customFetch(`/api/v1/vehicles/${vehicleId}/assign`, {
-        method: 'POST',
-        body: JSON.stringify({ driverId: driverId.trim(), caseFileId, purpose: purpose || undefined }),
-      })
-    })
-    setDriverId('')
-    setCaseReference('')
-    setPurpose('')
-  }
-
-  async function handleRelease() {
-    await run(() =>
-      customFetch(`/api/v1/vehicles/${vehicleId}/release`, {
-        method: 'POST',
-        body: JSON.stringify({ sendToMaintenance }),
-      }),
-    )
-    setSendToMaintenance(false)
-  }
-
   async function handleRecordFuel() {
     if (!liters.trim()) return
     await run(() =>
@@ -165,23 +126,10 @@ function VehicleDetailPage() {
     setOdometerKm('')
   }
 
-  async function handleOpenMaintenance() {
-    if (!orderDescription.trim()) return
-    await run(() =>
-      customFetch(`/api/v1/vehicles/${vehicleId}/maintenance-orders`, {
-        method: 'POST',
-        body: JSON.stringify({ orderType, description: orderDescription }),
-      }),
-    )
-    setOrderDescription('')
-  }
-
   if (vehicle.isLoading) return <p className="p-6 text-sm text-text-secondary">Cargando…</p>
   if (vehicle.isError || !vehicle.data) return <p className="p-6 text-sm text-critical">No se pudo cargar el vehículo.</p>
 
   const data = vehicle.data
-  const isAvailable = data.status === 'AVAILABLE'
-  const isInMission = data.status === 'IN_MISSION'
 
   return (
     <div className="flex flex-col gap-4">
@@ -240,6 +188,9 @@ function VehicleDetailPage() {
             : 'hidden'
         }
       >
+        {/* SPEC-0509: el porqué del estado y sólo las acciones que permite. Sustituye
+            a los paneles apilados que ofrecían «Asignar» a un vehículo en el taller. */}
+        <VehicleSituationPanel vehicleId={vehicleId} canManage={canManage} />
 
       {/* SPEC-0507: lo que faltaba -- administrar el vehículo, no sólo operarlo.
           Cada panel se dibuja sólo si el rol lo alcanza (docs/04 §2.4). */}
@@ -251,67 +202,6 @@ function VehicleDetailPage() {
         </>
       )}
       {canManageDevices && <VehicleDevicePanel vehicle={data as Vehicle} />}
-
-      {isAvailable && (
-        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
-          <h2 className="text-sm font-semibold text-text-primary">Asignar</h2>
-          <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Conductor *
-            {/* Se elige, no se teclea. Pedir el UUID fue lo que llevó al cliente
-                a escribir un radicado y recibir un 500 — mismo arreglo que ya se
-                hizo con la unidad territorial. */}
-            <select
-              value={driverId}
-              onChange={(event) => setDriverId(event.target.value)}
-              className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
-            >
-              <option value="">Seleccione…</option>
-              {(drivers.data ?? []).map((driver) => (
-                <option key={driver.id} value={driver.id}>
-                  {driver.displayName}
-                </option>
-              ))}
-            </select>
-            {drivers.data && drivers.data.length === 0 && (
-              <span className="text-xs text-text-secondary">
-                No hay personal disponible en su unidad territorial para asignar.
-              </span>
-            )}
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Caso vinculado (radicado, opcional)
-            <Input value={caseReference} onChange={(event) => setCaseReference(event.target.value)}
-                   placeholder="GAULA-BOG-2026-000004" />
-            <span className="text-xs text-text-secondary">
-              El radicado del caso. Se busca al asignar; si no existe o no lo alcanza, se avisa aquí.
-            </span>
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Propósito (opcional)
-            <Input value={purpose} onChange={(event) => setPurpose(event.target.value)} />
-          </label>
-          <div>
-            <Button variant="primary" size="sm" loading={busy} disabled={!driverId.trim()} onClick={handleAssign}>
-              Asignar vehículo
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {isInMission && (
-        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
-          <h2 className="text-sm font-semibold text-text-primary">Liberar</h2>
-          <label className="flex items-center gap-2 text-sm text-text-primary">
-            <input type="checkbox" checked={sendToMaintenance} onChange={(event) => setSendToMaintenance(event.target.checked)} />
-            Enviar a mantenimiento al liberar
-          </label>
-          <div>
-            <Button variant="secondary" size="sm" loading={busy} onClick={handleRelease}>
-              Liberar vehículo
-            </Button>
-          </div>
-        </div>
-      )}
 
       {data.status !== 'OUT_OF_SERVICE' && (
         <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
@@ -338,31 +228,6 @@ function VehicleDetailPage() {
         </div>
       )}
 
-      {data.status !== 'OUT_OF_SERVICE' && (
-        <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
-          <h2 className="text-sm font-semibold text-text-primary">Abrir orden de mantenimiento</h2>
-          <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Tipo
-            <select
-              value={orderType}
-              onChange={(event) => setOrderType(event.target.value as 'PREVENTIVE' | 'CORRECTIVE')}
-              className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
-            >
-              <option value="PREVENTIVE">Preventivo</option>
-              <option value="CORRECTIVE">Correctivo</option>
-            </select>
-          </label>
-          <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Descripción *
-            <Input value={orderDescription} onChange={(event) => setOrderDescription(event.target.value)} />
-          </label>
-          <div>
-            <Button variant="secondary" size="sm" loading={busy} disabled={!orderDescription.trim()} onClick={handleOpenMaintenance}>
-              Abrir orden
-            </Button>
-          </div>
-        </div>
-      )}
       </div>
     </div>
   )

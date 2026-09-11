@@ -118,6 +118,12 @@ const EVENTS = {
   totalElements: 2,
 }
 
+// SPEC-0509: la ficha pregunta el porqué del estado; el vehículo del mock está disponible.
+const SITUATION = { vehicleId: VEHICLE_ID, status: 'AVAILABLE', mission: null, openOrders: [], decommissionReason: null }
+const MISSION_TYPES = [
+  { id: '00000000-0000-0000-0000-0000000005a1', name: 'Operativo de caso', description: null, active: true },
+]
+
 async function mockConsole(page: Page, session: Record<string, unknown>) {
   await page.route('**/api/v1/me', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(session) }))
@@ -149,6 +155,10 @@ async function mockConsole(page: Page, session: Record<string, unknown>) {
     route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }))
   await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/events*`, (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(EVENTS) }))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/situation`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SITUATION) }))
+  await page.route('**/api/v1/mission-types', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MISSION_TYPES) }))
 }
 
 test.describe('SPEC-0507: gestión de flota', () => {
@@ -469,7 +479,8 @@ test.describe('SPEC-0507: gestión de flota', () => {
 
     await page.goto(`/recursos/flota/${VEHICLE_ID}`)
     await page.getByLabel('Conductor *').selectOption('dddddddd-dddd-dddd-dddd-dddddddddddd')
-    await page.getByLabel('Caso vinculado (radicado, opcional)').fill('GAULA-BOG-2026-000004')
+    await page.getByLabel('Tipo de misión *').selectOption({ label: 'Operativo de caso' })
+    await page.getByLabel('Caso vinculado (radicado)').fill('GAULA-BOG-2026-000004')
     await page.getByRole('button', { name: 'Asignar vehículo' }).click()
 
     await expect.poll(() => asignado).not.toBeNull()
@@ -479,6 +490,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
     expect(asignado!.caseFileId).toBe('cccccccc-cccc-cccc-cccc-cccccccccccc')
     // Y el conductor sale del desplegable: ya no hay UUID que teclear.
     expect(asignado!.driverId).toBe('dddddddd-dddd-dddd-dddd-dddddddddddd')
+    expect(asignado!.missionTypeId).toBe('00000000-0000-0000-0000-0000000005a1')
   })
 
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
