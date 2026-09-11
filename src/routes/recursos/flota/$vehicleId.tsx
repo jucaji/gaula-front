@@ -22,6 +22,7 @@ import {
 } from '@/design-system/domain/VehicleHistory'
 import {
   useAssignmentHistory,
+  useAssignableDrivers,
   useDevices,
   useFuelHistory,
   useMaintenanceOrders,
@@ -70,6 +71,7 @@ function VehicleDetailPage() {
   const [activeTab, setTab] = useState<TabId>('resumen')
   const units = useTerritorialUnits()
   const devices = useDevices(canManageDevices)
+  const drivers = useAssignableDrivers(canManage)
   const hasDevice = canManageDevices && devices.data
     ? (devices.data.content ?? []).some((device) => device.vehicleId === vehicleId)
     : null
@@ -254,15 +256,27 @@ function VehicleDetailPage() {
         <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
           <h2 className="text-sm font-semibold text-text-primary">Asignar</h2>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Conductor (identificador de usuario) *
-            <Input value={driverId} onChange={(event) => setDriverId(event.target.value)}
-                   placeholder="00000000-0000-0000-0000-000000000000" />
-            {/* Pendiente: elegirlo de una lista. Hoy no hay un endpoint que
-                liste usuarios para quien no es administrador, así que al menos
-                se dice qué forma tiene el dato en vez de dejar el campo mudo. */}
-            <span className="text-xs text-text-secondary">
-              Identificador del usuario conductor, no su cédula ni su nombre.
-            </span>
+            Conductor *
+            {/* Se elige, no se teclea. Pedir el UUID fue lo que llevó al cliente
+                a escribir un radicado y recibir un 500 — mismo arreglo que ya se
+                hizo con la unidad territorial. */}
+            <select
+              value={driverId}
+              onChange={(event) => setDriverId(event.target.value)}
+              className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary"
+            >
+              <option value="">Seleccione…</option>
+              {(drivers.data ?? []).map((driver) => (
+                <option key={driver.id} value={driver.id}>
+                  {driver.displayName}
+                </option>
+              ))}
+            </select>
+            {drivers.data && drivers.data.length === 0 && (
+              <span className="text-xs text-text-secondary">
+                No hay personal disponible en su unidad territorial para asignar.
+              </span>
+            )}
           </label>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
             Caso vinculado (radicado, opcional)

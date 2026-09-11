@@ -221,3 +221,10 @@ export const EVENT_TONE: Record<string, 'neutral' | 'active' | 'alert' | 'critic
   MAINTENANCE_OPENED: 'alert',
   MAINTENANCE_CLOSED: 'neutral',
 }
+
+/** Quién puede conducir: lo mínimo para reconocer a alguien en una lista (SPEC-0508 bis). */
+export interface Driver {
+  id: string
+  displayName: string
+  rank?: string | null
+}

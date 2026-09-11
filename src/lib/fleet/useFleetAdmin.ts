@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
 import type {
+  Driver,
   FuelHistory,
   MaintenanceOrder,
   TerritorialUnit,
@@ -227,5 +228,24 @@ export function useVehicleEvents(vehicleId: string, enabled = true) {
       ),
     enabled,
     ...HISTORY_OPTIONS,
+  })
+}
+
+/**
+ * Las personas a las que se les puede asignar este vehículo.
+ *
+ * <p>El backend devuelve SIEMPRE la unidad territorial de quien pregunta, así
+ * que no hay parámetro que ajustar — ni forma de pedir el personal de otra
+ * unidad. A quien no puede asignar le llega una lista vacía, y la consola lo
+ * dice en vez de mostrar un desplegable vacío sin explicación.
+ */
+export function useAssignableDrivers(enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'assignable-drivers'],
+    queryFn: () => customFetch<Driver[]>('/api/v1/vehicles/assignable-drivers'),
+    enabled,
+    staleTime: 5 * 60_000,
+    networkMode: 'always',
+    retry: false,
   })
 }

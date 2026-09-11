@@ -75,6 +75,10 @@ const DEVICES = {
   totalElements: 2,
 }
 
+const DRIVERS = [
+  { id: 'dddddddd-dddd-dddd-dddd-dddddddddddd', displayName: 'Sargento Rueda Ortiz', rank: 'Sargento' },
+]
+
 const FUEL_HISTORY = {
   // Dos cargas: la primera SIN rendimiento (no hay tramo anterior), la segunda con él.
   records: [
@@ -132,6 +136,8 @@ async function mockConsole(page: Page, session: Record<string, unknown>) {
     }
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(VEHICLE) })
   })
+  await page.route('**/api/v1/vehicles/assignable-drivers', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(DRIVERS) }))
   await page.route('**/api/v1/telemetry/devices*', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(DEVICES) }))
   // SPEC-0508: la ficha consulta la historia del vehículo.
@@ -462,7 +468,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
     })
 
     await page.goto(`/recursos/flota/${VEHICLE_ID}`)
-    await page.getByLabel('Conductor (identificador de usuario) *').fill('00000000-0000-0000-0000-000000000202')
+    await page.getByLabel('Conductor *').selectOption('dddddddd-dddd-dddd-dddd-dddddddddddd')
     await page.getByLabel('Caso vinculado (radicado, opcional)').fill('GAULA-BOG-2026-000004')
     await page.getByRole('button', { name: 'Asignar vehículo' }).click()
 
@@ -471,6 +477,8 @@ test.describe('SPEC-0507: gestión de flota', () => {
     // radicado producía un 500 y es lo que el cliente escribió de verdad.
     expect(buscado).toContain('GAULA-BOG-2026-000004')
     expect(asignado!.caseFileId).toBe('cccccccc-cccc-cccc-cccc-cccccccccccc')
+    // Y el conductor sale del desplegable: ya no hay UUID que teclear.
+    expect(asignado!.driverId).toBe('dddddddd-dddd-dddd-dddd-dddddddddddd')
   })
 
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
