@@ -210,3 +210,26 @@ export const REASON_LABEL: Record<string, string> = {
   DERIVATION_WINDOW_TOO_SHORT: 'Las dos últimas posiciones están demasiado juntas para calcular',
   NO_SPEED_AND_NO_PRIOR_FIX: 'El proveedor no entrega velocidad y no hay posición anterior con la que calcularla',
 }
+
+/**
+ * SPEC-0511: la dirección de la última posición, o por qué no la hay. La
+ * dirección es la que el proveedor asocia al punto: aproximada, no verificada.
+ */
+export type AddressStatus = 'RESOLVED' | 'NOT_FOUND' | 'UNAVAILABLE' | 'DISABLED' | 'NO_POSITION'
+
+export interface VehicleAddressResponse {
+  vehicleId: string
+  status: AddressStatus
+  address?: string | null
+  provider?: string | null
+  detail?: string | null
+  fromCache: boolean
+  latitude?: number | null
+  longitude?: number | null
+  resolvedAt?: string | null
+}
+
+export const ADDRESS_PROVIDER_LABEL: Record<string, string> = {
+  GOOGLE: 'Google',
+}
+
