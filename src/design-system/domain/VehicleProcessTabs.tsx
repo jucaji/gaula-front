@@ -421,8 +421,12 @@ function AssignForm({ vehicleId, canManageCatalog }: { vehicleId: string; canMan
         <div className="flex flex-col gap-1 md:col-span-2">
           <label htmlFor="case-filter" className="text-sm text-text-primary">Caso vinculado</label>
           <div className="flex flex-wrap gap-2">
-            <Input id="case-filter" className="w-48" placeholder="Filtrar por radicado" value={caseFilter}
-                   aria-label="Filtrar casos por radicado" onChange={(event) => setCaseFilter(event.target.value)} />
+            {/* El ancho lo pone el contenedor: `Input` trae `w-full` y le gana a un
+                `w-48` propio — el filtro ocupaba toda la fila y empujaba la lista abajo. */}
+            <div className="w-48 shrink-0">
+              <Input id="case-filter" placeholder="Filtrar por radicado" value={caseFilter}
+                     aria-label="Filtrar casos por radicado" onChange={(event) => setCaseFilter(event.target.value)} />
+            </div>
             <select aria-label="Caso vinculado" value={caseFileId} onChange={(event) => setCaseFileId(event.target.value)}
                     className={`${SELECT} min-w-[16rem] flex-1`}>
               <option value="">Sin caso</option>
