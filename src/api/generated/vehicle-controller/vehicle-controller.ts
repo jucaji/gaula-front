@@ -32,7 +32,10 @@ import type {
   EventsParams,
   FuelConsumptionResponse,
   FuelHistoryResponse,
+  LinkableCaseView,
+  LinkableCasesParams,
   MaintenanceOrderResponse,
+  MetricsParams,
   PageResponseFleetAssignmentResponse,
   PageResponseVehicleEventResponse,
   PageResponseVehicleResponse,
@@ -43,6 +46,7 @@ import type {
   TransferVehicleRequest,
   UpdateVehicleRequest,
   VehicleAssignmentResponse,
+  VehicleMetrics,
   VehicleResponse,
   VehicleSituation
 } from '.././models';
@@ -1199,6 +1203,248 @@ export function useSituation<TData = Awaited<ReturnType<typeof situation>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getSituationQueryOptions(vehicleId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type metricsResponse200 = {
+  data: VehicleMetrics
+  status: 200
+}
+    
+export type metricsResponseSuccess = (metricsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type metricsResponse = (metricsResponseSuccess)
+
+export const getMetricsUrl = (vehicleId: string,
+    params?: MetricsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/vehicles/${vehicleId}/metrics?${stringifiedParams}` : `/api/v1/vehicles/${vehicleId}/metrics`
+}
+
+export const metrics = async (vehicleId: string,
+    params?: MetricsParams, options?: RequestInit): Promise<metricsResponse> => {
+  
+  return customFetch<metricsResponse>(getMetricsUrl(vehicleId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getMetricsQueryKey = (vehicleId?: string,
+    params?: MetricsParams,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/metrics`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getMetricsQueryOptions = <TData = Awaited<ReturnType<typeof metrics>>, TError = unknown>(vehicleId: string,
+    params?: MetricsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof metrics>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMetricsQueryKey(vehicleId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof metrics>>> = () => metrics(vehicleId,params, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof metrics>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MetricsQueryResult = NonNullable<Awaited<ReturnType<typeof metrics>>>
+export type MetricsQueryError = unknown
+
+
+export function useMetrics<TData = Awaited<ReturnType<typeof metrics>>, TError = unknown>(
+ vehicleId: string,
+    params: undefined |  MetricsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof metrics>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof metrics>>,
+          TError,
+          Awaited<ReturnType<typeof metrics>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMetrics<TData = Awaited<ReturnType<typeof metrics>>, TError = unknown>(
+ vehicleId: string,
+    params?: MetricsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof metrics>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof metrics>>,
+          TError,
+          Awaited<ReturnType<typeof metrics>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMetrics<TData = Awaited<ReturnType<typeof metrics>>, TError = unknown>(
+ vehicleId: string,
+    params?: MetricsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof metrics>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMetrics<TData = Awaited<ReturnType<typeof metrics>>, TError = unknown>(
+ vehicleId: string,
+    params?: MetricsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof metrics>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMetricsQueryOptions(vehicleId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type linkableCasesResponse200 = {
+  data: LinkableCaseView[]
+  status: 200
+}
+    
+export type linkableCasesResponseSuccess = (linkableCasesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type linkableCasesResponse = (linkableCasesResponseSuccess)
+
+export const getLinkableCasesUrl = (vehicleId: string,
+    params?: LinkableCasesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/vehicles/${vehicleId}/linkable-cases?${stringifiedParams}` : `/api/v1/vehicles/${vehicleId}/linkable-cases`
+}
+
+export const linkableCases = async (vehicleId: string,
+    params?: LinkableCasesParams, options?: RequestInit): Promise<linkableCasesResponse> => {
+  
+  return customFetch<linkableCasesResponse>(getLinkableCasesUrl(vehicleId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getLinkableCasesQueryKey = (vehicleId?: string,
+    params?: LinkableCasesParams,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/linkable-cases`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getLinkableCasesQueryOptions = <TData = Awaited<ReturnType<typeof linkableCases>>, TError = unknown>(vehicleId: string,
+    params?: LinkableCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof linkableCases>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getLinkableCasesQueryKey(vehicleId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof linkableCases>>> = () => linkableCases(vehicleId,params, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof linkableCases>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type LinkableCasesQueryResult = NonNullable<Awaited<ReturnType<typeof linkableCases>>>
+export type LinkableCasesQueryError = unknown
+
+
+export function useLinkableCases<TData = Awaited<ReturnType<typeof linkableCases>>, TError = unknown>(
+ vehicleId: string,
+    params: undefined |  LinkableCasesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof linkableCases>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof linkableCases>>,
+          TError,
+          Awaited<ReturnType<typeof linkableCases>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLinkableCases<TData = Awaited<ReturnType<typeof linkableCases>>, TError = unknown>(
+ vehicleId: string,
+    params?: LinkableCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof linkableCases>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof linkableCases>>,
+          TError,
+          Awaited<ReturnType<typeof linkableCases>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useLinkableCases<TData = Awaited<ReturnType<typeof linkableCases>>, TError = unknown>(
+ vehicleId: string,
+    params?: LinkableCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof linkableCases>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useLinkableCases<TData = Awaited<ReturnType<typeof linkableCases>>, TError = unknown>(
+ vehicleId: string,
+    params?: LinkableCasesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof linkableCases>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getLinkableCasesQueryOptions(vehicleId,params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

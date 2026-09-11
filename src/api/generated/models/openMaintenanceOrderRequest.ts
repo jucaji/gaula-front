@@ -15,4 +15,5 @@ export interface OpenMaintenanceOrderRequest {
    */
   description: string;
   expectedExitAt?: string;
+  scheduledFor?: string;
 }

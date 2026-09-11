@@ -7,11 +7,13 @@
  */
 import type { CurrentMission } from './currentMission';
 import type { OpenOrder } from './openOrder';
+import type { ScheduledOrder } from './scheduledOrder';
 
 export interface VehicleSituation {
   vehicleId?: string;
   status?: string;
   mission?: CurrentMission;
   openOrders?: OpenOrder[];
+  scheduledOrders?: ScheduledOrder[];
   decommissionReason?: string;
 }
