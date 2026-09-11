@@ -34,19 +34,19 @@ import { customFetch } from '../../client';
 
 
 
-export type listResponse200 = {
+export type list1Response200 = {
   data: PersonOfInterestResponse[]
   status: 200
 }
     
-export type listResponseSuccess = (listResponse200) & {
+export type list1ResponseSuccess = (list1Response200) & {
   headers: Headers;
 };
 ;
 
-export type listResponse = (listResponseSuccess)
+export type list1Response = (list1ResponseSuccess)
 
-export const getListUrl = (trackingNumber: string,) => {
+export const getList1Url = (trackingNumber: string,) => {
 
 
   
@@ -54,9 +54,9 @@ export const getListUrl = (trackingNumber: string,) => {
   return `/api/v1/case-files/${trackingNumber}/persons`
 }
 
-export const list = async (trackingNumber: string, options?: RequestInit): Promise<listResponse> => {
+export const list1 = async (trackingNumber: string, options?: RequestInit): Promise<list1Response> => {
   
-  return customFetch<listResponse>(getListUrl(trackingNumber),
+  return customFetch<list1Response>(getList1Url(trackingNumber),
   {      
     ...options,
     method: 'GET'
@@ -69,66 +69,66 @@ export const list = async (trackingNumber: string, options?: RequestInit): Promi
 
 
 
-export const getListQueryKey = (trackingNumber?: string,) => {
+export const getList1QueryKey = (trackingNumber?: string,) => {
     return [
     `/api/v1/case-files/${trackingNumber}/persons`
     ] as const;
     }
 
     
-export const getListQueryOptions = <TData = Awaited<ReturnType<typeof list>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+export const getList1QueryOptions = <TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListQueryKey(trackingNumber);
+  const queryKey =  queryOptions?.queryKey ?? getList1QueryKey(trackingNumber);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof list>>> = () => list(trackingNumber, );
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list1>>> = () => list1(trackingNumber, );
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListQueryResult = NonNullable<Awaited<ReturnType<typeof list>>>
-export type ListQueryError = unknown
+export type List1QueryResult = NonNullable<Awaited<ReturnType<typeof list1>>>
+export type List1QueryError = unknown
 
 
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
- trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>> & Pick<
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list>>,
+          Awaited<ReturnType<typeof list1>>,
           TError,
-          Awaited<ReturnType<typeof list>>
+          Awaited<ReturnType<typeof list1>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
- trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>> & Pick<
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list>>,
+          Awaited<ReturnType<typeof list1>>,
           TError,
-          Awaited<ReturnType<typeof list>>
+          Awaited<ReturnType<typeof list1>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
- trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
- trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListQueryOptions(trackingNumber,options)
+  const queryOptions = getList1QueryOptions(trackingNumber,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

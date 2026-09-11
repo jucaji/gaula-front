@@ -6,15 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export interface MaintenanceOrderResponse {
+export interface MissionTypeResponse {
   id?: string;
-  vehicleId?: string;
-  orderType?: string;
-  status?: string;
+  name?: string;
   description?: string;
-  cost?: number;
-  openedAt?: string;
-  closedAt?: string;
-  expectedExitAt?: string;
-  closingNote?: string;
+  active?: boolean;
 }

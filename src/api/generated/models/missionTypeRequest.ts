@@ -6,12 +6,15 @@
  * OpenAPI spec version: v1
  */
 
-export interface CloseMaintenanceOrderRequest {
-  /** @minimum 0 */
-  cost?: number;
+export interface MissionTypeRequest {
   /**
    * @minLength 0
-   * @maxLength 1000
+   * @maxLength 80
    */
-  closingNote?: string;
+  name?: string;
+  /**
+   * @minLength 0
+   * @maxLength 300
+   */
+  description?: string;
 }

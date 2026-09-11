@@ -9,6 +9,10 @@ import type { OpenMaintenanceOrderRequestOrderType } from './openMaintenanceOrde
 
 export interface OpenMaintenanceOrderRequest {
   orderType: OpenMaintenanceOrderRequestOrderType;
-  /** @minLength 1 */
+  /**
+   * @minLength 0
+   * @maxLength 1000
+   */
   description: string;
+  expectedExitAt?: string;
 }

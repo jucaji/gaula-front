@@ -5,16 +5,13 @@
  * Sistema de información operacional del GAULA, Ejército Nacional de Colombia.
  * OpenAPI spec version: v1
  */
+import type { CurrentMission } from './currentMission';
+import type { OpenOrder } from './openOrder';
 
-export interface MaintenanceOrderResponse {
-  id?: string;
+export interface VehicleSituation {
   vehicleId?: string;
-  orderType?: string;
   status?: string;
-  description?: string;
-  cost?: number;
-  openedAt?: string;
-  closedAt?: string;
-  expectedExitAt?: string;
-  closingNote?: string;
+  mission?: CurrentMission;
+  openOrders?: OpenOrder[];
+  decommissionReason?: string;
 }

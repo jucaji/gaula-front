@@ -29,19 +29,19 @@ import { customFetch } from '../../client';
 
 
 
-export type list3Response200 = {
+export type list4Response200 = {
   data: TerritorialUnitResponse[]
   status: 200
 }
     
-export type list3ResponseSuccess = (list3Response200) & {
+export type list4ResponseSuccess = (list4Response200) & {
   headers: Headers;
 };
 ;
 
-export type list3Response = (list3ResponseSuccess)
+export type list4Response = (list4ResponseSuccess)
 
-export const getList3Url = () => {
+export const getList4Url = () => {
 
 
   
@@ -49,9 +49,9 @@ export const getList3Url = () => {
   return `/api/v1/territorial-units`
 }
 
-export const list3 = async ( options?: RequestInit): Promise<list3Response> => {
+export const list4 = async ( options?: RequestInit): Promise<list4Response> => {
   
-  return customFetch<list3Response>(getList3Url(),
+  return customFetch<list4Response>(getList4Url(),
   {      
     ...options,
     method: 'GET'
@@ -64,66 +64,66 @@ export const list3 = async ( options?: RequestInit): Promise<list3Response> => {
 
 
 
-export const getList3QueryKey = () => {
+export const getList4QueryKey = () => {
     return [
     `/api/v1/territorial-units`
     ] as const;
     }
 
     
-export const getList3QueryOptions = <TData = Awaited<ReturnType<typeof list3>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list3>>, TError, TData>>, }
+export const getList4QueryOptions = <TData = Awaited<ReturnType<typeof list4>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getList3QueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getList4QueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof list3>>> = () => list3();
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list4>>> = () => list4();
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list3>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type List3QueryResult = NonNullable<Awaited<ReturnType<typeof list3>>>
-export type List3QueryError = unknown
+export type List4QueryResult = NonNullable<Awaited<ReturnType<typeof list4>>>
+export type List4QueryError = unknown
 
 
-export function useList3<TData = Awaited<ReturnType<typeof list3>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list3>>, TError, TData>> & Pick<
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list3>>,
+          Awaited<ReturnType<typeof list4>>,
           TError,
-          Awaited<ReturnType<typeof list3>>
+          Awaited<ReturnType<typeof list4>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList3<TData = Awaited<ReturnType<typeof list3>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list3>>, TError, TData>> & Pick<
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list3>>,
+          Awaited<ReturnType<typeof list4>>,
           TError,
-          Awaited<ReturnType<typeof list3>>
+          Awaited<ReturnType<typeof list4>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList3<TData = Awaited<ReturnType<typeof list3>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list3>>, TError, TData>>, }
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useList3<TData = Awaited<ReturnType<typeof list3>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list3>>, TError, TData>>, }
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getList3QueryOptions(options)
+  const queryOptions = getList4QueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

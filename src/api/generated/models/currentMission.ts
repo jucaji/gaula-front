@@ -6,16 +6,14 @@
  * OpenAPI spec version: v1
  */
 
-export interface VehicleAssignmentResponse {
-  id?: string;
-  vehicleId?: string;
-  caseFileId?: string;
+export interface CurrentMission {
+  assignmentId?: string;
   driverId?: string;
-  assignedFrom?: string;
-  assignedTo?: string;
+  driverName?: string;
+  missionTypeName?: string;
+  caseTrackingNumber?: string;
   purpose?: string;
-  missionTypeId?: string;
+  since?: string;
   expectedEndAt?: string;
-  closingNote?: string;
-  returnOdometerKm?: number;
+  overdue?: boolean;
 }

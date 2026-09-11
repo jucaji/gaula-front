@@ -6,15 +6,13 @@
  * OpenAPI spec version: v1
  */
 
-export interface MaintenanceOrderResponse {
+export interface FuelRecordResponse {
   id?: string;
-  vehicleId?: string;
-  orderType?: string;
-  status?: string;
-  description?: string;
+  loadedAt?: string;
+  liters?: number;
   cost?: number;
-  openedAt?: string;
-  closedAt?: string;
-  expectedExitAt?: string;
-  closingNote?: string;
+  odometerKm?: number;
+  efficiencyStatus?: string;
+  kilometersPerLiter?: number;
+  distanceKm?: number;
 }

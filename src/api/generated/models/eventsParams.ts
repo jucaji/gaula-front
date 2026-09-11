@@ -5,13 +5,8 @@
  * Sistema de información operacional del GAULA, Ejército Nacional de Colombia.
  * OpenAPI spec version: v1
  */
+import type { Pageable } from './pageable';
 
-export interface CloseMaintenanceOrderRequest {
-  /** @minimum 0 */
-  cost?: number;
-  /**
-   * @minLength 0
-   * @maxLength 1000
-   */
-  closingNote?: string;
-}
+export type EventsParams = {
+pageable: Pageable;
+};

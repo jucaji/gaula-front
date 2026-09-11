@@ -5,7 +5,21 @@
  * Sistema de información operacional del GAULA, Ejército Nacional de Colombia.
  * OpenAPI spec version: v1
  */
+import type { ReleaseVehicleRequestWorkshopOrderType } from './releaseVehicleRequestWorkshopOrderType';
 
 export interface ReleaseVehicleRequest {
   sendToMaintenance?: boolean;
+  /**
+   * @minLength 0
+   * @maxLength 1000
+   */
+  closingNote?: string;
+  /** @minimum 0 */
+  returnOdometerKm?: number;
+  /**
+   * @minLength 0
+   * @maxLength 1000
+   */
+  workshopReason?: string;
+  workshopOrderType?: ReleaseVehicleRequestWorkshopOrderType;
 }

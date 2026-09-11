@@ -9,5 +9,11 @@
 export interface AssignVehicleRequest {
   caseFileId?: string;
   driverId: string;
+  /**
+   * @minLength 0
+   * @maxLength 500
+   */
   purpose?: string;
+  missionTypeId?: string;
+  expectedEndAt?: string;
 }

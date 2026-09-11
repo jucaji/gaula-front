@@ -28,8 +28,13 @@ import type {
   AssignVehicleRequest,
   AssignmentsParams,
   DecommissionVehicleRequest,
+  DriverResponse,
+  EventsParams,
   FuelConsumptionResponse,
+  FuelHistoryResponse,
+  MaintenanceOrderResponse,
   PageResponseFleetAssignmentResponse,
+  PageResponseVehicleEventResponse,
   PageResponseVehicleResponse,
   RecordFuelRequest,
   RegisterVehicleRequest,
@@ -38,7 +43,8 @@ import type {
   TransferVehicleRequest,
   UpdateVehicleRequest,
   VehicleAssignmentResponse,
-  VehicleResponse
+  VehicleResponse,
+  VehicleSituation
 } from '.././models';
 
 import { customFetch } from '../../client';
@@ -652,7 +658,219 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type recordFuelResponse201 = {
+    export type maintenanceOrdersResponse200 = {
+  data: MaintenanceOrderResponse[]
+  status: 200
+}
+    
+export type maintenanceOrdersResponseSuccess = (maintenanceOrdersResponse200) & {
+  headers: Headers;
+};
+;
+
+export type maintenanceOrdersResponse = (maintenanceOrdersResponseSuccess)
+
+export const getMaintenanceOrdersUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/vehicles/${vehicleId}/maintenance-orders`
+}
+
+export const maintenanceOrders = async (vehicleId: string, options?: RequestInit): Promise<maintenanceOrdersResponse> => {
+  
+  return customFetch<maintenanceOrdersResponse>(getMaintenanceOrdersUrl(vehicleId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getMaintenanceOrdersQueryKey = (vehicleId?: string,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/maintenance-orders`
+    ] as const;
+    }
+
+    
+export const getMaintenanceOrdersQueryOptions = <TData = Awaited<ReturnType<typeof maintenanceOrders>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof maintenanceOrders>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getMaintenanceOrdersQueryKey(vehicleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof maintenanceOrders>>> = () => maintenanceOrders(vehicleId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof maintenanceOrders>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type MaintenanceOrdersQueryResult = NonNullable<Awaited<ReturnType<typeof maintenanceOrders>>>
+export type MaintenanceOrdersQueryError = unknown
+
+
+export function useMaintenanceOrders<TData = Awaited<ReturnType<typeof maintenanceOrders>>, TError = unknown>(
+ vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof maintenanceOrders>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof maintenanceOrders>>,
+          TError,
+          Awaited<ReturnType<typeof maintenanceOrders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMaintenanceOrders<TData = Awaited<ReturnType<typeof maintenanceOrders>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof maintenanceOrders>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof maintenanceOrders>>,
+          TError,
+          Awaited<ReturnType<typeof maintenanceOrders>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useMaintenanceOrders<TData = Awaited<ReturnType<typeof maintenanceOrders>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof maintenanceOrders>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useMaintenanceOrders<TData = Awaited<ReturnType<typeof maintenanceOrders>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof maintenanceOrders>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getMaintenanceOrdersQueryOptions(vehicleId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type fuelHistoryResponse200 = {
+  data: FuelHistoryResponse
+  status: 200
+}
+    
+export type fuelHistoryResponseSuccess = (fuelHistoryResponse200) & {
+  headers: Headers;
+};
+;
+
+export type fuelHistoryResponse = (fuelHistoryResponseSuccess)
+
+export const getFuelHistoryUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/vehicles/${vehicleId}/fuel`
+}
+
+export const fuelHistory = async (vehicleId: string, options?: RequestInit): Promise<fuelHistoryResponse> => {
+  
+  return customFetch<fuelHistoryResponse>(getFuelHistoryUrl(vehicleId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getFuelHistoryQueryKey = (vehicleId?: string,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/fuel`
+    ] as const;
+    }
+
+    
+export const getFuelHistoryQueryOptions = <TData = Awaited<ReturnType<typeof fuelHistory>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fuelHistory>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getFuelHistoryQueryKey(vehicleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof fuelHistory>>> = () => fuelHistory(vehicleId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof fuelHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type FuelHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof fuelHistory>>>
+export type FuelHistoryQueryError = unknown
+
+
+export function useFuelHistory<TData = Awaited<ReturnType<typeof fuelHistory>>, TError = unknown>(
+ vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof fuelHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fuelHistory>>,
+          TError,
+          Awaited<ReturnType<typeof fuelHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFuelHistory<TData = Awaited<ReturnType<typeof fuelHistory>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fuelHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof fuelHistory>>,
+          TError,
+          Awaited<ReturnType<typeof fuelHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useFuelHistory<TData = Awaited<ReturnType<typeof fuelHistory>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fuelHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useFuelHistory<TData = Awaited<ReturnType<typeof fuelHistory>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof fuelHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getFuelHistoryQueryOptions(vehicleId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type recordFuelResponse201 = {
   data: FuelConsumptionResponse
   status: 201
 }
@@ -886,7 +1104,340 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type assignmentsResponse200 = {
+    export type situationResponse200 = {
+  data: VehicleSituation
+  status: 200
+}
+    
+export type situationResponseSuccess = (situationResponse200) & {
+  headers: Headers;
+};
+;
+
+export type situationResponse = (situationResponseSuccess)
+
+export const getSituationUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/vehicles/${vehicleId}/situation`
+}
+
+export const situation = async (vehicleId: string, options?: RequestInit): Promise<situationResponse> => {
+  
+  return customFetch<situationResponse>(getSituationUrl(vehicleId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getSituationQueryKey = (vehicleId?: string,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/situation`
+    ] as const;
+    }
+
+    
+export const getSituationQueryOptions = <TData = Awaited<ReturnType<typeof situation>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof situation>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSituationQueryKey(vehicleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof situation>>> = () => situation(vehicleId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof situation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type SituationQueryResult = NonNullable<Awaited<ReturnType<typeof situation>>>
+export type SituationQueryError = unknown
+
+
+export function useSituation<TData = Awaited<ReturnType<typeof situation>>, TError = unknown>(
+ vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof situation>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof situation>>,
+          TError,
+          Awaited<ReturnType<typeof situation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSituation<TData = Awaited<ReturnType<typeof situation>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof situation>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof situation>>,
+          TError,
+          Awaited<ReturnType<typeof situation>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useSituation<TData = Awaited<ReturnType<typeof situation>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof situation>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useSituation<TData = Awaited<ReturnType<typeof situation>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof situation>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getSituationQueryOptions(vehicleId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type eventsResponse200 = {
+  data: PageResponseVehicleEventResponse
+  status: 200
+}
+    
+export type eventsResponseSuccess = (eventsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type eventsResponse = (eventsResponseSuccess)
+
+export const getEventsUrl = (vehicleId: string,
+    params: EventsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/vehicles/${vehicleId}/events?${stringifiedParams}` : `/api/v1/vehicles/${vehicleId}/events`
+}
+
+export const events = async (vehicleId: string,
+    params: EventsParams, options?: RequestInit): Promise<eventsResponse> => {
+  
+  return customFetch<eventsResponse>(getEventsUrl(vehicleId,params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getEventsQueryKey = (vehicleId?: string,
+    params?: EventsParams,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/events`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getEventsQueryOptions = <TData = Awaited<ReturnType<typeof events>>, TError = unknown>(vehicleId: string,
+    params: EventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof events>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getEventsQueryKey(vehicleId,params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof events>>> = () => events(vehicleId,params, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof events>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type EventsQueryResult = NonNullable<Awaited<ReturnType<typeof events>>>
+export type EventsQueryError = unknown
+
+
+export function useEvents<TData = Awaited<ReturnType<typeof events>>, TError = unknown>(
+ vehicleId: string,
+    params: EventsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof events>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof events>>,
+          TError,
+          Awaited<ReturnType<typeof events>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEvents<TData = Awaited<ReturnType<typeof events>>, TError = unknown>(
+ vehicleId: string,
+    params: EventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof events>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof events>>,
+          TError,
+          Awaited<ReturnType<typeof events>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useEvents<TData = Awaited<ReturnType<typeof events>>, TError = unknown>(
+ vehicleId: string,
+    params: EventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof events>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useEvents<TData = Awaited<ReturnType<typeof events>>, TError = unknown>(
+ vehicleId: string,
+    params: EventsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof events>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getEventsQueryOptions(vehicleId,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type assignmentHistoryResponse200 = {
+  data: VehicleAssignmentResponse[]
+  status: 200
+}
+    
+export type assignmentHistoryResponseSuccess = (assignmentHistoryResponse200) & {
+  headers: Headers;
+};
+;
+
+export type assignmentHistoryResponse = (assignmentHistoryResponseSuccess)
+
+export const getAssignmentHistoryUrl = (vehicleId: string,) => {
+
+
+  
+
+  return `/api/v1/vehicles/${vehicleId}/assignments`
+}
+
+export const assignmentHistory = async (vehicleId: string, options?: RequestInit): Promise<assignmentHistoryResponse> => {
+  
+  return customFetch<assignmentHistoryResponse>(getAssignmentHistoryUrl(vehicleId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAssignmentHistoryQueryKey = (vehicleId?: string,) => {
+    return [
+    `/api/v1/vehicles/${vehicleId}/assignments`
+    ] as const;
+    }
+
+    
+export const getAssignmentHistoryQueryOptions = <TData = Awaited<ReturnType<typeof assignmentHistory>>, TError = unknown>(vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignmentHistory>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAssignmentHistoryQueryKey(vehicleId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof assignmentHistory>>> = () => assignmentHistory(vehicleId, );
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(vehicleId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assignmentHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AssignmentHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof assignmentHistory>>>
+export type AssignmentHistoryQueryError = unknown
+
+
+export function useAssignmentHistory<TData = Awaited<ReturnType<typeof assignmentHistory>>, TError = unknown>(
+ vehicleId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignmentHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof assignmentHistory>>,
+          TError,
+          Awaited<ReturnType<typeof assignmentHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAssignmentHistory<TData = Awaited<ReturnType<typeof assignmentHistory>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignmentHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof assignmentHistory>>,
+          TError,
+          Awaited<ReturnType<typeof assignmentHistory>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAssignmentHistory<TData = Awaited<ReturnType<typeof assignmentHistory>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignmentHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAssignmentHistory<TData = Awaited<ReturnType<typeof assignmentHistory>>, TError = unknown>(
+ vehicleId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignmentHistory>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAssignmentHistoryQueryOptions(vehicleId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type assignmentsResponse200 = {
   data: PageResponseFleetAssignmentResponse
   status: 200
 }
@@ -988,6 +1539,112 @@ export function useAssignments<TData = Awaited<ReturnType<typeof assignments>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAssignmentsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+export type assignableDriversResponse200 = {
+  data: DriverResponse[]
+  status: 200
+}
+    
+export type assignableDriversResponseSuccess = (assignableDriversResponse200) & {
+  headers: Headers;
+};
+;
+
+export type assignableDriversResponse = (assignableDriversResponseSuccess)
+
+export const getAssignableDriversUrl = () => {
+
+
+  
+
+  return `/api/v1/vehicles/assignable-drivers`
+}
+
+export const assignableDrivers = async ( options?: RequestInit): Promise<assignableDriversResponse> => {
+  
+  return customFetch<assignableDriversResponse>(getAssignableDriversUrl(),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getAssignableDriversQueryKey = () => {
+    return [
+    `/api/v1/vehicles/assignable-drivers`
+    ] as const;
+    }
+
+    
+export const getAssignableDriversQueryOptions = <TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>>, }
+) => {
+
+const {query: queryOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getAssignableDriversQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof assignableDrivers>>> = () => assignableDrivers();
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type AssignableDriversQueryResult = NonNullable<Awaited<ReturnType<typeof assignableDrivers>>>
+export type AssignableDriversQueryError = unknown
+
+
+export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof assignableDrivers>>,
+          TError,
+          Awaited<ReturnType<typeof assignableDrivers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof assignableDrivers>>,
+          TError,
+          Awaited<ReturnType<typeof assignableDrivers>>
+        > , 'initialData'
+      >, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>>, }
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>>, }
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getAssignableDriversQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

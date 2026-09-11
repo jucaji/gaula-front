@@ -6,12 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export interface CloseMaintenanceOrderRequest {
-  /** @minimum 0 */
-  cost?: number;
-  /**
-   * @minLength 0
-   * @maxLength 1000
-   */
-  closingNote?: string;
+export interface DriverResponse {
+  id?: string;
+  displayName?: string;
+  rank?: string;
 }

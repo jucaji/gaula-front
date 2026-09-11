@@ -17,4 +17,5 @@ export interface VehicleResponse {
   status?: string;
   odometerKm?: number;
   version?: number;
+  attention?: string;
 }
