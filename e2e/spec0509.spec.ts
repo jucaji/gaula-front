@@ -5,8 +5,9 @@ import AxeBuilder from '@axe-core/playwright'
  * SPEC-0509 — Estados operativos del vehículo.
  *
  * <p>Lo que estas pruebas defienden: que la ficha diga POR QUÉ un vehículo está
- * en el estado en que está, y que sólo ofrezca lo que ese estado permite. Antes
- * se le ofrecía «Asignar» a un vehículo en el taller y «Liberar» sin decir de qué.
+ * en el estado en que está, y que sólo ofrezca lo que ese estado permite. Desde
+ * SPEC-0510 cada proceso vive en su pestaña (`?tab=`), así que las pruebas van
+ * directo a la pestaña donde se actúa.
  */
 const ADMIN_STAFF = {
   userId: '00000000-0000-0000-0000-000000000206',
@@ -37,8 +38,14 @@ const OPEN_ORDER = {
 }
 
 const situation = (status: string, extra: Record<string, unknown> = {}) => ({
-  vehicleId: VEHICLE_ID, status, mission: null, openOrders: [], decommissionReason: null, ...extra,
+  vehicleId: VEHICLE_ID, status, mission: null, openOrders: [], scheduledOrders: [], decommissionReason: null, ...extra,
 })
+
+const METRICS = {
+  windowDays: 30, from: '2026-08-12T12:00:00Z', to: '2026-09-11T12:00:00Z', missions: 2, kilometers: 400,
+  averageKmPerLiter: 10, fuelLiters: 40, fuelCost: 200000, loadsWithoutCost: 0, workshopDays: 1.5,
+  openOrders: 0, scheduledOrders: 0,
+}
 
 const json = (body: unknown) => ({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
@@ -63,6 +70,8 @@ async function mockConsole(page: Page, status: string, extra: Record<string, unk
   await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assignments`, (route) => route.fulfill(json([])))
   await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/events*`, (route) => route.fulfill(json({ content: [], totalElements: 0 })))
   await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/situation`, (route) => route.fulfill(json(situation(status, extra))))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/metrics*`, (route) => route.fulfill(json(METRICS)))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/linkable-cases*`, (route) => route.fulfill(json([])))
   await page.route('**/api/v1/mission-types', (route) => {
     if (route.request().method() === 'GET') return route.fulfill(json(types))
     return route.fallback()
@@ -73,16 +82,15 @@ async function mockConsole(page: Page, status: string, extra: Record<string, unk
 test.describe('SPEC-0509: estados operativos del vehículo', () => {
   test('CA-11: en misión se ve la misión y sólo se ofrece terminarla', async ({ page }) => {
     await mockConsole(page, 'IN_MISSION', { mission: MISSION })
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
 
-    const card = page.getByRole('region', { name: 'Situación actual' })
+    const card = page.getByRole('region', { name: 'Misión en curso' })
     await expect(card.getByText('Sargento Rueda Ortiz')).toBeVisible()
     await expect(card.getByText('Patrullaje')).toBeVisible()
     await expect(card.getByText('GAULA-BOG-2026-000004')).toBeVisible()
     await expect(card.getByText('Vencida')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Terminar misión' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Asignar vehículo' })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Abrir orden' })).toHaveCount(0)
   })
 
   test('CA-5: enviar al taller exige decir qué avería tiene', async ({ page }) => {
@@ -92,7 +100,7 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
       body = JSON.parse(route.request().postData() ?? '{}')
       return route.fulfill(json({}))
     })
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
 
     await page.getByLabel('Enviar al taller').check()
     const submit = page.getByRole('button', { name: 'Terminar misión' })
@@ -112,10 +120,9 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
       body = JSON.parse(route.request().postData() ?? '{}')
       return route.fulfill(json({}))
     })
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=mantenimiento`)
 
     await expect(page.getByRole('list', { name: 'Órdenes abiertas' }).getByText('Frenos')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Asignar vehículo' })).toHaveCount(0)
     const close = page.getByRole('button', { name: 'Cerrar orden' })
     await expect(close).toBeDisabled()
     await page.getByLabel('Qué se le hizo *').fill('Cambio de pastillas')
@@ -125,6 +132,14 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
     expect(body).toMatchObject({ closingNote: 'Cambio de pastillas' })
   })
 
+  test('CA-11: en el taller, la pestaña de misiones no ofrece asignar', async ({ page }) => {
+    await mockConsole(page, 'MAINTENANCE', { openOrders: [OPEN_ORDER] })
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
+
+    await expect(page.getByText(/no sale a misión hasta que se cierre/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Asignar vehículo' })).toHaveCount(0)
+  })
+
   test('CA-7: disponible, no se asigna sin tipo de misión', async ({ page }) => {
     await mockConsole(page, 'AVAILABLE')
     let body: Record<string, unknown> | null = null
@@ -132,7 +147,7 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
       body = JSON.parse(route.request().postData() ?? '{}')
       return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
     })
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
 
     await page.getByLabel('Conductor *').selectOption(DRIVER_ID)
     const assign = page.getByRole('button', { name: 'Asignar vehículo' })
@@ -145,16 +160,18 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
     expect(body!.missionTypeId).toBe('00000000-0000-0000-0000-0000000005a2')
     // Viaja un instante con zona, no la hora local sin zona del control.
     expect(String(body!.expectedEndAt)).toMatch(/Z$/)
-    await expect(page.getByRole('button', { name: 'Terminar misión' })).toHaveCount(0)
+    // Sin caso elegido, no viaja caso.
+    expect(body).not.toHaveProperty('caseFileId')
   })
 
-  test('fuera de servicio: dice el motivo y no ofrece acciones operativas', async ({ page }) => {
+  test('fuera de servicio: el resumen dice el motivo y misiones no ofrece asignar', async ({ page }) => {
     await mockConsole(page, 'OUT_OF_SERVICE', { decommissionReason: 'Pérdida total' })
     await page.goto(`/recursos/flota/${VEHICLE_ID}`)
 
-    await expect(page.getByRole('region', { name: 'Situación actual' }).getByText('Pérdida total')).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Ahora' }).getByText(/Pérdida total/)).toBeVisible()
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
     await expect(page.getByRole('button', { name: 'Asignar vehículo' })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Abrir orden' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Terminar misión' })).toHaveCount(0)
   })
 
@@ -210,9 +227,9 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
     await expect(dialog.getByText('Archivado')).toBeVisible()
   })
 
-  test('accesibilidad: sin violaciones serias en la ficha en misión', async ({ page }) => {
+  test('accesibilidad: sin violaciones serias en la pestaña de una misión en curso', async ({ page }) => {
     await mockConsole(page, 'IN_MISSION', { mission: MISSION })
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
     await expect(page.getByRole('button', { name: 'Terminar misión' })).toBeVisible()
 
     const results = await new AxeBuilder({ page }).analyze()

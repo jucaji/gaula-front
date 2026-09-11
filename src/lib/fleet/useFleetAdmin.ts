@@ -1,8 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
 import type {
   Driver,
   FuelHistory,
+  LinkableCase,
+  VehicleMetrics,
   MissionType,
   VehicleSituation,
   MaintenanceOrder,
@@ -346,7 +348,13 @@ export function useOperationalActions(vehicleId: string) {
   })
 
   const openOrder = useMutation({
-    mutationFn: (input: { orderType: 'PREVENTIVE' | 'CORRECTIVE'; description: string; expectedExitAt?: string }) =>
+    mutationFn: (input: {
+      orderType: 'PREVENTIVE' | 'CORRECTIVE'
+      description: string
+      expectedExitAt?: string
+      /** SPEC-0510: con fecha, queda programada y el vehículo no cambia. */
+      scheduledFor?: string
+    }) =>
       customFetch(`/api/v1/vehicles/${vehicleId}/maintenance-orders`, { method: 'POST', body: JSON.stringify(input) }),
     onSuccess: invalidate,
   })
@@ -360,5 +368,59 @@ export function useOperationalActions(vehicleId: string) {
     onSuccess: invalidate,
   })
 
-  return { assign, endMission, openOrder, closeOrder }
+  const startOrder = useMutation({
+    mutationFn: (orderId: string) =>
+      customFetch(`/api/v1/maintenance-orders/${orderId}/start`, { method: 'POST' }),
+    onSuccess: invalidate,
+  })
+
+  const cancelOrder = useMutation({
+    mutationFn: (input: { orderId: string; reason: string }) =>
+      customFetch(`/api/v1/maintenance-orders/${input.orderId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: input.reason }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  const recordFuel = useMutation({
+    mutationFn: (input: { liters: number; cost?: number; odometerKm?: number }) =>
+      customFetch(`/api/v1/vehicles/${vehicleId}/fuel`, {
+        method: 'POST',
+        body: JSON.stringify({ ...input, loadedAt: new Date().toISOString() }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  return { assign, endMission, openOrder, closeOrder, startOrder, cancelOrder, recordFuel }
+}
+
+/**
+ * SPEC-0510 Decisión 2: los casos abiertos de la unidad del vehículo. Sustituye
+ * la consulta a `/case-files/{radicado}`, que traía el expediente entero.
+ */
+export function useLinkableCases(vehicleId: string, fragment: string, enabled = true) {
+  const query = fragment.trim()
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'linkable-cases', query],
+    queryFn: () =>
+      customFetch<LinkableCase[]>(
+        `/api/v1/vehicles/${vehicleId}/linkable-cases${query ? `?q=${encodeURIComponent(query)}` : ''}`,
+      ),
+    enabled,
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+/** SPEC-0510 Decisión 4: métricas de la ventana, calculadas al consultar. */
+export function useVehicleMetrics(vehicleId: string, days = 30) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'metrics', days],
+    queryFn: () => customFetch<VehicleMetrics>(`/api/v1/vehicles/${vehicleId}/metrics?days=${days}`),
+    networkMode: 'always',
+    retry: false,
+  })
 }

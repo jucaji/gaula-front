@@ -23,7 +23,7 @@ function errorOf(error: unknown, fallback: string): string {
  * backend rechazaría a cualquier otro, y un botón que lleva a un 403 es peor
  * que no tener botón.
  */
-export function MissionTypesDialog() {
+export function MissionTypesDialog({ triggerLabel = 'Tipos de misión' }: { triggerLabel?: string } = {}) {
   const [open, setOpen] = useState(false)
   const types = useMissionTypes(open)
   const { create } = useMissionTypeMutations()
@@ -33,7 +33,7 @@ export function MissionTypesDialog() {
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button variant="secondary" size="sm">Tipos de misión</Button>
+        <Button variant="secondary" size="sm">{triggerLabel}</Button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50" />

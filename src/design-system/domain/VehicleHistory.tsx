@@ -98,6 +98,13 @@ export function FuelHistoryPanel({ history }: { history: FuelHistory }) {
   )
 }
 
+const ORDER_TONE: Record<string, 'neutral' | 'active' | 'alert'> = {
+  SCHEDULED: 'active',
+  OPEN: 'alert',
+  CLOSED: 'neutral',
+  CANCELLED: 'neutral',
+}
+
 export function MaintenancePanel({ orders }: { orders: MaintenanceOrder[] }) {
   if (orders.length === 0) {
     return (
@@ -114,15 +121,25 @@ export function MaintenancePanel({ orders }: { orders: MaintenanceOrder[] }) {
         <li key={order.id} className={CARD}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-text-primary">{order.description}</p>
-            <Badge tone={order.status === 'OPEN' ? 'alert' : 'neutral'}>
+            <Badge tone={ORDER_TONE[order.status] ?? 'neutral'}>
               {MAINTENANCE_STATUS_LABEL[order.status] ?? order.status}
             </Badge>
           </div>
           <p className="text-xs text-text-secondary">
-            {MAINTENANCE_TYPE_LABEL[order.orderType] ?? order.orderType} · abierta el {formatDateTime(order.openedAt)}
-            {order.closedAt ? ` · cerrada el ${formatDateTime(order.closedAt)}` : ''}
+            {MAINTENANCE_TYPE_LABEL[order.orderType] ?? order.orderType}
+            {order.scheduledFor ? ` · programada para el ${formatDateTime(order.scheduledFor)}` : ''}
+            {order.startedAt ? ` · ingresó el ${formatDateTime(order.startedAt)}` : ''}
+            {order.closedAt
+              ? ` · ${order.status === 'CANCELLED' ? 'cancelada' : 'cerrada'} el ${formatDateTime(order.closedAt)}`
+              : ''}
           </p>
-          <p className="text-xs text-text-secondary">{money(order.cost)}</p>
+          {order.closingNote && (
+            <p className="text-xs text-text-primary">
+              {order.status === 'CANCELLED' ? 'Motivo: ' : 'Qué se hizo: '}
+              {order.closingNote}
+            </p>
+          )}
+          {order.status !== 'CANCELLED' && <p className="text-xs text-text-secondary">{money(order.cost)}</p>}
         </li>
       ))}
     </ul>
@@ -156,9 +173,9 @@ export function AssignmentHistoryPanel({ assignments }: { assignments: VehicleAs
             Desde {formatDateTime(assignment.assignedFrom)}
             {assignment.assignedTo ? ` hasta ${formatDateTime(assignment.assignedTo)}` : ''}
           </p>
-          {assignment.caseFileId && (
-            <p className="text-xs text-text-secondary">Caso vinculado: {assignment.caseFileId}</p>
-          )}
+          {/* El identificador del caso no se le muestra a nadie: es un UUID. El radicado
+              queda en la línea de tiempo, redactado por el servidor. */}
+          {assignment.caseFileId && <p className="text-xs text-text-secondary">Con caso vinculado</p>}
         </li>
       ))}
     </ul>

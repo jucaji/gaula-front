@@ -156,8 +156,10 @@ export const MAINTENANCE_TYPE_LABEL: Record<string, string> = {
 }
 
 export const MAINTENANCE_STATUS_LABEL: Record<string, string> = {
-  OPEN: 'Abierta',
+  SCHEDULED: 'Programada',
+  OPEN: 'En taller',
   CLOSED: 'Cerrada',
+  CANCELLED: 'Cancelada',
 }
 
 export interface MaintenanceOrder {
@@ -169,6 +171,13 @@ export interface MaintenanceOrder {
   cost?: number | null
   openedAt: string
   closedAt?: string | null
+  expectedExitAt?: string | null
+  /** Qué se le hizo (cerrada) o por qué no se hizo (cancelada). */
+  closingNote?: string | null
+  /** SPEC-0510: para cuándo se programó. */
+  scheduledFor?: string | null
+  /** SPEC-0510: cuándo ingresó de verdad al taller. */
+  startedAt?: string | null
 }
 
 export interface VehicleAssignmentRecord {
@@ -208,6 +217,11 @@ export const EVENT_TYPE_LABEL: Record<string, string> = {
   FUEL_RECORDED: 'Combustible',
   MAINTENANCE_OPENED: 'Mantenimiento',
   MAINTENANCE_CLOSED: 'Mantenimiento',
+  MAINTENANCE_FINISHED: 'Salida de taller',
+  STATUS_RECONCILED: 'Corrección de estado',
+  MAINTENANCE_SCHEDULED: 'Programación',
+  MAINTENANCE_STARTED: 'Ingreso a taller',
+  MAINTENANCE_CANCELLED: 'Cancelación',
 }
 
 /** El tono de cada hecho. El texto lo redacta el servidor; aquí sólo se le da forma. */
@@ -222,6 +236,11 @@ export const EVENT_TONE: Record<string, 'neutral' | 'active' | 'alert' | 'critic
   FUEL_RECORDED: 'neutral',
   MAINTENANCE_OPENED: 'alert',
   MAINTENANCE_CLOSED: 'neutral',
+  MAINTENANCE_FINISHED: 'active',
+  STATUS_RECONCILED: 'alert',
+  MAINTENANCE_SCHEDULED: 'neutral',
+  MAINTENANCE_STARTED: 'alert',
+  MAINTENANCE_CANCELLED: 'neutral',
 }
 
 /** Quién puede conducir: lo mínimo para reconocer a alguien en una lista (SPEC-0508 bis). */
@@ -273,12 +292,61 @@ export interface VehicleSituation {
   vehicleId: string
   status: VehicleStatus
   mission?: CurrentMission | null
-  openOrders: OpenOrder[]
+  openOrders?: OpenOrder[]
+  /** SPEC-0510: programadas, la próxima primero. */
+  scheduledOrders?: ScheduledOrder[]
   decommissionReason?: string | null
+}
+
+/** SPEC-0510: una orden para más adelante. `due` = pasó su fecha sin ingresar al taller. */
+export interface ScheduledOrder {
+  orderId: string
+  orderType: string
+  description: string
+  scheduledFor: string
+  expectedExitAt?: string | null
+  due: boolean
 }
 
 /** Por qué un vehículo requiere mirarse en el inventario. */
 export const ATTENTION_LABEL: Record<string, string> = {
   MISSION_OVERDUE: 'Misión vencida',
   MAINTENANCE_OVERDUE: 'Mantenimiento vencido',
+  MAINTENANCE_DUE: 'Mantenimiento atrasado',
+}
+
+// --- SPEC-0510: ficha por procesos ---
+
+/** Un caso al que se puede vincular una misión: radicado y estado, nada del expediente. */
+export interface LinkableCase {
+  id: string
+  trackingNumber: string
+  status: string
+}
+
+export const CASE_STATUS_LABEL: Record<string, string> = {
+  RECEIVED: 'Recibido',
+  UNDER_VERIFICATION: 'En verificación',
+  IN_OPERATION: 'En operación',
+  RESULT_RECORDED: 'Resultado registrado',
+  PROSECUTED: 'Judicializado',
+}
+
+/**
+ * Métricas de una ventana (SPEC-0510 Decisión 4). Los campos nulos son «no se
+ * puede calcular», nunca cero — la pantalla dice «sin dato».
+ */
+export interface VehicleMetrics {
+  windowDays: number
+  from: string
+  to: string
+  missions?: number | null
+  kilometers?: number | null
+  averageKmPerLiter?: number | null
+  fuelLiters?: number | null
+  fuelCost?: number | null
+  loadsWithoutCost: number
+  workshopDays?: number | null
+  openOrders?: number | null
+  scheduledOrders?: number | null
 }

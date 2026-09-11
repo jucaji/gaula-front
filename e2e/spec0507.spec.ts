@@ -98,8 +98,9 @@ const FUEL_HISTORY = {
 
 const MAINTENANCE = [
   {
-    id: 'm1', vehicleId: VEHICLE_ID, orderType: 'PREVENTIVE', status: 'OPEN',
-    description: 'cambio de aceite', cost: null, openedAt: '2026-09-05T12:00:00Z', closedAt: null,
+    id: 'm1', vehicleId: VEHICLE_ID, orderType: 'PREVENTIVE', status: 'CLOSED',
+    description: 'cambio de aceite', cost: null, openedAt: '2026-09-05T12:00:00Z', closedAt: '2026-09-06T12:00:00Z',
+    closingNote: 'hecho', startedAt: '2026-09-05T12:00:00Z',
   },
 ]
 
@@ -123,6 +124,13 @@ const SITUATION = { vehicleId: VEHICLE_ID, status: 'AVAILABLE', mission: null, o
 const MISSION_TYPES = [
   { id: '00000000-0000-0000-0000-0000000005a1', name: 'Operativo de caso', description: null, active: true },
 ]
+
+const METRICS = {
+  windowDays: 30, from: '2026-08-12T12:00:00Z', to: '2026-09-11T12:00:00Z', missions: 0, kilometers: null,
+  averageKmPerLiter: null, fuelLiters: null, fuelCost: null, loadsWithoutCost: 0, workshopDays: 0,
+  openOrders: 0, scheduledOrders: 0,
+}
+const LINKABLE = [{ id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', trackingNumber: 'GAULA-BOG-2026-000004', status: 'IN_OPERATION' }]
 
 async function mockConsole(page: Page, session: Record<string, unknown>) {
   await page.route('**/api/v1/me', (route) =>
@@ -159,6 +167,10 @@ async function mockConsole(page: Page, session: Record<string, unknown>) {
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(SITUATION) }))
   await page.route('**/api/v1/mission-types', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MISSION_TYPES) }))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/metrics*`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(METRICS) }))
+  await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/linkable-cases*`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(LINKABLE) }))
 }
 
 test.describe('SPEC-0507: gestión de flota', () => {
@@ -209,7 +221,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(VEHICLE) })
     })
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
     await page.getByRole('button', { name: 'Corregir' }).click()
     await page.getByLabel('Marca').fill('Nissan')
     await page.getByRole('button', { name: 'Guardar' }).click()
@@ -223,7 +235,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
   test('CA-5: el formulario de corrección no ofrece la unidad territorial', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
     await page.getByRole('button', { name: 'Corregir' }).click()
 
     await expect(page.getByLabel('Unidad territorial *')).toHaveCount(0)
@@ -239,7 +251,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(VEHICLE) })
     })
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
     const destino = page.getByLabel('Unidad de destino *')
     await expect(destino.getByRole('option')).toHaveCount(2)   // «Seleccione…» + la otra unidad
 
@@ -253,7 +265,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
   test('CA-8: dar de baja dice que no borra nada', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
 
     await expect(page.getByText(/No se borra/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Dar de baja' })).toBeVisible()
@@ -262,7 +274,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
   test('CA-12: la unidad administrativa no ve el bloque de equipo GPS', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
 
     // Administra la flota y no la operación (docs/04 §2.4): los equipos son de
     // SYSTEM_ADMIN, y el backend le devolvería 403 en cada acción de ese panel.
@@ -277,7 +289,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
       return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
     })
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
 
     await expect(page.getByText('Este vehículo no tiene equipo vinculado.')).toBeVisible()
     await page.getByLabel('Equipo libre').selectOption(FREE_DEVICE)
@@ -359,8 +371,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
   test('SPEC-0508 CA-2: la primera carga NO muestra un rendimiento de cero', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
-    await page.getByRole('button', { name: 'Historial' }).click()
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=combustible`)
 
     const tanqueos = page.getByRole('list', { name: 'Tanqueos' })
     await expect(tanqueos.getByText('10 km/l')).toBeVisible()
@@ -373,8 +384,7 @@ test.describe('SPEC-0507: gestión de flota', () => {
   test('SPEC-0508: el promedio dice sobre cuántos tramos se calculó', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
-    await page.getByRole('button', { name: 'Historial' }).click()
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=combustible`)
 
     // Un promedio sin su denominador no se puede juzgar.
     // «tramo calculable», en singular: la primera versión decía «1 tramo
@@ -385,11 +395,12 @@ test.describe('SPEC-0507: gestión de flota', () => {
   test('SPEC-0508 CA-4/CA-6: mantenimiento y traslado se pueden volver a ver', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
-    await page.getByRole('button', { name: 'Historial' }).click()
+    // SPEC-0510: cada historial en la pestaña de su proceso.
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=mantenimiento`)
 
     await expect(page.getByRole('list', { name: 'Órdenes de mantenimiento' })
       .getByText('cambio de aceite')).toBeVisible()
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=historial`)
     const linea = page.getByRole('list', { name: 'Línea de tiempo' })
     await expect(linea.getByText(/Trasladado de GAULA Militar Bogotá D.C. a GAULA Militar Antioquia/)).toBeVisible()
     // El tipo se nombra en español: `TRANSFERRED` en la cara del usuario era el
@@ -460,42 +471,36 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await expect(page.getByRole('link', { name: 'Ver ficha' })).toBeVisible()
   })
 
-  test('el caso se vincula por RADICADO, no por identificador', async ({ page }) => {
+  test('el caso se elige por RADICADO de una lista, y la ficha no pide el expediente', async ({ page }) => {
     await mockConsole(page, ADMIN_STAFF)
-    let buscado: string | null = null
-    let asignado: Record<string, unknown> | null = null
-
-    await page.route('**/api/v1/case-files/GAULA-BOG-2026-000004', (route) => {
-      buscado = route.request().url()
-      return route.fulfill({
-        status: 200, contentType: 'application/json',
-        body: JSON.stringify({ id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', trackingNumber: 'GAULA-BOG-2026-000004' }),
-      })
+    const expediente: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('/api/v1/case-files')) expediente.push(request.url())
     })
+    let asignado: Record<string, unknown> | null = null
     await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assign`, (route) => {
       asignado = JSON.parse(route.request().postData() ?? '{}')
       return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
     })
 
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
     await page.getByLabel('Conductor *').selectOption('dddddddd-dddd-dddd-dddd-dddddddddddd')
     await page.getByLabel('Tipo de misión *').selectOption({ label: 'Operativo de caso' })
-    await page.getByLabel('Caso vinculado (radicado)').fill('GAULA-BOG-2026-000004')
+    await page.getByRole('combobox', { name: 'Caso vinculado' }).selectOption({ label: 'GAULA-BOG-2026-000004 · En operación' })
     await page.getByRole('button', { name: 'Asignar vehículo' }).click()
 
     await expect.poll(() => asignado).not.toBeNull()
-    // Lo que viaja al backend es el IDENTIFICADOR resuelto, no el radicado: el
-    // radicado producía un 500 y es lo que el cliente escribió de verdad.
-    expect(buscado).toContain('GAULA-BOG-2026-000004')
+    // Lo que viaja es el IDENTIFICADOR del caso elegido; lo que la persona ve es el radicado.
     expect(asignado!.caseFileId).toBe('cccccccc-cccc-cccc-cccc-cccccccccccc')
-    // Y el conductor sale del desplegable: ya no hay UUID que teclear.
     expect(asignado!.driverId).toBe('dddddddd-dddd-dddd-dddd-dddddddddddd')
     expect(asignado!.missionTypeId).toBe('00000000-0000-0000-0000-0000000005a1')
+    // SPEC-0510 CA-5: antes se pedía /case-files/{radicado}, que devolvía el expediente entero.
+    expect(expediente).toEqual([])
   })
 
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
     await mockConsole(page, SYSTEM_ADMIN)
-    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)
     await expect(page.getByRole('heading', { name: 'Equipo GPS' })).toBeVisible()
 
     const results = await new AxeBuilder({ page }).analyze()
