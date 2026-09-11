@@ -16,4 +16,5 @@ export interface VehicleAddressResponse {
   latitude?: number;
   longitude?: number;
   resolvedAt?: string;
+  offsetMeters?: number;
 }
