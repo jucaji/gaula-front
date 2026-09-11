@@ -75,7 +75,7 @@ function VehicleDetailPage() {
     : null
 
   const [driverId, setDriverId] = useState('')
-  const [caseFileId, setCaseFileId] = useState('')
+  const [caseReference, setCaseReference] = useState('')
   const [purpose, setPurpose] = useState('')
   const [sendToMaintenance, setSendToMaintenance] = useState(false)
   const [liters, setLiters] = useState('')
@@ -104,16 +104,34 @@ function VehicleDetailPage() {
     }
   }
 
+  /**
+   * Asigna el vehículo.
+   *
+   * <p>El caso se escribe por RADICADO —`GAULA-BOG-2026-000004`—, que es lo que
+   * una persona conoce, y se traduce aquí a su identificador. Antes el campo
+   * pedía el UUID y quien escribía el radicado recibía un 500: el backend ya
+   * responde 400 a eso, pero el arreglo de fondo es no pedir un dato que nadie
+   * tiene a mano.
+   */
   async function handleAssign() {
     if (!driverId.trim()) return
-    await run(() =>
-      customFetch(`/api/v1/vehicles/${vehicleId}/assign`, {
+
+    await run(async () => {
+      let caseFileId: string | undefined
+      if (caseReference.trim()) {
+        const caso = await customFetch<{ id?: string }>(
+          `/api/v1/case-files/${encodeURIComponent(caseReference.trim())}`,
+        )
+        caseFileId = caso.id
+      }
+
+      return customFetch(`/api/v1/vehicles/${vehicleId}/assign`, {
         method: 'POST',
-        body: JSON.stringify({ driverId, caseFileId: caseFileId || undefined, purpose: purpose || undefined }),
-      }),
-    )
+        body: JSON.stringify({ driverId: driverId.trim(), caseFileId, purpose: purpose || undefined }),
+      })
+    })
     setDriverId('')
-    setCaseFileId('')
+    setCaseReference('')
     setPurpose('')
   }
 
@@ -236,12 +254,23 @@ function VehicleDetailPage() {
         <div className="flex h-fit flex-col gap-2 rounded-md border border-border-strong bg-surface-raised p-4">
           <h2 className="text-sm font-semibold text-text-primary">Asignar</h2>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Conductor (id) *
-            <Input value={driverId} onChange={(event) => setDriverId(event.target.value)} />
+            Conductor (identificador de usuario) *
+            <Input value={driverId} onChange={(event) => setDriverId(event.target.value)}
+                   placeholder="00000000-0000-0000-0000-000000000000" />
+            {/* Pendiente: elegirlo de una lista. Hoy no hay un endpoint que
+                liste usuarios para quien no es administrador, así que al menos
+                se dice qué forma tiene el dato en vez de dejar el campo mudo. */}
+            <span className="text-xs text-text-secondary">
+              Identificador del usuario conductor, no su cédula ni su nombre.
+            </span>
           </label>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
-            Caso vinculado (id, opcional)
-            <Input value={caseFileId} onChange={(event) => setCaseFileId(event.target.value)} />
+            Caso vinculado (radicado, opcional)
+            <Input value={caseReference} onChange={(event) => setCaseReference(event.target.value)}
+                   placeholder="GAULA-BOG-2026-000004" />
+            <span className="text-xs text-text-secondary">
+              El radicado del caso. Se busca al asignar; si no existe o no lo alcanza, se avisa aquí.
+            </span>
           </label>
           <label className="flex flex-col gap-1 text-sm text-text-primary">
             Propósito (opcional)

@@ -444,6 +444,35 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await expect(page.getByRole('link', { name: 'Ver ficha' })).toBeVisible()
   })
 
+  test('el caso se vincula por RADICADO, no por identificador', async ({ page }) => {
+    await mockConsole(page, ADMIN_STAFF)
+    let buscado: string | null = null
+    let asignado: Record<string, unknown> | null = null
+
+    await page.route('**/api/v1/case-files/GAULA-BOG-2026-000004', (route) => {
+      buscado = route.request().url()
+      return route.fulfill({
+        status: 200, contentType: 'application/json',
+        body: JSON.stringify({ id: 'cccccccc-cccc-cccc-cccc-cccccccccccc', trackingNumber: 'GAULA-BOG-2026-000004' }),
+      })
+    })
+    await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assign`, (route) => {
+      asignado = JSON.parse(route.request().postData() ?? '{}')
+      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
+    })
+
+    await page.goto(`/recursos/flota/${VEHICLE_ID}`)
+    await page.getByLabel('Conductor (identificador de usuario) *').fill('00000000-0000-0000-0000-000000000202')
+    await page.getByLabel('Caso vinculado (radicado, opcional)').fill('GAULA-BOG-2026-000004')
+    await page.getByRole('button', { name: 'Asignar vehículo' }).click()
+
+    await expect.poll(() => asignado).not.toBeNull()
+    // Lo que viaja al backend es el IDENTIFICADOR resuelto, no el radicado: el
+    // radicado producía un 500 y es lo que el cliente escribió de verdad.
+    expect(buscado).toContain('GAULA-BOG-2026-000004')
+    expect(asignado!.caseFileId).toBe('cccccccc-cccc-cccc-cccc-cccccccccccc')
+  })
+
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
     await mockConsole(page, SYSTEM_ADMIN)
     await page.goto(`/recursos/flota/${VEHICLE_ID}`)
