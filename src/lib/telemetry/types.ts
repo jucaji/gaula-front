@@ -227,6 +227,8 @@ export interface VehicleAddressResponse {
   latitude?: number | null
   longitude?: number | null
   resolvedAt?: string | null
+  /** A cuántos metros del punto de la dirección está hoy el vehículo (radio de reutilización: 100 m). */
+  offsetMeters?: number
 }
 
 export const ADDRESS_PROVIDER_LABEL: Record<string, string> = {

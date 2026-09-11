@@ -57,6 +57,15 @@ test.describe('SPEC-0511: la dirección de la última posición', () => {
     await expect(page.getByText('Dirección aproximada · Google')).toBeVisible()
   })
 
+  test('una dirección reutilizada dentro de 100 m dice a cuántos metros está', async ({ page }) => {
+    await mockConsole(page, {
+      status: 'RESOLVED', address: 'Cra. 11 #72-30, Bogotá, Colombia', provider: 'GOOGLE', fromCache: true, offsetMeters: 56,
+    })
+    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=ubicacion`)
+
+    await expect(page.getByText('Dirección aproximada (a unos 56 m) · Google')).toBeVisible()
+  })
+
   test('CA-5: apagada, la coordenada sigue y se dice por qué no hay dirección', async ({ page }) => {
     await mockConsole(page, {
       status: 'DISABLED', address: null, provider: null,

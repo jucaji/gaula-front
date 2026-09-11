@@ -31,11 +31,15 @@ export function VehicleLocationPanel({ vehicleId }: { vehicleId: string }) {
   })
 
   const fixPoint = telemetry.data?.lastFix
-  // SPEC-0511: la dirección se pide por punto — la clave de la consulta cambia
-  // cuando el vehículo se mueve — y el servidor tiene su propia caché, así que
-  // volver a esta pestaña no reenvía la posición al proveedor.
+  // SPEC-0511: la dirección se pide por CELDA de ~110 m (3 decimales), no por
+  // cada posición: un vehículo en marcha lenta no dispara una consulta en cada
+  // refresco. El servidor además reutiliza la dirección dentro de 100 m y no
+  // reenvía nada tras un fallo durante un minuto.
+  const cell = fixPoint
+    ? `${fixPoint.latitude.toFixed(3)},${fixPoint.longitude.toFixed(3)}`
+    : null
   const address = useQuery({
-    queryKey: ['telemetry', 'vehicles', vehicleId, 'address', fixPoint?.latitude, fixPoint?.longitude],
+    queryKey: ['telemetry', 'vehicles', vehicleId, 'address', cell],
     queryFn: () => customFetch<VehicleAddressResponse>(`/api/v1/telemetry/vehicles/${vehicleId}/address`),
     enabled: Boolean(fixPoint),
     staleTime: 60_000,
@@ -128,7 +132,12 @@ function AddressLine({
       <>
         <span className="block text-sm text-text-primary">{data.address}</span>
         <span className="block text-xs text-text-secondary">
-          Dirección aproximada · {ADDRESS_PROVIDER_LABEL[data.provider ?? ''] ?? data.provider}
+          Dirección aproximada
+          {/* Reutilizada dentro del radio de 100 m: se dice, en vez de presentarla
+              como la del punto exacto. Por debajo de 20 m es ruido del GPS. */}
+          {(data.offsetMeters ?? 0) >= 20 ? ` (a unos ${data.offsetMeters} m)` : ''}
+          {' · '}
+          {ADDRESS_PROVIDER_LABEL[data.provider ?? ''] ?? data.provider}
         </span>
       </>
     )
