@@ -14,6 +14,7 @@ import { ModusOperandiPanel } from '@/design-system/domain/ModusOperandiPanel'
 import { ReferralGuide } from '@/design-system/domain/ReferralGuide'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
+import { MunicipalityCombobox } from '@/design-system/domain/MunicipalityCombobox'
 import { clearDraft, loadDraft, saveDraft } from '@/lib/storage/callDraftStore'
 
 export const Route = createFileRoute('/recepcion/')({
@@ -66,18 +67,6 @@ function useReporterLookup(phone: string) {
   })
 }
 
-function useMunicipalitySearch(q: string) {
-  const debouncedQ = useDebounced(q, 250)
-  return useQuery({
-    queryKey: ['catalog', 'municipalities', debouncedQ],
-    queryFn: () => customFetch<MunicipalityResponse[]>(`/api/v1/catalog/municipalities?q=${encodeURIComponent(debouncedQ)}`),
-    enabled: debouncedQ.trim().length >= 2,
-    staleTime: 10_000,
-    networkMode: 'always',
-    retry: false,
-  })
-}
-
 function useModusOperandi(crimeTypeCode: string) {
   return useQuery({
     queryKey: ['catalog', 'modus-operandi', crimeTypeCode],
@@ -117,8 +106,7 @@ function RecepcionConsole() {
   const [reporterRegistered, setReporterRegistered] = useState(false)
   const [reporterError, setReporterError] = useState<string | null>(null)
 
-  const [municipalityQuery, setMunicipalityQuery] = useState('')
-  const [municipalityCode, setMunicipalityCode] = useState<string | null>(null)
+  const [municipality, setMunicipality] = useState<MunicipalityResponse | null>(null)
   const [resolvedTerritorial, setResolvedTerritorial] = useState<string | null | undefined>(undefined)
   const [crimeTypeCode, setCrimeTypeCode] = useState('')
   const [jurisdiction, setJurisdiction] = useState<'UNDETERMINED' | 'GAULA' | 'REFERRED'>('UNDETERMINED')
@@ -133,7 +121,6 @@ function RecepcionConsole() {
 
   const crimeTypes = useCrimeTypes()
   const reporterLookup = useReporterLookup(phone)
-  const municipalityMatches = useMunicipalitySearch(municipalityQuery)
   const modusOperandi = useModusOperandi(crimeTypeCode)
   const referralGuidelines = useReferralGuidelines(crimeTypeCode, exitFlow === 'referral' && jurisdiction !== 'GAULA')
 
@@ -210,26 +197,16 @@ function RecepcionConsole() {
     }
   }
 
-  function handleSelectMunicipality(match: MunicipalityResponse) {
-    if (!match.code || match.code === municipalityCode) return
-    setMunicipalityCode(match.code)
-    setMunicipalityQuery(`${match.name ?? ''}, ${match.departmentName ?? ''}`)
+  function handleSelectMunicipality(match: MunicipalityResponse | null) {
+    if (match?.code && match.code === municipality?.code) return
+    setMunicipality(match)
+    if (!match?.code) {
+      setResolvedTerritorial(undefined)
+      return
+    }
     setResolvedTerritorial(match.territorialUnitName ?? null)
     void enrich({ municipalityCode: match.code })
   }
-
-  // S4.QA.01 (criterio A1, ≤3 interacciones): si al escribir sólo queda una
-  // coincidencia, se selecciona sola -- el operador no gasta una interacción
-  // aparte en hacer clic sobre la única sugerencia posible.
-  useEffect(() => {
-    if (municipalityCode) return
-    const onlyMatch = municipalityMatches.data?.length === 1 ? municipalityMatches.data[0] : undefined
-    if (!onlyMatch) return
-    // `queueMicrotask` -- el resultado ya es asíncrono (react-query); esto sólo
-    // evita el `setState` síncrono dentro del cuerpo del efecto.
-    queueMicrotask(() => handleSelectMunicipality(onlyMatch))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [municipalityMatches.data, municipalityCode])
 
   function handleSelectCrimeType(code: string) {
     setCrimeTypeCode(code)
@@ -451,33 +428,15 @@ function RecepcionConsole() {
             </select>
           </label>
 
-          <label className="relative flex flex-col gap-1 text-sm text-text-primary">
-            Municipio
-            <Input
-              value={municipalityQuery}
-              onChange={(e) => {
-                setMunicipalityQuery(e.target.value)
-                setMunicipalityCode(null)
-                setResolvedTerritorial(undefined)
-              }}
-              placeholder="Tolerante a acentos y errores"
-            />
-            {municipalityMatches.data && municipalityMatches.data.length > 0 && !municipalityCode && (
-              <ul className="absolute top-full z-10 mt-1 w-full rounded-sm border border-border-strong bg-surface-raised shadow-sm">
-                {municipalityMatches.data.map((match) => (
-                  <li key={match.code}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectMunicipality(match)}
-                      className="block w-full px-2 py-1.5 text-left text-sm hover:bg-surface-sunken"
-                    >
-                      {match.name}, {match.departmentName}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </label>
+          {/* S4.QA.01 (criterio A1): una sola coincidencia se elige sola. */}
+          <MunicipalityCombobox
+            label="Municipio"
+            labelClassName="text-sm text-text-primary"
+            placeholder="Tolerante a acentos y errores"
+            autoSelectSingleMatch
+            value={municipality}
+            onChange={handleSelectMunicipality}
+          />
 
           {resolvedTerritorial !== undefined && (
             <div className="rounded-sm border border-border-strong bg-surface-sunken p-2 text-sm">

@@ -13,6 +13,7 @@ import type {
 } from '@/api/generated/models'
 import { RespondExternalDataRequestRequestOutcome } from '@/api/generated/models'
 import { TrackingNumberBadge } from '@/design-system/domain/TrackingNumberBadge'
+import { CrimeTypeName, MunicipalityName } from '@/design-system/domain/CatalogNames'
 import { CaseStatusChip } from '@/design-system/domain/CaseStatusChip'
 import { PriorityIndicator } from '@/design-system/domain/PriorityIndicator'
 import { ClassificationBanner } from '@/design-system/domain/ClassificationBanner'
@@ -286,11 +287,11 @@ function CaseDetailPage() {
           <dl className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-xs text-text-muted">Tipología</dt>
-              <dd className="text-text-primary">{caseFile.crimeTypeCode ?? '—'}</dd>
+              <dd className="text-text-primary"><CrimeTypeName code={caseFile.crimeTypeCode} /></dd>
             </div>
             <div>
               <dt className="text-xs text-text-muted">Municipio</dt>
-              <dd className="text-text-primary">{caseFile.municipalityCode ?? '—'}</dd>
+              <dd className="text-text-primary"><MunicipalityName code={caseFile.municipalityCode} withCode /></dd>
             </div>
             <div>
               <dt className="text-xs text-text-muted">Involucra menor</dt>

@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { CrimeTypeName, MunicipalityName } from '@/design-system/domain/CatalogNames'
 import { useRef, useState } from 'react'
 import { customFetch } from '@/api/client'
 import { ApiError } from '@/api/problem'
@@ -178,11 +179,11 @@ function FieldCaseDetailPage() {
         <dl className="mt-3 flex flex-col gap-1 text-sm text-text-secondary">
           <div>
             <dt className="inline font-medium text-text-primary">Municipio: </dt>
-            <dd className="inline">{data.municipalityCode ?? '—'}</dd>
+            <dd className="inline"><MunicipalityName code={data.municipalityCode} /></dd>
           </div>
           <div>
             <dt className="inline font-medium text-text-primary">Tipología: </dt>
-            <dd className="inline">{data.crimeTypeCode ?? '—'}</dd>
+            <dd className="inline"><CrimeTypeName code={data.crimeTypeCode} /></dd>
           </div>
         </dl>
 

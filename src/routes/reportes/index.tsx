@@ -8,6 +8,7 @@ import type { OperationalReportResponse } from '@/api/generated/models'
 import { useSessionQuery } from '@/lib/auth/useSession'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { DataTable } from '@/design-system/primitives/DataTable'
+import { MunicipalityName } from '@/design-system/domain/CatalogNames'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { formatDateTime } from '@/lib/format/formatDateTime'
@@ -82,7 +83,7 @@ const columns: ColumnDef<OperationalReportResponse, unknown>[] = [
   },
   { id: 'status', accessorKey: 'status', header: 'Estado', cell: ({ getValue }) => STATUS_LABEL[getValue<string>() ?? ''] ?? '—' },
   { id: 'source', accessorKey: 'source', header: 'Origen', cell: ({ getValue }) => getValue<string>() ?? '—' },
-  { id: 'municipalityCode', accessorKey: 'municipalityCode', header: 'Municipio', cell: ({ getValue }) => getValue<string>() ?? '—' },
+  { id: 'municipalityCode', accessorKey: 'municipalityCode', header: 'Municipio', cell: ({ getValue }) => <MunicipalityName code={getValue<string>()} /> },
   { id: 'operationType', accessorKey: 'operationType', header: 'Tipo de operación', cell: ({ getValue }) => getValue<string>() ?? '—' },
   // `submittedAt` se fija al CAPTURAR el borrador (OperationalReport.createDraft), no al enviarlo a revisión.
   { id: 'submittedAt', accessorKey: 'submittedAt', header: 'Capturado', cell: ({ getValue }) => (getValue<string>() ? formatDateTime(getValue<string>()) : '—') },

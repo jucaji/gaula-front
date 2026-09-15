@@ -7,6 +7,7 @@ import { customFetch } from '@/api/client'
 import type { CallResponse } from '@/api/generated/models'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { DataTable } from '@/design-system/primitives/DataTable'
+import { CrimeTypeName, MunicipalityName } from '@/design-system/domain/CatalogNames'
 import { Button } from '@/design-system/primitives/Button'
 import { formatDateTime } from '@/lib/format/formatDateTime'
 
@@ -106,8 +107,8 @@ const columns: ColumnDef<CallResponse, unknown>[] = [
   { id: 'sequenceNumber', accessorKey: 'sequenceNumber', header: '#', cell: ({ getValue }) => getValue<number>() ?? '—' },
   { id: 'startedAt', accessorKey: 'startedAt', header: 'Inicio', cell: ({ getValue }) => formatDateTime(getValue<string>()) },
   { id: 'status', accessorKey: 'status', header: 'Estado', cell: ({ getValue }) => STATUS_LABEL[getValue<string>() ?? ''] ?? '—' },
-  { id: 'crimeTypeCode', accessorKey: 'crimeTypeCode', header: 'Tipología', cell: ({ getValue }) => getValue<string>() ?? '—' },
-  { id: 'municipalityCode', accessorKey: 'municipalityCode', header: 'Municipio', cell: ({ getValue }) => getValue<string>() ?? '—' },
+  { id: 'crimeTypeCode', accessorKey: 'crimeTypeCode', header: 'Tipología', cell: ({ getValue }) => <CrimeTypeName code={getValue<string>()} /> },
+  { id: 'municipalityCode', accessorKey: 'municipalityCode', header: 'Municipio', cell: ({ getValue }) => <MunicipalityName code={getValue<string>()} /> },
   { id: 'jurisdiction', accessorKey: 'jurisdiction', header: 'Competencia', cell: ({ getValue }) => JURISDICTION_LABEL[getValue<string>() ?? ''] ?? '—' },
   {
     id: 'actions',
