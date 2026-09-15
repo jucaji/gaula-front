@@ -471,33 +471,6 @@ test.describe('SPEC-0507: gestión de flota', () => {
     await expect(page.getByRole('link', { name: 'Ver ficha' })).toBeVisible()
   })
 
-  test('el caso se elige por RADICADO de una lista, y la ficha no pide el expediente', async ({ page }) => {
-    await mockConsole(page, ADMIN_STAFF)
-    const expediente: string[] = []
-    page.on('request', (request) => {
-      if (request.url().includes('/api/v1/case-files')) expediente.push(request.url())
-    })
-    let asignado: Record<string, unknown> | null = null
-    await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assign`, (route) => {
-      asignado = JSON.parse(route.request().postData() ?? '{}')
-      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
-    })
-
-    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
-    await page.getByLabel('Conductor *').selectOption('dddddddd-dddd-dddd-dddd-dddddddddddd')
-    await page.getByLabel('Tipo de misión *').selectOption({ label: 'Operativo de caso' })
-    await page.getByRole('combobox', { name: 'Caso vinculado' }).selectOption({ label: 'GAULA-BOG-2026-000004 · En operación' })
-    await page.getByRole('button', { name: 'Asignar vehículo' }).click()
-
-    await expect.poll(() => asignado).not.toBeNull()
-    // Lo que viaja es el IDENTIFICADOR del caso elegido; lo que la persona ve es el radicado.
-    expect(asignado!.caseFileId).toBe('cccccccc-cccc-cccc-cccc-cccccccccccc')
-    expect(asignado!.driverId).toBe('dddddddd-dddd-dddd-dddd-dddddddddddd')
-    expect(asignado!.missionTypeId).toBe('00000000-0000-0000-0000-0000000005a1')
-    // SPEC-0510 CA-5: antes se pedía /case-files/{radicado}, que devolvía el expediente entero.
-    expect(expediente).toEqual([])
-  })
-
   test('accesibilidad: sin violaciones serias en la ficha administrable', async ({ page }) => {
     await mockConsole(page, SYSTEM_ADMIN)
     await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=administracion`)

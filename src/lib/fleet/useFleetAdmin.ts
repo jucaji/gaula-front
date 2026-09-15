@@ -1,7 +1,14 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
 import type {
-  Driver,
+  AuthorizedDriver,
+  CrewInput,
+  DriverFormValues,
+  DriverOption,
+  DriverRecord,
+  LinkableUser,
+  Mission,
+  MissionStatus,
   FuelHistory,
   LinkableCase,
   VehicleMetrics,
@@ -235,24 +242,6 @@ export function useVehicleEvents(vehicleId: string, enabled = true) {
   })
 }
 
-/**
- * Las personas a las que se les puede asignar este vehículo.
- *
- * <p>El backend devuelve SIEMPRE la unidad territorial de quien pregunta, así
- * que no hay parámetro que ajustar — ni forma de pedir el personal de otra
- * unidad. A quien no puede asignar le llega una lista vacía, y la consola lo
- * dice en vez de mostrar un desplegable vacío sin explicación.
- */
-export function useAssignableDrivers(enabled = true) {
-  return useQuery({
-    queryKey: ['resource', 'assignable-drivers'],
-    queryFn: () => customFetch<Driver[]>('/api/v1/vehicles/assignable-drivers'),
-    enabled,
-    staleTime: 5 * 60_000,
-    networkMode: 'always',
-    retry: false,
-  })
-}
 
 // --- SPEC-0509: estados operativos ---
 
@@ -324,17 +313,6 @@ export function useOperationalActions(vehicleId: string) {
   // Todo lo del vehículo: estado, situación, historial e inventario.
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['resource', 'vehicles'] })
 
-  const assign = useMutation({
-    mutationFn: (input: {
-      driverId: string
-      missionTypeId: string
-      caseFileId?: string
-      purpose?: string
-      expectedEndAt?: string
-    }) =>
-      customFetch(`/api/v1/vehicles/${vehicleId}/assign`, { method: 'POST', body: JSON.stringify(input) }),
-    onSuccess: invalidate,
-  })
 
   const endMission = useMutation({
     mutationFn: (input: {
@@ -392,7 +370,7 @@ export function useOperationalActions(vehicleId: string) {
     onSuccess: invalidate,
   })
 
-  return { assign, endMission, openOrder, closeOrder, startOrder, cancelOrder, recordFuel }
+  return { endMission, openOrder, closeOrder, startOrder, cancelOrder, recordFuel }
 }
 
 /**
@@ -424,3 +402,232 @@ export function useVehicleMetrics(vehicleId: string, days = 30) {
     retry: false,
   })
 }
+
+// --- SPEC-0512: conductores ---------------------------------------------------------------------
+
+function driverBody(values: DriverFormValues) {
+  return {
+    territorialUnitId: values.territorialUnitId || undefined,
+    rank: values.rank || undefined,
+    firstName: values.firstName,
+    lastName: values.lastName,
+    militaryId: values.militaryId,
+    licenseNumber: values.licenseNumber,
+    licenseCategory: values.licenseCategory,
+    licenseExpiresOn: values.licenseExpiresOn || undefined,
+    appUserId: values.appUserId || undefined,
+  }
+}
+
+export function useDrivers(includeDecommissioned: boolean, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'drivers', { includeDecommissioned }],
+    queryFn: () => customFetch<DriverRecord[]>(`/api/v1/drivers?includeDecommissioned=${includeDecommissioned}`),
+    enabled,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+export function useDriverMutations() {
+  const queryClient = useQueryClient()
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['resource'] })
+
+  const register = useMutation({
+    mutationFn: (values: DriverFormValues) =>
+      customFetch<DriverRecord>('/api/v1/drivers', { method: 'POST', body: JSON.stringify(driverBody(values)) }),
+    onSuccess: invalidate,
+  })
+
+  /** Con la versión que está en pantalla: si otro lo corrigió antes, 409 en vez de pisarlo. */
+  const update = useMutation({
+    mutationFn: (input: { driver: DriverRecord; values: DriverFormValues }) =>
+      customFetch<DriverRecord>(`/api/v1/drivers/${input.driver.id}`, {
+        method: 'PUT',
+        headers: { 'If-Match': `"${input.driver.version}"` },
+        body: JSON.stringify(driverBody(input.values)),
+      }),
+    onSuccess: invalidate,
+  })
+
+  const decommission = useMutation({
+    mutationFn: (input: { driverId: string; reason: string }) =>
+      customFetch<DriverRecord>(`/api/v1/drivers/${input.driverId}/decommission`, {
+        method: 'POST',
+        body: JSON.stringify({ note: input.reason }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  const reactivate = useMutation({
+    mutationFn: (driverId: string) =>
+      customFetch<DriverRecord>(`/api/v1/drivers/${driverId}/reactivate`, { method: 'POST' }),
+    onSuccess: invalidate,
+  })
+
+  const remove = useMutation({
+    mutationFn: (driverId: string) =>
+      customFetch<{ outcome: 'DELETED' | 'ARCHIVED' }>(`/api/v1/drivers/${driverId}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+
+  return { register, update, decommission, reactivate, remove }
+}
+
+export function useLinkableUsers(territorialUnitId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'drivers', 'linkable-users', territorialUnitId],
+    queryFn: () => customFetch<LinkableUser[]>(`/api/v1/drivers/linkable-users?territorialUnitId=${territorialUnitId}`),
+    enabled: enabled && Boolean(territorialUnitId),
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+export function useAuthorizedDrivers(vehicleId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'vehicles', vehicleId, 'authorized-drivers'],
+    queryFn: () => customFetch<AuthorizedDriver[]>(`/api/v1/vehicles/${vehicleId}/authorized-drivers`),
+    enabled,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+export function useAuthorizationMutations(vehicleId: string) {
+  const queryClient = useQueryClient()
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['resource'] })
+
+  const authorize = useMutation({
+    mutationFn: (driverId: string) =>
+      customFetch<AuthorizedDriver[]>(`/api/v1/vehicles/${vehicleId}/authorized-drivers`, {
+        method: 'POST',
+        body: JSON.stringify({ driverId }),
+      }),
+    onSuccess: invalidate,
+  })
+
+  const revoke = useMutation({
+    mutationFn: (driverId: string) =>
+      customFetch<AuthorizedDriver[]>(`/api/v1/vehicles/${vehicleId}/authorized-drivers/${driverId}`, {
+        method: 'DELETE',
+      }),
+    onSuccess: invalidate,
+  })
+
+  return { authorize, revoke }
+}
+
+// --- SPEC-0512: misiones ------------------------------------------------------------------------
+
+export function useMissions(filter: { status?: MissionStatus; vehicleId?: string }, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'missions', filter],
+    queryFn: () => {
+      const params = new URLSearchParams()
+      if (filter.status) params.set('status', filter.status)
+      if (filter.vehicleId) params.set('vehicleId', filter.vehicleId)
+      const query = params.toString()
+      return customFetch<Mission[]>(`/api/v1/missions${query ? `?${query}` : ''}`)
+    },
+    enabled,
+    placeholderData: keepPreviousData,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+export function useMission(missionId: string) {
+  return useQuery({
+    queryKey: ['resource', 'missions', missionId],
+    queryFn: () => customFetch<Mission>(`/api/v1/missions/${missionId}`),
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+export interface MissionPlanInput {
+  territorialUnitId?: string
+  missionTypeId: string
+  caseFileId?: string
+  purpose?: string
+  plannedStartAt?: string
+  expectedEndAt?: string
+}
+
+export function useMissionMutations(missionId?: string) {
+  const queryClient = useQueryClient()
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['resource'] })
+  const base = `/api/v1/missions/${missionId ?? ''}`
+
+  const plan = useMutation({
+    mutationFn: (input: MissionPlanInput) =>
+      customFetch<Mission>('/api/v1/missions', { method: 'POST', body: JSON.stringify(input) }),
+    onSuccess: invalidate,
+  })
+  const edit = useMutation({
+    mutationFn: (input: MissionPlanInput) => customFetch<Mission>(base, { method: 'PUT', body: JSON.stringify(input) }),
+    onSuccess: invalidate,
+  })
+  const addVehicle = useMutation({
+    mutationFn: (input: { vehicleId: string; crew: CrewInput[] }) =>
+      customFetch<Mission>(`${base}/vehicles`, { method: 'POST', body: JSON.stringify(input) }),
+    onSuccess: invalidate,
+  })
+  const replaceCrew = useMutation({
+    mutationFn: (input: { vehicleId: string; crew: CrewInput[] }) =>
+      customFetch<Mission>(`${base}/vehicles/${input.vehicleId}/crew`, {
+        method: 'PUT',
+        body: JSON.stringify({ crew: input.crew }),
+      }),
+    onSuccess: invalidate,
+  })
+  const removeVehicle = useMutation({
+    mutationFn: (vehicleId: string) => customFetch<Mission>(`${base}/vehicles/${vehicleId}`, { method: 'DELETE' }),
+    onSuccess: invalidate,
+  })
+  const start = useMutation({
+    mutationFn: () => customFetch<Mission>(`${base}/start`, { method: 'POST' }),
+    onSuccess: invalidate,
+  })
+  const complete = useMutation({
+    mutationFn: (note: string) =>
+      customFetch<Mission>(`${base}/complete`, { method: 'POST', body: JSON.stringify({ note }) }),
+    onSuccess: invalidate,
+  })
+  const cancel = useMutation({
+    mutationFn: (reason: string) =>
+      customFetch<Mission>(`${base}/cancel`, { method: 'POST', body: JSON.stringify({ note: reason }) }),
+    onSuccess: invalidate,
+  })
+
+  return { plan, edit, addVehicle, replaceCrew, removeVehicle, start, complete, cancel }
+}
+
+export function useDriverOptions(missionId: string, vehicleId: string, enabled = true) {
+  return useQuery({
+    queryKey: ['resource', 'missions', missionId, 'driver-options', vehicleId],
+    queryFn: () => customFetch<DriverOption[]>(`/api/v1/missions/${missionId}/driver-options?vehicleId=${vehicleId}`),
+    enabled: enabled && Boolean(vehicleId),
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+/** Casos abiertos de una unidad, para una misión que aún no tiene vehículos (SPEC-0510). */
+export function useUnitLinkableCases(territorialUnitId: string, fragment: string, enabled = true) {
+  const query = fragment.trim()
+  return useQuery({
+    queryKey: ['resource', 'missions', 'linkable-cases', territorialUnitId, query],
+    queryFn: () =>
+      customFetch<LinkableCase[]>(
+        `/api/v1/missions/linkable-cases?territorialUnitId=${territorialUnitId}${query ? `&q=${encodeURIComponent(query)}` : ''}`,
+      ),
+    enabled: enabled && Boolean(territorialUnitId),
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+

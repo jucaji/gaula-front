@@ -18,6 +18,10 @@ import type { RoleCode } from '@/lib/auth/roles'
  */
 export const FLEET_SECTIONS = [
   { to: '/recursos/flota', label: 'Inventario', resource: 'FLEET' },
+  // SPEC-0512: las misiones y los conductores son de la flota y viven tras el mismo
+  // recurso que el inventario; lo que cada rol puede HACER lo decide la matriz.
+  { to: '/recursos/misiones', label: 'Misiones', resource: 'FLEET' },
+  { to: '/recursos/conductores', label: 'Conductores', resource: 'FLEET' },
   { to: '/flota', label: 'Comando', resource: 'VEHICLE_TELEMETRY' },
   // SPEC-0507: los equipos GPS son configuración del sistema y viven tras otro
   // recurso (SYSTEM_ADMIN). Están aquí y no en Administración porque es en la

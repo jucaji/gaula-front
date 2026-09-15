@@ -243,13 +243,6 @@ export const EVENT_TONE: Record<string, 'neutral' | 'active' | 'alert' | 'critic
   MAINTENANCE_CANCELLED: 'neutral',
 }
 
-/** Quién puede conducir: lo mínimo para reconocer a alguien en una lista (SPEC-0508 bis). */
-export interface Driver {
-  id: string
-  displayName: string
-  rank?: string | null
-}
-
 // --- SPEC-0509: estados operativos ---
 
 /** Un tipo de misión del catálogo que gobierna el cliente. `active` false = archivado. */
@@ -262,6 +255,10 @@ export interface MissionType {
 
 export interface CurrentMission {
   assignmentId: string
+  /** SPEC-0512: nulo en asignaciones anteriores a las misiones. */
+  missionId?: string | null
+  missionCode?: string | null
+  driverNames?: string[]
   driverId: string
   driverName?: string | null
   missionTypeName?: string | null
@@ -350,3 +347,162 @@ export interface VehicleMetrics {
   openOrders?: number | null
   scheduledOrders?: number | null
 }
+
+// --- SPEC-0512: conductores y misiones ---
+
+export type DriverStatus = 'ACTIVE' | 'DECOMMISSIONED'
+
+export const DRIVER_STATUS_LABEL: Record<DriverStatus, string> = {
+  ACTIVE: 'Activo',
+  DECOMMISSIONED: 'Dado de baja',
+}
+
+/** Un conductor del registro de flota. La licencia puede faltar sólo en los migrados (V43). */
+export interface DriverRecord {
+  id: string
+  territorialUnitId: string
+  rank?: string | null
+  firstName: string
+  lastName: string
+  displayName: string
+  militaryId: string
+  licenseNumber?: string | null
+  licenseCategory?: string | null
+  licenseExpiresOn?: string | null
+  licenseValid: boolean
+  appUserId?: string | null
+  status: DriverStatus
+  decommissionReason?: string | null
+  version: number
+  authorizedPlates: string[]
+}
+
+export interface DriverFormValues {
+  territorialUnitId: string
+  rank: string
+  firstName: string
+  lastName: string
+  militaryId: string
+  licenseNumber: string
+  licenseCategory: string
+  licenseExpiresOn: string
+  appUserId: string
+}
+
+export const EMPTY_DRIVER_FORM: DriverFormValues = {
+  territorialUnitId: '',
+  rank: '',
+  firstName: '',
+  lastName: '',
+  militaryId: '',
+  licenseNumber: '',
+  licenseCategory: '',
+  licenseExpiresOn: '',
+  appUserId: '',
+}
+
+export function driverToForm(driver: DriverRecord): DriverFormValues {
+  return {
+    territorialUnitId: driver.territorialUnitId,
+    rank: driver.rank ?? '',
+    firstName: driver.firstName,
+    lastName: driver.lastName,
+    militaryId: driver.militaryId,
+    licenseNumber: driver.licenseNumber ?? '',
+    licenseCategory: driver.licenseCategory ?? '',
+    licenseExpiresOn: driver.licenseExpiresOn ?? '',
+    appUserId: driver.appUserId ?? '',
+  }
+}
+
+export function isDriverFormComplete(values: DriverFormValues): boolean {
+  return [values.firstName, values.lastName, values.militaryId, values.licenseNumber, values.licenseCategory,
+    values.licenseExpiresOn].every((value) => value.trim() !== '')
+}
+
+export interface LinkableUser {
+  id: string
+  displayName: string
+  rank?: string | null
+}
+
+export interface AuthorizedDriver {
+  driverId: string
+  displayName: string
+  licenseCategory?: string | null
+  licenseExpiresOn?: string | null
+  licenseValid: boolean
+  active: boolean
+}
+
+/** Un conductor ofrecido para un vehículo de una misión: autorizados primero. */
+export interface DriverOption {
+  driverId: string
+  displayName: string
+  licenseCategory?: string | null
+  licenseExpiresOn?: string | null
+  licenseValid: boolean
+  authorized: boolean
+  busy: boolean
+}
+
+export type MissionStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+
+export const MISSION_STATUS_LABEL: Record<MissionStatus, string> = {
+  PLANNED: 'Planeada',
+  IN_PROGRESS: 'En curso',
+  COMPLETED: 'Terminada',
+  CANCELLED: 'Cancelada',
+}
+
+export const MISSION_STATUS_TONE: Record<MissionStatus, 'neutral' | 'active' | 'alert' | 'critical'> = {
+  PLANNED: 'neutral',
+  IN_PROGRESS: 'alert',
+  COMPLETED: 'active',
+  CANCELLED: 'neutral',
+}
+
+export interface MissionCrew {
+  driverId: string
+  displayName?: string | null
+  authorized: boolean
+  overrideReason?: string | null
+  active: boolean
+  licenseValid: boolean
+}
+
+export interface MissionVehicle {
+  vehicleId: string
+  plate?: string | null
+  vehicleStatus?: string | null
+  releasedAt?: string | null
+  warnings: string[]
+  crew: MissionCrew[]
+}
+
+export interface Mission {
+  id: string
+  code: string
+  territorialUnitId: string
+  missionTypeId: string
+  missionTypeName?: string | null
+  caseFileId?: string | null
+  caseTrackingNumber?: string | null
+  purpose?: string | null
+  plannedStartAt?: string | null
+  expectedEndAt?: string | null
+  status: MissionStatus
+  startedAt?: string | null
+  endedAt?: string | null
+  closingNote?: string | null
+  cancelReason?: string | null
+  overdue: boolean
+  version: number
+  vehicles: MissionVehicle[]
+}
+
+export interface CrewInput {
+  driverId: string
+  overrideReason?: string
+}
+

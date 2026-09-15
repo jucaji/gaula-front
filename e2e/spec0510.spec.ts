@@ -115,39 +115,6 @@ test.describe('SPEC-0510: la ficha por procesos', () => {
     await expect(page.getByRole('button', { name: 'Combustible' })).toHaveAttribute('aria-current', 'page')
   })
 
-  test('CA-3/CA-5: el caso se elige de la lista y la ficha no pide el expediente', async ({ page }) => {
-    await mockConsole(page, 'AVAILABLE')
-    const caseFileCalls: string[] = []
-    page.on('request', (request) => {
-      if (request.url().includes('/api/v1/case-files')) caseFileCalls.push(request.url())
-    })
-    let body: Record<string, unknown> | null = null
-    await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assign`, (route) => {
-      body = JSON.parse(route.request().postData() ?? '{}')
-      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
-    })
-    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
-
-    const caso = page.getByRole('combobox', { name: 'Caso vinculado' })
-    await expect(caso.getByRole('option', { name: 'GAULA-BOG-2026-000001 · En operación' })).toHaveCount(1)
-    await page.getByLabel('Conductor *').selectOption(DRIVER_ID)
-    await page.getByLabel('Tipo de misión *').selectOption({ label: 'Patrullaje' })
-    await caso.selectOption(CASE_ID)
-    await page.getByRole('button', { name: 'Asignar vehículo' }).click()
-
-    await expect.poll(() => body).not.toBeNull()
-    expect(body!.caseFileId).toBe(CASE_ID)
-    expect(caseFileCalls).toEqual([])
-  })
-
-  test('CA-12: el catálogo de tipos se abre junto al desplegable', async ({ page }) => {
-    await mockConsole(page, 'AVAILABLE')
-    await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
-
-    await page.getByRole('button', { name: 'Gestionar tipos' }).click()
-    await expect(page.getByRole('dialog', { name: 'Tipos de misión' })).toBeVisible()
-  })
-
   test('quien sólo consulta no ve formularios de misión ni el catálogo', async ({ page }) => {
     await mockConsole(page, 'AVAILABLE', {}, FIELD_OFFICER)
     await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)

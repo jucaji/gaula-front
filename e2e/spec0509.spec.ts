@@ -140,28 +140,16 @@ test.describe('SPEC-0509: estados operativos del vehículo', () => {
     await expect(page.getByRole('button', { name: 'Asignar vehículo' })).toHaveCount(0)
   })
 
-  test('CA-7: disponible, no se asigna sin tipo de misión', async ({ page }) => {
+  test('SPEC-0512: disponible, la ficha lleva a crear una misión con este vehículo', async ({ page }) => {
     await mockConsole(page, 'AVAILABLE')
-    let body: Record<string, unknown> | null = null
-    await page.route(`**/api/v1/vehicles/${VEHICLE_ID}/assign`, (route) => {
-      body = JSON.parse(route.request().postData() ?? '{}')
-      return route.fulfill({ status: 201, contentType: 'application/json', body: '{}' })
-    })
+    await page.route('**/api/v1/missions?*', (route) => route.fulfill(json([])))
     await page.goto(`/recursos/flota/${VEHICLE_ID}?tab=misiones`)
 
-    await page.getByLabel('Conductor *').selectOption(DRIVER_ID)
-    const assign = page.getByRole('button', { name: 'Asignar vehículo' })
-    await expect(assign).toBeDisabled()
-    await page.getByLabel('Tipo de misión *').selectOption({ label: 'Patrullaje' })
-    await page.getByLabel('Fin estimado').fill('2026-12-01T18:30')
-    await assign.click()
-
-    await expect.poll(() => body).not.toBeNull()
-    expect(body!.missionTypeId).toBe('00000000-0000-0000-0000-0000000005a2')
-    // Viaja un instante con zona, no la hora local sin zona del control.
-    expect(String(body!.expectedEndAt)).toMatch(/Z$/)
-    // Sin caso elegido, no viaja caso.
-    expect(body).not.toHaveProperty('caseFileId')
+    const link = page.getByRole('link', { name: 'Crear misión con este vehículo' })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('href', new RegExp(`/recursos/misiones\\?.*vehiculo=${VEHICLE_ID}`))
+    // El formulario de asignar desde la ficha ya no existe: se sale a misión DESDE la misión.
+    await expect(page.getByRole('button', { name: 'Asignar vehículo' })).toHaveCount(0)
   })
 
   test('fuera de servicio: el resumen dice el motivo y misiones no ofrece asignar', async ({ page }) => {

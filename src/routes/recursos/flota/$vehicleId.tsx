@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { customFetch } from '@/api/client'
 import type { VehicleResponse } from '@/api/generated/models'
 import {
+  AuthorizedDriversPanel,
   CorrectVehiclePanel,
   TransferVehiclePanel,
   VehicleDevicePanel,
@@ -79,7 +80,6 @@ function VehicleDetailPage() {
   const vehicle = useVehicle(vehicleId)
   const { can } = Route.useRouteContext()
   const canManage = can('UPDATE', 'FLEET')
-  const canManageCatalog = can('CREATE', 'FLEET')
   const canManageDevices = can('UPDATE', 'TRACKING_DEVICE')
   // La ubicación va detrás de SU propio recurso: la unidad administrativa
   // gestiona la flota y no ve la operación (docs/04 §2.4). Sin permiso, la
@@ -144,7 +144,7 @@ function VehicleDetailPage() {
         </div>
       )}
       {activeTab === 'misiones' && (
-        <MissionsTab vehicleId={vehicleId} canManage={canManage} canManageCatalog={canManageCatalog} />
+        <MissionsTab vehicleId={vehicleId} canManage={canManage} />
       )}
       {activeTab === 'mantenimiento' && <MaintenanceTab vehicleId={vehicleId} canManage={canManage} />}
       {activeTab === 'combustible' && (
@@ -163,6 +163,7 @@ function VehicleDetailPage() {
               <CorrectVehiclePanel vehicle={data} />
               <TransferVehiclePanel vehicle={data} />
               <VehicleServiceStatusPanel vehicle={data} />
+              <AuthorizedDriversPanel vehicle={data} />
             </>
           )}
           {canManageDevices && <VehicleDevicePanel vehicle={data} />}

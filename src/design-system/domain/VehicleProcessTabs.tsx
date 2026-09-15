@@ -1,23 +1,21 @@
-import { useDeferredValue, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 import { Badge } from '@/design-system/primitives/Badge'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
-import { MissionTypesDialog } from '@/design-system/domain/MissionTypesDialog'
 import { AssignmentHistoryPanel, FuelHistoryPanel, MaintenancePanel } from '@/design-system/domain/VehicleHistory'
 import { formatDateTime } from '@/lib/format/formatDateTime'
 import {
-  useAssignableDrivers,
   useAssignmentHistory,
   useFuelHistory,
-  useLinkableCases,
   useMaintenanceOrders,
-  useMissionTypes,
+  useMissions,
   useOperationalActions,
   useVehicleMetrics,
   useVehicleSituation,
 } from '@/lib/fleet/useFleetAdmin'
 import {
-  CASE_STATUS_LABEL,
+  MISSION_STATUS_LABEL,
   MAINTENANCE_TYPE_LABEL,
   VEHICLE_STATUS_LABEL,
   type OpenOrder,
@@ -240,15 +238,7 @@ export function MetricsCard({ vehicleId }: { vehicleId: string }) {
 
 // --- Misiones ------------------------------------------------------------------------------------
 
-export function MissionsTab({
-  vehicleId,
-  canManage,
-  canManageCatalog,
-}: {
-  vehicleId: string
-  canManage: boolean
-  canManageCatalog: boolean
-}) {
+export function MissionsTab({ vehicleId, canManage }: { vehicleId: string; canManage: boolean }) {
   const { data, placeholder } = useSituation(vehicleId)
   const history = useAssignmentHistory(vehicleId)
 
@@ -260,8 +250,19 @@ export function MissionsTab({
           title="Misión en curso"
           action={data.mission.overdue ? <Badge tone="critical">Vencida</Badge> : undefined}
         >
+          {data.mission.missionId && data.mission.missionCode ? (
+            <Link to="/recursos/misiones/$missionId" params={{ missionId: data.mission.missionId }}
+                  className="w-fit text-sm text-accent-hover underline">
+              Ver la misión {data.mission.missionCode}
+            </Link>
+          ) : (
+            <p className="text-xs text-text-secondary">Asignación anterior a las misiones.</p>
+          )}
           <dl className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-3 xl:grid-cols-6">
-            <Detail label="Conductor" value={data.mission.driverName} />
+            <Detail label="Conductores"
+                    value={(data.mission.driverNames ?? []).length > 0
+                      ? (data.mission.driverNames ?? []).join(', ')
+                      : data.mission.driverName} />
             <Detail label="Tipo de misión" value={data.mission.missionTypeName ?? 'Sin tipo registrado'} />
             <Detail label="Caso" value={data.mission.caseTrackingNumber} />
             <Detail label="Propósito" value={data.mission.purpose} />
@@ -274,9 +275,7 @@ export function MissionsTab({
           {canManage && <EndMissionForm vehicleId={vehicleId} />}
         </Section>
       )}
-      {data?.status === 'AVAILABLE' && canManage && (
-        <AssignForm vehicleId={vehicleId} canManageCatalog={canManageCatalog} />
-      )}
+      {data?.status === 'AVAILABLE' && <PlannedMissions vehicleId={vehicleId} canManage={canManage} />}
       {data?.status === 'MAINTENANCE' && (
         <Section title="Misión">
           <p className="text-sm text-text-secondary">
@@ -356,112 +355,40 @@ function EndMissionForm({ vehicleId }: { vehicleId: string }) {
 }
 
 /**
- * SPEC-0509 CA-7 y SPEC-0510 Decisión 2: el tipo sale del catálogo y el caso de
- * una lista — casos abiertos de la unidad del vehículo. Nadie teclea un radicado
- * que puede no existir.
+ * SPEC-0512: un vehículo disponible sale a misión DESDE una misión. La ficha
+ * ofrece crearla con este vehículo y muestra las planeadas en las que ya está.
  */
-function AssignForm({ vehicleId, canManageCatalog }: { vehicleId: string; canManageCatalog: boolean }) {
-  const { assign } = useOperationalActions(vehicleId)
-  const drivers = useAssignableDrivers()
-  const types = useMissionTypes()
-  const [driverId, setDriverId] = useState('')
-  const [missionTypeId, setMissionTypeId] = useState('')
-  const [caseFilter, setCaseFilter] = useState('')
-  const [caseFileId, setCaseFileId] = useState('')
-  const [purpose, setPurpose] = useState('')
-  const [expectedEnd, setExpectedEnd] = useState('')
-  const cases = useLinkableCases(vehicleId, useDeferredValue(caseFilter))
-
-  const activeTypes = (types.data ?? []).filter((type) => type.active)
-  const caseOptions = cases.data ?? []
+function PlannedMissions({ vehicleId, canManage }: { vehicleId: string; canManage: boolean }) {
+  const missions = useMissions({ vehicleId })
+  const planned = (missions.data ?? []).filter((mission) => mission.status === 'PLANNED')
 
   return (
-    <form
-      className={CARD}
-      aria-label="Asignar a una misión"
-      onSubmit={(event) => {
-        event.preventDefault()
-        void assign.mutateAsync({
-          driverId,
-          missionTypeId,
-          ...(caseFileId ? { caseFileId } : {}),
-          ...(purpose ? { purpose } : {}),
-          ...(expectedEnd ? { expectedEndAt: new Date(expectedEnd).toISOString() } : {}),
-        }).catch(() => undefined)
-      }}
-    >
-      <h2 className="text-sm font-semibold text-text-primary">Asignar a una misión</h2>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm text-text-primary">
-          Conductor *
-          <select value={driverId} onChange={(event) => setDriverId(event.target.value)} className={SELECT}>
-            <option value="">Seleccione…</option>
-            {(drivers.data ?? []).map((driver) => (
-              <option key={driver.id} value={driver.id}>{driver.displayName}</option>
-            ))}
-          </select>
-        </label>
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center justify-between gap-2">
-            <label htmlFor="mission-type" className="text-sm text-text-primary">Tipo de misión *</label>
-            {/* SPEC-0510 CA-12: el catálogo, también desde aquí, para quien puede gestionarlo. */}
-            {canManageCatalog && <MissionTypesDialog triggerLabel="Gestionar tipos" />}
-          </div>
-          <select id="mission-type" value={missionTypeId} onChange={(event) => setMissionTypeId(event.target.value)}
-                  className={SELECT}>
-            <option value="">Seleccione…</option>
-            {activeTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
-          </select>
-          {types.data && activeTypes.length === 0 && (
-            <span className="text-xs text-text-secondary">
-              No hay tipos de misión.{canManageCatalog ? ' Créelos con «Gestionar tipos».' : ' Pídale a un administrador que los cree.'}
-            </span>
-          )}
+    <Section title="Salir a misión">
+      <p className="text-sm text-text-secondary">
+        Un vehículo sale a misión desde la misión: ahí se eligen sus conductores y se inicia.
+      </p>
+      {planned.length > 0 && (
+        <ul className="flex flex-col gap-1" aria-label="Misiones planeadas con este vehículo">
+          {planned.map((mission) => (
+            <li key={mission.id} className="text-sm text-text-primary">
+              <Link to="/recursos/misiones/$missionId" params={{ missionId: mission.id }}
+                    className="text-accent-hover underline">
+                {mission.code}
+              </Link>
+              {' · '}{mission.missionTypeName ?? 'Sin tipo'} · {MISSION_STATUS_LABEL[mission.status]}
+            </li>
+          ))}
+        </ul>
+      )}
+      {canManage && (
+        <div>
+          <Link to="/recursos/misiones" search={{ nueva: true, vehiculo: vehicleId }}
+                className="inline-flex min-h-[var(--tap-min)] items-center rounded-sm border border-border-strong px-3 text-sm text-text-primary hover:bg-surface-sunken">
+            Crear misión con este vehículo
+          </Link>
         </div>
-        <div className="flex flex-col gap-1 md:col-span-2">
-          <label htmlFor="case-filter" className="text-sm text-text-primary">Caso vinculado</label>
-          <div className="flex flex-wrap gap-2">
-            {/* El ancho lo pone el contenedor: `Input` trae `w-full` y le gana a un
-                `w-48` propio — el filtro ocupaba toda la fila y empujaba la lista abajo. */}
-            <div className="w-48 shrink-0">
-              <Input id="case-filter" placeholder="Filtrar por radicado" value={caseFilter}
-                     aria-label="Filtrar casos por radicado" onChange={(event) => setCaseFilter(event.target.value)} />
-            </div>
-            <select aria-label="Caso vinculado" value={caseFileId} onChange={(event) => setCaseFileId(event.target.value)}
-                    className={`${SELECT} min-w-[16rem] flex-1`}>
-              <option value="">Sin caso</option>
-              {caseOptions.map((linkable) => (
-                <option key={linkable.id} value={linkable.id}>
-                  {linkable.trackingNumber} · {CASE_STATUS_LABEL[linkable.status] ?? linkable.status}
-                </option>
-              ))}
-            </select>
-          </div>
-          <span className="text-xs text-text-secondary">
-            {cases.isError
-              ? 'No se pudieron cargar los casos.'
-              : caseOptions.length === 0 && cases.data
-                ? 'No hay casos abiertos en la unidad de este vehículo.'
-                : 'Sólo casos abiertos de la unidad del vehículo. Se ve el radicado y el estado, no el expediente.'}
-          </span>
-        </div>
-        <label className="flex flex-col gap-1 text-sm text-text-primary">
-          Propósito
-          <Input value={purpose} maxLength={500} onChange={(event) => setPurpose(event.target.value)} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm text-text-primary">
-          Fin estimado
-          <Input type="datetime-local" value={expectedEnd} onChange={(event) => setExpectedEnd(event.target.value)} />
-          <span className="text-xs text-text-secondary">Pasada esta fecha sin terminar, el inventario la señala como vencida.</span>
-        </label>
-      </div>
-      {assign.isError && <p className="text-sm text-critical">{errorOf(assign.error, 'No se pudo asignar.')}</p>}
-      <div>
-        <Button type="submit" variant="primary" size="sm" loading={assign.isPending} disabled={!driverId || !missionTypeId}>
-          Asignar vehículo
-        </Button>
-      </div>
-    </form>
+      )}
+    </Section>
   )
 }
 

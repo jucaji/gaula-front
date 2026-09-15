@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { Button } from '@/design-system/primitives/Button'
 import { Input } from '@/design-system/primitives/Input'
 import { VehicleForm } from '@/design-system/domain/VehicleForm'
-import { useDeviceMutations, useDevices, useFleetMutations, useTerritorialUnits } from '@/lib/fleet/useFleetAdmin'
+import {
+  useAuthorizationMutations,
+  useAuthorizedDrivers,
+  useDeviceMutations,
+  useDevices,
+  useDrivers,
+  useFleetMutations,
+  useTerritorialUnits,
+} from '@/lib/fleet/useFleetAdmin'
 import { DEVICE_STATUS_LABEL, isVehicleFormComplete, vehicleToForm, type TrackingDevice, type Vehicle, type VehicleFormValues } from '@/lib/fleet/types'
 
 /**
@@ -260,3 +268,60 @@ export function VehicleDevicePanel({ vehicle }: { vehicle: Vehicle }) {
     </div>
   )
 }
+
+/**
+ * SPEC-0512 Decisión 3: los conductores autorizados de este vehículo. Al armar
+ * una misión se ofrecen primero; uno no autorizado exige un motivo.
+ */
+export function AuthorizedDriversPanel({ vehicle }: { vehicle: Vehicle }) {
+  const authorized = useAuthorizedDrivers(vehicle.id)
+  const drivers = useDrivers(false)
+  const { authorize, revoke } = useAuthorizationMutations(vehicle.id)
+  const [driverId, setDriverId] = useState('')
+  const current = new Set((authorized.data ?? []).map((driver) => driver.driverId))
+  const candidates = (drivers.data ?? []).filter((driver) =>
+    driver.territorialUnitId === vehicle.territorialUnitId && !current.has(driver.id))
+  const error = authorize.error ?? revoke.error
+
+  return (
+    <section className={CARD} aria-label="Conductores autorizados">
+      <h2 className="text-sm font-semibold text-text-primary">Conductores autorizados</h2>
+      {authorized.data && authorized.data.length === 0 && (
+        <p className="text-sm text-text-secondary">Ningún conductor autorizado todavía.</p>
+      )}
+      <ul className="flex flex-col gap-2">
+        {(authorized.data ?? []).map((driver) => (
+          <li key={driver.driverId} className="flex flex-wrap items-center justify-between gap-2">
+            <span className="flex flex-wrap items-center gap-2 text-sm text-text-primary">
+              {driver.displayName}
+              {!driver.licenseValid && <span className="text-xs text-critical">Licencia vencida o sin registrar</span>}
+            </span>
+            <Button variant="ghost" size="sm" loading={revoke.isPending}
+                    onClick={() => void revoke.mutateAsync(driver.driverId).catch(() => undefined)}>
+              Desvincular
+            </Button>
+          </li>
+        ))}
+      </ul>
+      <div className="flex flex-wrap items-end gap-2">
+        <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-sm text-text-primary">
+          Autorizar conductor
+          <select value={driverId} onChange={(event) => setDriverId(event.target.value)}
+                  className="h-[var(--control-height-md)] rounded-sm border border-border-strong bg-surface px-2 text-sm text-text-primary">
+            <option value="">Seleccione…</option>
+            {candidates.map((driver) => <option key={driver.id} value={driver.id}>{driver.displayName}</option>)}
+          </select>
+        </label>
+        <Button variant="secondary" size="sm" loading={authorize.isPending} disabled={!driverId}
+                onClick={() => void authorize.mutateAsync(driverId).then(() => setDriverId('')).catch(() => undefined)}>
+          Vincular
+        </Button>
+      </div>
+      {drivers.data && candidates.length === 0 && (
+        <p className="text-xs text-text-secondary">No quedan conductores activos de la unidad por autorizar.</p>
+      )}
+      {error && <p className="text-sm text-critical">{errorOf(error, 'No se pudo completar la acción.')}</p>}
+    </section>
+  )
+}
+
