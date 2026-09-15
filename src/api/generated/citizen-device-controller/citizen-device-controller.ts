@@ -24,19 +24,19 @@ import { customFetch } from '../../client';
 
 
 
-export type register3Response201 = {
+export type register4Response201 = {
   data: RegisterCitizenDeviceResponse
   status: 201
 }
     
-export type register3ResponseSuccess = (register3Response201) & {
+export type register4ResponseSuccess = (register4Response201) & {
   headers: Headers;
 };
 ;
 
-export type register3Response = (register3ResponseSuccess)
+export type register4Response = (register4ResponseSuccess)
 
-export const getRegister3Url = () => {
+export const getRegister4Url = () => {
 
 
   
@@ -44,9 +44,9 @@ export const getRegister3Url = () => {
   return `/api/v1/citizen/devices`
 }
 
-export const register3 = async ( options?: RequestInit): Promise<register3Response> => {
+export const register4 = async ( options?: RequestInit): Promise<register4Response> => {
   
-  return customFetch<register3Response>(getRegister3Url(),
+  return customFetch<register4Response>(getRegister4Url(),
   {      
     ...options,
     method: 'POST'
@@ -58,11 +58,11 @@ export const register3 = async ( options?: RequestInit): Promise<register3Respon
 
 
 
-export const getRegister3MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register3>>, TError,void, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof register3>>, TError,void, TContext> => {
+export const getRegister4MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,void, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,void, TContext> => {
 
-const mutationKey = ['register3'];
+const mutationKey = ['register4'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -72,10 +72,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register3>>, void> = () => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register4>>, void> = () => {
           
 
-          return  register3()
+          return  register4()
         }
 
         
@@ -83,20 +83,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type Register3MutationResult = NonNullable<Awaited<ReturnType<typeof register3>>>
+    export type Register4MutationResult = NonNullable<Awaited<ReturnType<typeof register4>>>
     
-    export type Register3MutationError = unknown
+    export type Register4MutationError = unknown
 
-    export const useRegister3 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register3>>, TError,void, TContext>, }
+    export const useRegister4 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,void, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof register3>>,
+        Awaited<ReturnType<typeof register4>>,
         TError,
         void,
         TContext
       > => {
 
-      const mutationOptions = getRegister3MutationOptions(options);
+      const mutationOptions = getRegister4MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -34,19 +34,19 @@ import { customFetch } from '../../client';
 
 
 
-export type list1Response200 = {
+export type list4Response200 = {
   data: PersonOfInterestResponse[]
   status: 200
 }
     
-export type list1ResponseSuccess = (list1Response200) & {
+export type list4ResponseSuccess = (list4Response200) & {
   headers: Headers;
 };
 ;
 
-export type list1Response = (list1ResponseSuccess)
+export type list4Response = (list4ResponseSuccess)
 
-export const getList1Url = (trackingNumber: string,) => {
+export const getList4Url = (trackingNumber: string,) => {
 
 
   
@@ -54,9 +54,9 @@ export const getList1Url = (trackingNumber: string,) => {
   return `/api/v1/case-files/${trackingNumber}/persons`
 }
 
-export const list1 = async (trackingNumber: string, options?: RequestInit): Promise<list1Response> => {
+export const list4 = async (trackingNumber: string, options?: RequestInit): Promise<list4Response> => {
   
-  return customFetch<list1Response>(getList1Url(trackingNumber),
+  return customFetch<list4Response>(getList4Url(trackingNumber),
   {      
     ...options,
     method: 'GET'
@@ -69,66 +69,66 @@ export const list1 = async (trackingNumber: string, options?: RequestInit): Prom
 
 
 
-export const getList1QueryKey = (trackingNumber?: string,) => {
+export const getList4QueryKey = (trackingNumber?: string,) => {
     return [
     `/api/v1/case-files/${trackingNumber}/persons`
     ] as const;
     }
 
     
-export const getList1QueryOptions = <TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
+export const getList4QueryOptions = <TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getList1QueryKey(trackingNumber);
+  const queryKey =  queryOptions?.queryKey ?? getList4QueryKey(trackingNumber);
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof list1>>> = () => list1(trackingNumber, );
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list4>>> = () => list4(trackingNumber, );
 
       
 
       
 
-   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(trackingNumber), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type List1QueryResult = NonNullable<Awaited<ReturnType<typeof list1>>>
-export type List1QueryError = unknown
+export type List4QueryResult = NonNullable<Awaited<ReturnType<typeof list4>>>
+export type List4QueryError = unknown
 
 
-export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
- trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>> & Pick<
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+ trackingNumber: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list1>>,
+          Awaited<ReturnType<typeof list4>>,
           TError,
-          Awaited<ReturnType<typeof list1>>
+          Awaited<ReturnType<typeof list4>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
- trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>> & Pick<
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list1>>,
+          Awaited<ReturnType<typeof list4>>,
           TError,
-          Awaited<ReturnType<typeof list1>>
+          Awaited<ReturnType<typeof list4>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
- trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unknown>(
- trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list1>>, TError, TData>>, }
+export function useList4<TData = Awaited<ReturnType<typeof list4>>, TError = unknown>(
+ trackingNumber: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list4>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getList1QueryOptions(trackingNumber,options)
+  const queryOptions = getList4QueryOptions(trackingNumber,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 
@@ -140,19 +140,19 @@ export function useList1<TData = Awaited<ReturnType<typeof list1>>, TError = unk
 
 
 
-export type register4Response201 = {
+export type register5Response201 = {
   data: PersonOfInterestResponse
   status: 201
 }
     
-export type register4ResponseSuccess = (register4Response201) & {
+export type register5ResponseSuccess = (register5Response201) & {
   headers: Headers;
 };
 ;
 
-export type register4Response = (register4ResponseSuccess)
+export type register5Response = (register5ResponseSuccess)
 
-export const getRegister4Url = (trackingNumber: string,) => {
+export const getRegister5Url = (trackingNumber: string,) => {
 
 
   
@@ -160,10 +160,10 @@ export const getRegister4Url = (trackingNumber: string,) => {
   return `/api/v1/case-files/${trackingNumber}/persons`
 }
 
-export const register4 = async (trackingNumber: string,
-    registerPersonOfInterestRequest: RegisterPersonOfInterestRequest, options?: RequestInit): Promise<register4Response> => {
+export const register5 = async (trackingNumber: string,
+    registerPersonOfInterestRequest: RegisterPersonOfInterestRequest, options?: RequestInit): Promise<register5Response> => {
   
-  return customFetch<register4Response>(getRegister4Url(trackingNumber),
+  return customFetch<register5Response>(getRegister5Url(trackingNumber),
   {      
     ...options,
     method: 'POST',
@@ -176,11 +176,11 @@ export const register4 = async (trackingNumber: string,
 
 
 
-export const getRegister4MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext> => {
+export const getRegister5MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register5>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof register5>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext> => {
 
-const mutationKey = ['register4'];
+const mutationKey = ['register5'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -190,10 +190,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register4>>, {trackingNumber: string;data: RegisterPersonOfInterestRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof register5>>, {trackingNumber: string;data: RegisterPersonOfInterestRequest}> = (props) => {
           const {trackingNumber,data} = props ?? {};
 
-          return  register4(trackingNumber,data,)
+          return  register5(trackingNumber,data,)
         }
 
         
@@ -201,20 +201,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type Register4MutationResult = NonNullable<Awaited<ReturnType<typeof register4>>>
-    export type Register4MutationBody = RegisterPersonOfInterestRequest
-    export type Register4MutationError = unknown
+    export type Register5MutationResult = NonNullable<Awaited<ReturnType<typeof register5>>>
+    export type Register5MutationBody = RegisterPersonOfInterestRequest
+    export type Register5MutationError = unknown
 
-    export const useRegister4 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register4>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
+    export const useRegister5 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof register5>>, TError,{trackingNumber: string;data: RegisterPersonOfInterestRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof register4>>,
+        Awaited<ReturnType<typeof register5>>,
         TError,
         {trackingNumber: string;data: RegisterPersonOfInterestRequest},
         TContext
       > => {
 
-      const mutationOptions = getRegister4MutationOptions(options);
+      const mutationOptions = getRegister5MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

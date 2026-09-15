@@ -35,19 +35,19 @@ import { customFetch } from '../../client';
 
 
 
-export type editResponse200 = {
+export type edit1Response200 = {
   data: MissionTypeResponse
   status: 200
 }
     
-export type editResponseSuccess = (editResponse200) & {
+export type edit1ResponseSuccess = (edit1Response200) & {
   headers: Headers;
 };
 ;
 
-export type editResponse = (editResponseSuccess)
+export type edit1Response = (edit1ResponseSuccess)
 
-export const getEditUrl = (missionTypeId: string,) => {
+export const getEdit1Url = (missionTypeId: string,) => {
 
 
   
@@ -55,10 +55,10 @@ export const getEditUrl = (missionTypeId: string,) => {
   return `/api/v1/mission-types/${missionTypeId}`
 }
 
-export const edit = async (missionTypeId: string,
-    missionTypeRequest: MissionTypeRequest, options?: RequestInit): Promise<editResponse> => {
+export const edit1 = async (missionTypeId: string,
+    missionTypeRequest: MissionTypeRequest, options?: RequestInit): Promise<edit1Response> => {
   
-  return customFetch<editResponse>(getEditUrl(missionTypeId),
+  return customFetch<edit1Response>(getEdit1Url(missionTypeId),
   {      
     ...options,
     method: 'PUT',
@@ -71,11 +71,11 @@ export const edit = async (missionTypeId: string,
 
 
 
-export const getEditMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof edit>>, TError,{missionTypeId: string;data: MissionTypeRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof edit>>, TError,{missionTypeId: string;data: MissionTypeRequest}, TContext> => {
+export const getEdit1MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof edit1>>, TError,{missionTypeId: string;data: MissionTypeRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof edit1>>, TError,{missionTypeId: string;data: MissionTypeRequest}, TContext> => {
 
-const mutationKey = ['edit'];
+const mutationKey = ['edit1'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -85,10 +85,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof edit>>, {missionTypeId: string;data: MissionTypeRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof edit1>>, {missionTypeId: string;data: MissionTypeRequest}> = (props) => {
           const {missionTypeId,data} = props ?? {};
 
-          return  edit(missionTypeId,data,)
+          return  edit1(missionTypeId,data,)
         }
 
         
@@ -96,20 +96,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type EditMutationResult = NonNullable<Awaited<ReturnType<typeof edit>>>
-    export type EditMutationBody = MissionTypeRequest
-    export type EditMutationError = unknown
+    export type Edit1MutationResult = NonNullable<Awaited<ReturnType<typeof edit1>>>
+    export type Edit1MutationBody = MissionTypeRequest
+    export type Edit1MutationError = unknown
 
-    export const useEdit = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof edit>>, TError,{missionTypeId: string;data: MissionTypeRequest}, TContext>, }
+    export const useEdit1 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof edit1>>, TError,{missionTypeId: string;data: MissionTypeRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof edit>>,
+        Awaited<ReturnType<typeof edit1>>,
         TError,
         {missionTypeId: string;data: MissionTypeRequest},
         TContext
       > => {
 
-      const mutationOptions = getEditMutationOptions(options);
+      const mutationOptions = getEdit1MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -189,19 +189,19 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type listResponse200 = {
+    export type list2Response200 = {
   data: MissionTypeResponse[]
   status: 200
 }
     
-export type listResponseSuccess = (listResponse200) & {
+export type list2ResponseSuccess = (list2Response200) & {
   headers: Headers;
 };
 ;
 
-export type listResponse = (listResponseSuccess)
+export type list2Response = (list2ResponseSuccess)
 
-export const getListUrl = () => {
+export const getList2Url = () => {
 
 
   
@@ -209,9 +209,9 @@ export const getListUrl = () => {
   return `/api/v1/mission-types`
 }
 
-export const list = async ( options?: RequestInit): Promise<listResponse> => {
+export const list2 = async ( options?: RequestInit): Promise<list2Response> => {
   
-  return customFetch<listResponse>(getListUrl(),
+  return customFetch<list2Response>(getList2Url(),
   {      
     ...options,
     method: 'GET'
@@ -224,66 +224,66 @@ export const list = async ( options?: RequestInit): Promise<listResponse> => {
 
 
 
-export const getListQueryKey = () => {
+export const getList2QueryKey = () => {
     return [
     `/api/v1/mission-types`
     ] as const;
     }
 
     
-export const getListQueryOptions = <TData = Awaited<ReturnType<typeof list>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+export const getList2QueryOptions = <TData = Awaited<ReturnType<typeof list2>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getList2QueryKey();
 
   
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof list>>> = () => list();
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof list2>>> = () => list2();
 
       
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListQueryResult = NonNullable<Awaited<ReturnType<typeof list>>>
-export type ListQueryError = unknown
+export type List2QueryResult = NonNullable<Awaited<ReturnType<typeof list2>>>
+export type List2QueryError = unknown
 
 
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>> & Pick<
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list>>,
+          Awaited<ReturnType<typeof list2>>,
           TError,
-          Awaited<ReturnType<typeof list>>
+          Awaited<ReturnType<typeof list2>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>> & Pick<
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof list>>,
+          Awaited<ReturnType<typeof list2>>,
           TError,
-          Awaited<ReturnType<typeof list>>
+          Awaited<ReturnType<typeof list2>>
         > , 'initialData'
       >, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useList<TData = Awaited<ReturnType<typeof list>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list>>, TError, TData>>, }
+export function useList2<TData = Awaited<ReturnType<typeof list2>>, TError = unknown>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof list2>>, TError, TData>>, }
  , queryClient?: QueryClient 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getListQueryOptions(options)
+  const queryOptions = getList2QueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

@@ -8,8 +8,11 @@
 
 export interface CurrentMission {
   assignmentId?: string;
+  missionId?: string;
+  missionCode?: string;
   driverId?: string;
   driverName?: string;
+  driverNames?: string[];
   missionTypeName?: string;
   caseTrackingNumber?: string;
   purpose?: string;

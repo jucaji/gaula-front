@@ -105,19 +105,19 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type startResponse200 = {
+    export type start1Response200 = {
   data: MaintenanceOrderResponse
   status: 200
 }
     
-export type startResponseSuccess = (startResponse200) & {
+export type start1ResponseSuccess = (start1Response200) & {
   headers: Headers;
 };
 ;
 
-export type startResponse = (startResponseSuccess)
+export type start1Response = (start1ResponseSuccess)
 
-export const getStartUrl = (maintenanceOrderId: string,) => {
+export const getStart1Url = (maintenanceOrderId: string,) => {
 
 
   
@@ -125,9 +125,9 @@ export const getStartUrl = (maintenanceOrderId: string,) => {
   return `/api/v1/maintenance-orders/${maintenanceOrderId}/start`
 }
 
-export const start = async (maintenanceOrderId: string, options?: RequestInit): Promise<startResponse> => {
+export const start1 = async (maintenanceOrderId: string, options?: RequestInit): Promise<start1Response> => {
   
-  return customFetch<startResponse>(getStartUrl(maintenanceOrderId),
+  return customFetch<start1Response>(getStart1Url(maintenanceOrderId),
   {      
     ...options,
     method: 'POST'
@@ -139,11 +139,11 @@ export const start = async (maintenanceOrderId: string, options?: RequestInit): 
 
 
 
-export const getStartMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof start>>, TError,{maintenanceOrderId: string}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof start>>, TError,{maintenanceOrderId: string}, TContext> => {
+export const getStart1MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof start1>>, TError,{maintenanceOrderId: string}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof start1>>, TError,{maintenanceOrderId: string}, TContext> => {
 
-const mutationKey = ['start'];
+const mutationKey = ['start1'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -153,10 +153,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof start>>, {maintenanceOrderId: string}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof start1>>, {maintenanceOrderId: string}> = (props) => {
           const {maintenanceOrderId} = props ?? {};
 
-          return  start(maintenanceOrderId,)
+          return  start1(maintenanceOrderId,)
         }
 
         
@@ -164,20 +164,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type StartMutationResult = NonNullable<Awaited<ReturnType<typeof start>>>
+    export type Start1MutationResult = NonNullable<Awaited<ReturnType<typeof start1>>>
     
-    export type StartMutationError = unknown
+    export type Start1MutationError = unknown
 
-    export const useStart = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof start>>, TError,{maintenanceOrderId: string}, TContext>, }
+    export const useStart1 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof start1>>, TError,{maintenanceOrderId: string}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof start>>,
+        Awaited<ReturnType<typeof start1>>,
         TError,
         {maintenanceOrderId: string},
         TContext
       > => {
 
-      const mutationOptions = getStartMutationOptions(options);
+      const mutationOptions = getStart1MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -259,19 +259,19 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type cancelResponse200 = {
+    export type cancel1Response200 = {
   data: MaintenanceOrderResponse
   status: 200
 }
     
-export type cancelResponseSuccess = (cancelResponse200) & {
+export type cancel1ResponseSuccess = (cancel1Response200) & {
   headers: Headers;
 };
 ;
 
-export type cancelResponse = (cancelResponseSuccess)
+export type cancel1Response = (cancel1ResponseSuccess)
 
-export const getCancelUrl = (maintenanceOrderId: string,) => {
+export const getCancel1Url = (maintenanceOrderId: string,) => {
 
 
   
@@ -279,10 +279,10 @@ export const getCancelUrl = (maintenanceOrderId: string,) => {
   return `/api/v1/maintenance-orders/${maintenanceOrderId}/cancel`
 }
 
-export const cancel = async (maintenanceOrderId: string,
-    cancelMaintenanceOrderRequest: CancelMaintenanceOrderRequest, options?: RequestInit): Promise<cancelResponse> => {
+export const cancel1 = async (maintenanceOrderId: string,
+    cancelMaintenanceOrderRequest: CancelMaintenanceOrderRequest, options?: RequestInit): Promise<cancel1Response> => {
   
-  return customFetch<cancelResponse>(getCancelUrl(maintenanceOrderId),
+  return customFetch<cancel1Response>(getCancel1Url(maintenanceOrderId),
   {      
     ...options,
     method: 'POST',
@@ -295,11 +295,11 @@ export const cancel = async (maintenanceOrderId: string,
 
 
 
-export const getCancelMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancel>>, TError,{maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof cancel>>, TError,{maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}, TContext> => {
+export const getCancel1MutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancel1>>, TError,{maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof cancel1>>, TError,{maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}, TContext> => {
 
-const mutationKey = ['cancel'];
+const mutationKey = ['cancel1'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -309,10 +309,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancel>>, {maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancel1>>, {maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}> = (props) => {
           const {maintenanceOrderId,data} = props ?? {};
 
-          return  cancel(maintenanceOrderId,data,)
+          return  cancel1(maintenanceOrderId,data,)
         }
 
         
@@ -320,20 +320,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CancelMutationResult = NonNullable<Awaited<ReturnType<typeof cancel>>>
-    export type CancelMutationBody = CancelMaintenanceOrderRequest
-    export type CancelMutationError = unknown
+    export type Cancel1MutationResult = NonNullable<Awaited<ReturnType<typeof cancel1>>>
+    export type Cancel1MutationBody = CancelMaintenanceOrderRequest
+    export type Cancel1MutationError = unknown
 
-    export const useCancel = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancel>>, TError,{maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}, TContext>, }
+    export const useCancel1 = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancel1>>, TError,{maintenanceOrderId: string;data: CancelMaintenanceOrderRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof cancel>>,
+        Awaited<ReturnType<typeof cancel1>>,
         TError,
         {maintenanceOrderId: string;data: CancelMaintenanceOrderRequest},
         TContext
       > => {
 
-      const mutationOptions = getCancelMutationOptions(options);
+      const mutationOptions = getCancel1MutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

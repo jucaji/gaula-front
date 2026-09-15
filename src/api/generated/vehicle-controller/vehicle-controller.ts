@@ -25,10 +25,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  AssignVehicleRequest,
   AssignmentsParams,
   DecommissionVehicleRequest,
-  DriverResponse,
   EventsParams,
   FuelConsumptionResponse,
   FuelHistoryResponse,
@@ -1030,84 +1028,6 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type assignResponse201 = {
-  data: VehicleAssignmentResponse
-  status: 201
-}
-    
-export type assignResponseSuccess = (assignResponse201) & {
-  headers: Headers;
-};
-;
-
-export type assignResponse = (assignResponseSuccess)
-
-export const getAssignUrl = (vehicleId: string,) => {
-
-
-  
-
-  return `/api/v1/vehicles/${vehicleId}/assign`
-}
-
-export const assign = async (vehicleId: string,
-    assignVehicleRequest: AssignVehicleRequest, options?: RequestInit): Promise<assignResponse> => {
-  
-  return customFetch<assignResponse>(getAssignUrl(vehicleId),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      assignVehicleRequest,)
-  }
-);}
-
-
-
-
-export const getAssignMutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assign>>, TError,{vehicleId: string;data: AssignVehicleRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof assign>>, TError,{vehicleId: string;data: AssignVehicleRequest}, TContext> => {
-
-const mutationKey = ['assign'];
-const {mutation: mutationOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assign>>, {vehicleId: string;data: AssignVehicleRequest}> = (props) => {
-          const {vehicleId,data} = props ?? {};
-
-          return  assign(vehicleId,data,)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type AssignMutationResult = NonNullable<Awaited<ReturnType<typeof assign>>>
-    export type AssignMutationBody = AssignVehicleRequest
-    export type AssignMutationError = unknown
-
-    export const useAssign = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assign>>, TError,{vehicleId: string;data: AssignVehicleRequest}, TContext>, }
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assign>>,
-        TError,
-        {vehicleId: string;data: AssignVehicleRequest},
-        TContext
-      > => {
-
-      const mutationOptions = getAssignMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
     export type situationResponse200 = {
   data: VehicleSituation
   status: 200
@@ -1785,112 +1705,6 @@ export function useAssignments<TData = Awaited<ReturnType<typeof assignments>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getAssignmentsQueryOptions(params,options)
-
-  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey ;
-
-  return query;
-}
-
-
-
-
-export type assignableDriversResponse200 = {
-  data: DriverResponse[]
-  status: 200
-}
-    
-export type assignableDriversResponseSuccess = (assignableDriversResponse200) & {
-  headers: Headers;
-};
-;
-
-export type assignableDriversResponse = (assignableDriversResponseSuccess)
-
-export const getAssignableDriversUrl = () => {
-
-
-  
-
-  return `/api/v1/vehicles/assignable-drivers`
-}
-
-export const assignableDrivers = async ( options?: RequestInit): Promise<assignableDriversResponse> => {
-  
-  return customFetch<assignableDriversResponse>(getAssignableDriversUrl(),
-  {      
-    ...options,
-    method: 'GET'
-    
-    
-  }
-);}
-
-
-
-
-
-export const getAssignableDriversQueryKey = () => {
-    return [
-    `/api/v1/vehicles/assignable-drivers`
-    ] as const;
-    }
-
-    
-export const getAssignableDriversQueryOptions = <TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>>, }
-) => {
-
-const {query: queryOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getAssignableDriversQueryKey();
-
-  
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof assignableDrivers>>> = () => assignableDrivers();
-
-      
-
-      
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type AssignableDriversQueryResult = NonNullable<Awaited<ReturnType<typeof assignableDrivers>>>
-export type AssignableDriversQueryError = unknown
-
-
-export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>> & Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignableDrivers>>,
-          TError,
-          Awaited<ReturnType<typeof assignableDrivers>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>> & Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof assignableDrivers>>,
-          TError,
-          Awaited<ReturnType<typeof assignableDrivers>>
-        > , 'initialData'
-      >, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>>, }
- , queryClient?: QueryClient
-  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useAssignableDrivers<TData = Awaited<ReturnType<typeof assignableDrivers>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof assignableDrivers>>, TError, TData>>, }
- , queryClient?: QueryClient 
- ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-
-  const queryOptions = getAssignableDriversQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

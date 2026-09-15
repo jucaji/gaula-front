@@ -385,19 +385,19 @@ const {mutation: mutationOptions} = options ?
 
       return useMutation(mutationOptions, queryClient);
     }
-    export type assign1Response200 = {
+    export type assignResponse200 = {
   data: CaseFileResponse
   status: 200
 }
     
-export type assign1ResponseSuccess = (assign1Response200) & {
+export type assignResponseSuccess = (assignResponse200) & {
   headers: Headers;
 };
 ;
 
-export type assign1Response = (assign1ResponseSuccess)
+export type assignResponse = (assignResponseSuccess)
 
-export const getAssign1Url = (trackingNumber: string,) => {
+export const getAssignUrl = (trackingNumber: string,) => {
 
 
   
@@ -405,10 +405,10 @@ export const getAssign1Url = (trackingNumber: string,) => {
   return `/api/v1/case-files/${trackingNumber}/assignment`
 }
 
-export const assign1 = async (trackingNumber: string,
-    assignCaseFileRequest: AssignCaseFileRequest, options?: RequestInit): Promise<assign1Response> => {
+export const assign = async (trackingNumber: string,
+    assignCaseFileRequest: AssignCaseFileRequest, options?: RequestInit): Promise<assignResponse> => {
   
-  return customFetch<assign1Response>(getAssign1Url(trackingNumber),
+  return customFetch<assignResponse>(getAssignUrl(trackingNumber),
   {      
     ...options,
     method: 'PATCH',
@@ -421,11 +421,11 @@ export const assign1 = async (trackingNumber: string,
 
 
 
-export const getAssign1MutationOptions = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assign1>>, TError,{trackingNumber: string;data: AssignCaseFileRequest}, TContext>, }
-): UseMutationOptions<Awaited<ReturnType<typeof assign1>>, TError,{trackingNumber: string;data: AssignCaseFileRequest}, TContext> => {
+export const getAssignMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assign>>, TError,{trackingNumber: string;data: AssignCaseFileRequest}, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof assign>>, TError,{trackingNumber: string;data: AssignCaseFileRequest}, TContext> => {
 
-const mutationKey = ['assign1'];
+const mutationKey = ['assign'];
 const {mutation: mutationOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -435,10 +435,10 @@ const {mutation: mutationOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assign1>>, {trackingNumber: string;data: AssignCaseFileRequest}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assign>>, {trackingNumber: string;data: AssignCaseFileRequest}> = (props) => {
           const {trackingNumber,data} = props ?? {};
 
-          return  assign1(trackingNumber,data,)
+          return  assign(trackingNumber,data,)
         }
 
         
@@ -446,20 +446,20 @@ const {mutation: mutationOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type Assign1MutationResult = NonNullable<Awaited<ReturnType<typeof assign1>>>
-    export type Assign1MutationBody = AssignCaseFileRequest
-    export type Assign1MutationError = unknown
+    export type AssignMutationResult = NonNullable<Awaited<ReturnType<typeof assign>>>
+    export type AssignMutationBody = AssignCaseFileRequest
+    export type AssignMutationError = unknown
 
-    export const useAssign1 = <TError = unknown,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assign1>>, TError,{trackingNumber: string;data: AssignCaseFileRequest}, TContext>, }
+    export const useAssign = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assign>>, TError,{trackingNumber: string;data: AssignCaseFileRequest}, TContext>, }
  , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof assign1>>,
+        Awaited<ReturnType<typeof assign>>,
         TError,
         {trackingNumber: string;data: AssignCaseFileRequest},
         TContext
       > => {
 
-      const mutationOptions = getAssign1MutationOptions(options);
+      const mutationOptions = getAssignMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
