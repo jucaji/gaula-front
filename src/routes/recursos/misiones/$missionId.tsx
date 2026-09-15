@@ -287,6 +287,9 @@ function MissionDetailPage() {
                   value={data.status === 'CANCELLED'
                     ? (data.endedAt ? formatDateTime(data.endedAt) : null)
                     : (data.startedAt ? formatDateTime(data.startedAt) : null)} />
+          {data.status === 'COMPLETED' && (
+            <Detail label="Terminó" value={data.endedAt ? formatDateTime(data.endedAt) : null} />
+          )}
         </dl>
         {data.cancelReason && <p className="text-sm text-text-secondary">Motivo de la cancelación: {data.cancelReason}</p>}
         {data.closingNote && <p className="text-sm text-text-secondary">Observación de cierre: {data.closingNote}</p>}
