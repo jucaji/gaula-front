@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminAuditoriaRouteImport } from './routes/admin/auditoria'
 import { Route as AdminCatalogosRouteImport } from './routes/admin/catalogos'
 import { Route as AdminRolesRouteImport } from './routes/admin/roles'
+import { Route as AdminTerritorioRouteImport } from './routes/admin/territorio'
 import { Route as AdminUsuariosRouteImport } from './routes/admin/usuarios'
 import { Route as AnaliticaIndexRouteImport } from './routes/analitica/index'
 import { Route as AnaliticaCarga147RouteImport } from './routes/analitica/carga-147'
@@ -63,6 +64,11 @@ const AdminCatalogosRoute = AdminCatalogosRouteImport.update({
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/admin/roles',
   path: '/admin/roles',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTerritorioRoute = AdminTerritorioRouteImport.update({
+  id: '/admin/territorio',
+  path: '/admin/territorio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/catalogos': typeof AdminCatalogosRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/territorio': typeof AdminTerritorioRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/analitica/carga-147': typeof AnaliticaCarga147Route
   '/analitica/mapa': typeof AnaliticaMapaRoute
@@ -267,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/catalogos': typeof AdminCatalogosRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/territorio': typeof AdminTerritorioRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/analitica/carga-147': typeof AnaliticaCarga147Route
   '/analitica/mapa': typeof AnaliticaMapaRoute
@@ -305,6 +313,7 @@ export interface FileRoutesById {
   '/admin/auditoria': typeof AdminAuditoriaRoute
   '/admin/catalogos': typeof AdminCatalogosRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/territorio': typeof AdminTerritorioRoute
   '/admin/usuarios': typeof AdminUsuariosRoute
   '/analitica/carga-147': typeof AnaliticaCarga147Route
   '/analitica/mapa': typeof AnaliticaMapaRoute
@@ -344,6 +353,7 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/catalogos'
     | '/admin/roles'
+    | '/admin/territorio'
     | '/admin/usuarios'
     | '/analitica/carga-147'
     | '/analitica/mapa'
@@ -381,6 +391,7 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/catalogos'
     | '/admin/roles'
+    | '/admin/territorio'
     | '/admin/usuarios'
     | '/analitica/carga-147'
     | '/analitica/mapa'
@@ -418,6 +429,7 @@ export interface FileRouteTypes {
     | '/admin/auditoria'
     | '/admin/catalogos'
     | '/admin/roles'
+    | '/admin/territorio'
     | '/admin/usuarios'
     | '/analitica/carga-147'
     | '/analitica/mapa'
@@ -456,6 +468,7 @@ export interface RootRouteChildren {
   AdminAuditoriaRoute: typeof AdminAuditoriaRoute
   AdminCatalogosRoute: typeof AdminCatalogosRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminTerritorioRoute: typeof AdminTerritorioRoute
   AdminUsuariosRoute: typeof AdminUsuariosRoute
   AnaliticaCarga147Route: typeof AnaliticaCarga147Route
   AnaliticaMapaRoute: typeof AnaliticaMapaRoute
@@ -517,6 +530,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/roles'
       fullPath: '/admin/roles'
       preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/territorio': {
+      id: '/admin/territorio'
+      path: '/admin/territorio'
+      fullPath: '/admin/territorio'
+      preLoaderRoute: typeof AdminTerritorioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/usuarios': {
@@ -744,6 +764,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAuditoriaRoute: AdminAuditoriaRoute,
   AdminCatalogosRoute: AdminCatalogosRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminTerritorioRoute: AdminTerritorioRoute,
   AdminUsuariosRoute: AdminUsuariosRoute,
   AnaliticaCarga147Route: AnaliticaCarga147Route,
   AnaliticaMapaRoute: AnaliticaMapaRoute,

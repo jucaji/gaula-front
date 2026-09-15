@@ -4,6 +4,7 @@ const ADMIN_LINKS = [
   { to: '/admin/usuarios', label: 'Usuarios' },
   { to: '/admin/roles', label: 'Roles' },
   { to: '/admin/catalogos', label: 'Catálogos' },
+  { to: '/admin/territorio', label: 'Territorio' },
   { to: '/admin/auditoria', label: 'Auditoría' },
 ] as const
 
