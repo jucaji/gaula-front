@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { z } from 'zod'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
@@ -9,12 +9,15 @@ import { FleetNav } from '@/design-system/patterns/FleetNav'
 import { FleetSummary } from '@/design-system/domain/FleetSummary'
 import { VehicleList } from '@/design-system/domain/VehicleList'
 import { VehicleDetailsPanel } from '@/design-system/domain/VehicleDetailsPanel'
+import { TripPlaybackPanel } from '@/design-system/domain/TripPlaybackPanel'
+import type { RangoId } from '@/lib/telemetry/playbackRanges'
 import { FleetMap } from '@/design-system/maps/FleetMap'
 import { MOVEMENT_STYLE } from '@/design-system/maps/FleetMapPort'
 import { useFleetPositions, FLEET_REFRESH_MS } from '@/lib/telemetry/useFleetPositions'
 import { useVehicleTelemetry } from '@/lib/telemetry/useVehicleTelemetry'
 import { formatAgeSeconds } from '@/lib/format/formatDateTime'
 import type { MovementState } from '@/lib/telemetry/types'
+import type { TrackPoint } from '@/lib/telemetry/useTripPlayback'
 
 const MOVEMENT_STATES = [
   'MOVING',
@@ -29,6 +32,9 @@ const searchSchema = z.object({
   q: z.string().optional().catch(undefined),
   vehiculo: z.string().optional().catch(undefined),
   vivo: z.boolean().catch(true),
+  // SPEC-0513: el visor de recorrido va en la URL, para poder enlazarlo desde
+  // la ficha del vehículo —«el recorrido de hoy de OBG101»— y volver a él.
+  recorrido: z.enum(['hora', 'hoy', 'ayer']).optional().catch(undefined),
 })
 
 export const Route = createFileRoute('/flota/')({
@@ -56,6 +62,19 @@ function FleetCommandPage() {
   const selectedVehicleId = search.vehiculo ?? null
   const vehicle = useVehicleTelemetry(selectedVehicleId, search.vivo)
   const [now, setNow] = useState(() => Date.now())
+  // El trazado y el punto que se está reproduciendo: el panel los calcula y el
+  // mapa los dibuja. La pantalla sólo los pasa de uno a otro.
+  const [track, setTrack] = useState<TrackPoint[]>([])
+  const [playhead, setPlayhead] = useState<TrackPoint | null>(null)
+  // Estables y comparando por contenido: sin esto, el panel avisa al padre, el
+  // padre cambia de estado, el panel se vuelve a montar y vuelve a avisar. El
+  // visor parpadeaba y se desmontaba en bucle.
+  const recibirTrack = useCallback((points: TrackPoint[]) => {
+    setTrack((previo) => (previo.length === points.length && previo[0] === points[0] ? previo : points))
+  }, [])
+  const recibirPlayhead = useCallback((point: TrackPoint | null) => {
+    setPlayhead((previo) => (previo === point ? previo : point))
+  }, [])
 
   // La antigüedad de la consulta tiene que envejecer en pantalla aunque no
   // llegue un dato nuevo: si el backend deja de responder, "hace 4 s" congelado
@@ -202,6 +221,10 @@ function FleetCommandPage() {
             selectedVehicleId={selectedVehicleId}
             onSelect={(vehicleId) => setSearch({ vehiculo: vehicleId ?? undefined })}
             labelFor={labelFor}
+            trip={track.length > 1
+              ? { points: track, startLabel: 'Inicio del recorrido', endLabel: 'Última posición del rango' }
+              : null}
+            playhead={playhead}
           />
         </div>
 
@@ -212,9 +235,7 @@ function FleetCommandPage() {
             isLoading={vehicle.isLoading}
             isError={vehicle.isError}
             onClose={() => setSearch({ vehiculo: undefined })}
-            onShowTrips={() => {
-              /* SPEC-0506 fase siguiente: el visor de recorridos. */
-            }}
+            onShowTrips={() => setSearch({ recorrido: search.recorrido ?? 'hoy' })}
           />
         ) : (
           <aside className="hidden border-l border-border bg-surface p-4 md:block">
@@ -224,6 +245,21 @@ function FleetCommandPage() {
           </aside>
         )}
       </div>
+
+      {search.recorrido && selectedVehicleId && (
+        <TripPlaybackPanel
+          vehicleId={selectedVehicleId}
+          label={labelFor(selectedVehicleId)}
+          rangoInicial={search.recorrido as RangoId}
+          onTrack={recibirTrack}
+          onPlayhead={recibirPlayhead}
+          onClose={() => {
+            setSearch({ recorrido: undefined })
+            setTrack([])
+            setPlayhead(null)
+          }}
+        />
+      )}
     </div>
   )
 }

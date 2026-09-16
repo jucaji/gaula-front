@@ -19,6 +19,12 @@ export interface FleetMapProps {
   onSelect: (vehicleId: string | null) => void
   /** Recorrido a dibujar sobre el mapa, si el operador abrió uno. */
   trip?: TripPath | null
+  /**
+   * SPEC-0513: dónde va la reproducción del recorrido. Es un marcador aparte
+   * del de la posición actual: uno dice dónde está el vehículo AHORA y el otro
+   * dónde estaba en el instante que se está reproduciendo.
+   */
+  playhead?: { latitude: number; longitude: number } | null
   /** Etiqueta legible por vehículo, para el globo de información. */
   labelFor?: (vehicleId: string) => string
 }
@@ -27,6 +33,30 @@ export interface TripPath {
   points: Array<{ latitude: number; longitude: number }>
   startLabel: string
   endLabel: string | null
+}
+
+/**
+ * SPEC-0513: cada cuánto late el halo de un vehículo, en milisegundos.
+ *
+ * <p>Sólo late lo que está reportando: en movimiento late rápido, detenido
+ * lento, y lo que no reporta NO late. Un halo latiendo sobre un vehículo sin
+ * señal diría justo lo contrario de lo que pasa.
+ *
+ * <p>El latido se SUMA a la forma y al color; nunca los reemplaza (docs/06 §4.4).
+ */
+export const PULSE_PERIOD_MS: Record<MovementState, number | null> = {
+  MOVING: 1200,
+  STOPPED: 2400,
+  NO_SIGNAL: null,
+  NEVER_REPORTED: null,
+  UNDETERMINED: null,
+}
+
+/** Quien pidió menos movimiento en su sistema recibe el mismo mapa, sin latido. */
+export function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 /**

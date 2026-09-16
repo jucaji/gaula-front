@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MapPinOff } from 'lucide-react'
-import { MOVEMENT_STYLE, type FleetMapProps } from './FleetMapPort'
+import { MOVEMENT_STYLE, PULSE_PERIOD_MS, prefersReducedMotion, type FleetMapProps } from './FleetMapPort'
 import { loadGoogleMaps } from './googleMapsLoader'
 import { useMapConfig } from '@/lib/telemetry/useMapConfig'
 import { useResolvedTheme } from '@/lib/theme/useResolvedTheme'
@@ -21,6 +21,7 @@ export function GoogleFleetMap({
   selectedVehicleId,
   onSelect,
   trip,
+  playhead,
   labelFor,
 }: FleetMapProps) {
   const config = useMapConfig()
@@ -31,6 +32,11 @@ export function GoogleFleetMap({
   const mapRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map())
   const tripLineRef = useRef<google.maps.Polyline | null>(null)
+  // SPEC-0513: un círculo por vehículo vivo, cuyo radio late. Va aparte del
+  // marcador para no repintar el icono sesenta veces por segundo.
+  const halosRef = useRef<Map<string, google.maps.Circle>>(new Map())
+  const playheadRef = useRef<google.maps.Marker | null>(null)
+  const pulseFrameRef = useRef<number | null>(null)
   const infoRef = useRef<google.maps.InfoWindow | null>(null)
   const [sdkError, setSdkError] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
@@ -157,6 +163,105 @@ export function GoogleFleetMap({
     trip.points.forEach((point) => bounds.extend({ lat: point.latitude, lng: point.longitude }))
     mapRef.current.fitBounds(bounds, 48)
   }, [trip, ready])
+
+  // SPEC-0513: el latido. Sólo late lo que está reportando, y con
+  // `prefers-reduced-motion` no late nada: la información la dan igual la forma
+  // y el color, que no se tocan.
+  useEffect(() => {
+    if (!ready || !mapRef.current) return undefined
+    const map = mapRef.current
+    const halos = halosRef.current
+    const vivos = positions.filter(
+      (position) => position.latitude !== null && position.longitude !== null && PULSE_PERIOD_MS[position.state] !== null,
+    )
+
+    const vistos = new Set<string>()
+    vivos.forEach((position) => {
+      vistos.add(position.vehicleId)
+      const centro = { lat: position.latitude as number, lng: position.longitude as number }
+      const existente = halos.get(position.vehicleId)
+      if (existente) {
+        existente.setCenter(centro)
+        return
+      }
+      halos.set(position.vehicleId, new google.maps.Circle({
+        map,
+        center: centro,
+        radius: 0,
+        strokeColor: MOVEMENT_STYLE[position.state].fill,
+        strokeOpacity: 0.7,
+        strokeWeight: 2,
+        fillColor: MOVEMENT_STYLE[position.state].fill,
+        fillOpacity: 0.12,
+        clickable: false,
+      }))
+    })
+    halos.forEach((halo, vehicleId) => {
+      if (!vistos.has(vehicleId)) {
+        halo.setMap(null)
+        halos.delete(vehicleId)
+      }
+    })
+
+    if (prefersReducedMotion()) {
+      halos.forEach((halo) => halo.setMap(null))
+      halos.clear()
+      return undefined
+    }
+
+    // El radio se mide en metros y el mapa cambia de zoom: el halo se dimensiona
+    // contra la escala visible para que se vea igual de grande en todo zoom.
+    const animar = () => {
+      const zoom = map.getZoom() ?? 12
+      const metrosPorPixel = (156543.03392 * Math.cos((map.getCenter()?.lat() ?? 4.6) * Math.PI / 180)) / 2 ** zoom
+      const ahora = performance.now()
+      vivos.forEach((position) => {
+        const periodo = PULSE_PERIOD_MS[position.state]
+        const halo = halos.get(position.vehicleId)
+        if (!halo || periodo === null) return
+        const fase = (ahora % periodo) / periodo
+        halo.setRadius(metrosPorPixel * (10 + fase * 26))
+        halo.setOptions({ strokeOpacity: 0.7 * (1 - fase), fillOpacity: 0.15 * (1 - fase) })
+      })
+      pulseFrameRef.current = window.requestAnimationFrame(animar)
+    }
+    pulseFrameRef.current = window.requestAnimationFrame(animar)
+
+    return () => {
+      if (pulseFrameRef.current !== null) window.cancelAnimationFrame(pulseFrameRef.current)
+      pulseFrameRef.current = null
+    }
+  }, [positions, ready])
+
+  // El marcador de la reproducción: dónde estaba el vehículo en el instante que
+  // se está mirando, distinto del marcador de dónde está ahora.
+  useEffect(() => {
+    if (!ready || !mapRef.current) return
+    if (!playhead) {
+      playheadRef.current?.setMap(null)
+      playheadRef.current = null
+      return
+    }
+    const posicion = { lat: playhead.latitude, lng: playhead.longitude }
+    if (playheadRef.current) {
+      playheadRef.current.setPosition(posicion)
+      return
+    }
+    playheadRef.current = new google.maps.Marker({
+      map: mapRef.current,
+      position: posicion,
+      zIndex: 2000,
+      title: 'Posición reproducida',
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 8,
+        fillColor: '#f59e0b',
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+      },
+    })
+  }, [playhead, ready])
 
   if (config.isLoading) {
     return <MapPlaceholder message="Cargando la configuración del mapa…" />

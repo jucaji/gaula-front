@@ -105,6 +105,14 @@ export function VehicleLocationPanel({ vehicleId }: { vehicleId: string }) {
         <Link to="/flota" search={{ vehiculo: vehicleId, vivo: true }} className="text-sm text-accent-hover underline">
           Ver en el mapa de comando
         </Link>
+        {/* SPEC-0513: el recorrido del día, dibujado y reproducible. */}
+        <Link
+          to="/flota"
+          search={{ vehiculo: vehicleId, vivo: false, recorrido: 'hoy' }}
+          className="ml-4 text-sm text-accent-hover underline"
+        >
+          Ver el recorrido de hoy
+        </Link>
       </div>
     </div>
   )

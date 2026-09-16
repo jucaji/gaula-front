@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { MapPinOff } from 'lucide-react'
 import maplibregl from 'maplibre-gl'
 import type { Feature, FeatureCollection, Point } from 'geojson'
-import { MOVEMENT_STYLE, type FleetMapProps } from './FleetMapPort'
+import { MOVEMENT_STYLE, PULSE_PERIOD_MS, prefersReducedMotion, type FleetMapProps } from './FleetMapPort'
 import {
   attributionFor,
   basemapStyle,
@@ -35,6 +35,7 @@ export function MapLibreFleetMap({
   selectedVehicleId,
   onSelect,
   trip,
+  playhead,
   labelFor,
 }: FleetMapProps) {
   const theme = useResolvedTheme()
@@ -94,6 +95,35 @@ export function MapLibreFleetMap({
         type: 'line',
         source: 'recorrido',
         paint: { 'line-color': '#2563eb', 'line-width': 4, 'line-opacity': 0.9 },
+      })
+
+      // SPEC-0513: el halo que late, DEBAJO del punto para no taparlo.
+      map.addLayer({
+        id: 'latido',
+        type: 'circle',
+        source: 'flota',
+        filter: ['get', 'late'],
+        paint: {
+          'circle-color': colorPorEstado(),
+          'circle-radius': 8,
+          'circle-opacity': 0.25,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': colorPorEstado(),
+          'circle-stroke-opacity': 0.6,
+        },
+      })
+
+      map.addSource('reproduccion', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
+      map.addLayer({
+        id: 'reproduccion',
+        type: 'circle',
+        source: 'reproduccion',
+        paint: {
+          'circle-color': '#f59e0b',
+          'circle-radius': 8,
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#ffffff',
+        },
       })
 
       map.addLayer({
@@ -171,6 +201,49 @@ export function MapLibreFleetMap({
     }
   }, [selectedVehicleId, positions, listo])
 
+  // SPEC-0513: el latido. El radio y la opacidad del halo se animan por
+  // fotograma; `prefers-reduced-motion` lo deja fijo y discreto, con la misma
+  // información en la forma y el color.
+  useEffect(() => {
+    if (!listo || !mapRef.current) return undefined
+    const map = mapRef.current
+    if (prefersReducedMotion()) {
+      if (map.getLayer('latido')) map.setPaintProperty('latido', 'circle-radius', 10)
+      return undefined
+    }
+    let frame = 0
+    const animar = () => {
+      if (map.getLayer('latido')) {
+        const ahora = performance.now()
+        // Un solo periodo para la capa: MapLibre pinta todos sus puntos con la
+        // misma pintura, así que el matiz por estado lo da el color, no el ritmo.
+        const fase = (ahora % 1600) / 1600
+        map.setPaintProperty('latido', 'circle-radius', 8 + fase * 18)
+        map.setPaintProperty('latido', 'circle-opacity', 0.28 * (1 - fase))
+        map.setPaintProperty('latido', 'circle-stroke-opacity', 0.7 * (1 - fase))
+      }
+      frame = window.requestAnimationFrame(animar)
+    }
+    frame = window.requestAnimationFrame(animar)
+    return () => window.cancelAnimationFrame(frame)
+  }, [listo])
+
+  // El marcador de la reproducción: dónde estaba, no dónde está.
+  useEffect(() => {
+    if (!listo) return
+    const source = mapRef.current?.getSource('reproduccion') as maplibregl.GeoJSONSource | undefined
+    source?.setData({
+      type: 'FeatureCollection',
+      features: playhead
+        ? [{
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'Point', coordinates: [playhead.longitude, playhead.latitude] },
+          } as Feature]
+        : [],
+    })
+  }, [playhead, listo])
+
   // El recorrido histórico.
   useEffect(() => {
     if (!listo) return
@@ -238,6 +311,8 @@ function toGeoJson(
         properties: {
           vehicleId: p.vehicleId,
           estado: p.state,
+          // SPEC-0513: sólo late lo que está reportando.
+          late: PULSE_PERIOD_MS[p.state] !== null,
           seleccionado: Boolean(p.seleccionado),
           etiqueta: labelFor?.(p.vehicleId) ?? p.plate ?? p.vehicleId.slice(0, 8),
         },
