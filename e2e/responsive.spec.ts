@@ -67,7 +67,7 @@ const RUTAS = [
   '/tableros/secuestro/VALLE DEL CAUCA',
   '/', '/casos', '/casos/nuevo', '/campo', '/recepcion', '/recepcion/llamadas',
   '/reportes', '/reportes/nuevo', '/reportes/revision', '/analitica', '/analitica/carga-147',
-  '/observatorio/hechos', '/observatorio/cargue', '/tableros', '/tableros/extorsion',
+  '/observatorio/hechos', '/observatorio/cargue', '/observatorio/cifras-oficiales', '/tableros', '/tableros/extorsion',
   '/tableros/secuestro', '/tableros/boletin', '/recursos/flota', '/flota', '/recursos/equipos',
   '/recursos/misiones', '/recursos/conductores',
   '/admin/usuarios', '/admin/roles', '/admin/catalogos', '/admin/auditoria',

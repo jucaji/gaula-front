@@ -25,6 +25,7 @@ import { Route as CasosTrackingNumberRouteImport } from './routes/casos/$trackin
 import { Route as CasosNuevoRouteImport } from './routes/casos/nuevo'
 import { Route as FlotaIndexRouteImport } from './routes/flota/index'
 import { Route as ObservatorioCargueRouteImport } from './routes/observatorio/cargue'
+import { Route as ObservatorioCifrasOficialesRouteImport } from './routes/observatorio/cifras-oficiales'
 import { Route as ObservatorioHechosRouteImport } from './routes/observatorio/hechos'
 import { Route as RecepcionIndexRouteImport } from './routes/recepcion/index'
 import { Route as RecepcionLlamadasRouteImport } from './routes/recepcion/llamadas'
@@ -126,6 +127,12 @@ const ObservatorioCargueRoute = ObservatorioCargueRouteImport.update({
   path: '/observatorio/cargue',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ObservatorioCifrasOficialesRoute =
+  ObservatorioCifrasOficialesRouteImport.update({
+    id: '/observatorio/cifras-oficiales',
+    path: '/observatorio/cifras-oficiales',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ObservatorioHechosRoute = ObservatorioHechosRouteImport.update({
   id: '/observatorio/hechos',
   path: '/observatorio/hechos',
@@ -244,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/observatorio/cargue': typeof ObservatorioCargueRoute
+  '/observatorio/cifras-oficiales': typeof ObservatorioCifrasOficialesRoute
   '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/recursos/conductores': typeof RecursosConductoresRoute
@@ -282,6 +290,7 @@ export interface FileRoutesByTo {
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/observatorio/cargue': typeof ObservatorioCargueRoute
+  '/observatorio/cifras-oficiales': typeof ObservatorioCifrasOficialesRoute
   '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/recursos/conductores': typeof RecursosConductoresRoute
@@ -321,6 +330,7 @@ export interface FileRoutesById {
   '/casos/$trackingNumber': typeof CasosTrackingNumberRoute
   '/casos/nuevo': typeof CasosNuevoRoute
   '/observatorio/cargue': typeof ObservatorioCargueRoute
+  '/observatorio/cifras-oficiales': typeof ObservatorioCifrasOficialesRoute
   '/observatorio/hechos': typeof ObservatorioHechosRoute
   '/recepcion/llamadas': typeof RecepcionLlamadasRoute
   '/recursos/conductores': typeof RecursosConductoresRoute
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/observatorio/cargue'
+    | '/observatorio/cifras-oficiales'
     | '/observatorio/hechos'
     | '/recepcion/llamadas'
     | '/recursos/conductores'
@@ -399,6 +410,7 @@ export interface FileRouteTypes {
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/observatorio/cargue'
+    | '/observatorio/cifras-oficiales'
     | '/observatorio/hechos'
     | '/recepcion/llamadas'
     | '/recursos/conductores'
@@ -437,6 +449,7 @@ export interface FileRouteTypes {
     | '/casos/$trackingNumber'
     | '/casos/nuevo'
     | '/observatorio/cargue'
+    | '/observatorio/cifras-oficiales'
     | '/observatorio/hechos'
     | '/recepcion/llamadas'
     | '/recursos/conductores'
@@ -476,6 +489,7 @@ export interface RootRouteChildren {
   CasosTrackingNumberRoute: typeof CasosTrackingNumberRoute
   CasosNuevoRoute: typeof CasosNuevoRoute
   ObservatorioCargueRoute: typeof ObservatorioCargueRoute
+  ObservatorioCifrasOficialesRoute: typeof ObservatorioCifrasOficialesRoute
   ObservatorioHechosRoute: typeof ObservatorioHechosRoute
   RecepcionLlamadasRoute: typeof RecepcionLlamadasRoute
   RecursosConductoresRoute: typeof RecursosConductoresRoute
@@ -614,6 +628,13 @@ declare module '@tanstack/react-router' {
       path: '/observatorio/cargue'
       fullPath: '/observatorio/cargue'
       preLoaderRoute: typeof ObservatorioCargueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/observatorio/cifras-oficiales': {
+      id: '/observatorio/cifras-oficiales'
+      path: '/observatorio/cifras-oficiales'
+      fullPath: '/observatorio/cifras-oficiales'
+      preLoaderRoute: typeof ObservatorioCifrasOficialesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/observatorio/hechos': {
@@ -772,6 +793,7 @@ const rootRouteChildren: RootRouteChildren = {
   CasosTrackingNumberRoute: CasosTrackingNumberRoute,
   CasosNuevoRoute: CasosNuevoRoute,
   ObservatorioCargueRoute: ObservatorioCargueRoute,
+  ObservatorioCifrasOficialesRoute: ObservatorioCifrasOficialesRoute,
   ObservatorioHechosRoute: ObservatorioHechosRoute,
   RecepcionLlamadasRoute: RecepcionLlamadasRoute,
   RecursosConductoresRoute: RecursosConductoresRoute,

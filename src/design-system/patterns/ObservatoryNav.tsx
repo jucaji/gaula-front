@@ -3,6 +3,7 @@ import { SnapshotBand } from './SnapshotBand'
 
 const OBSERVATORY_LINKS = [
   { to: '/tableros', label: 'Tableros' },
+  { to: '/observatorio/cifras-oficiales', label: 'Cifras oficiales' },
   { to: '/observatorio/hechos', label: 'Hechos' },
   { to: '/observatorio/cargue', label: 'Cargue' },
 ] as const
@@ -12,10 +13,12 @@ const OBSERVATORY_LINKS = [
  * ARRIBA de la sub-navegación a propósito -- lo primero que se lee en
  * cualquiera de estas pantallas es de qué corte viene lo que se está mirando.
  */
-export function ObservatoryNav() {
+export function ObservatoryNav({ showSnapshot = true }: { showSnapshot?: boolean }) {
   return (
     <div className="mb-4">
-      <SnapshotBand />
+      {/* SPEC-0808: las cifras oficiales tienen su propio corte. La banda del registro
+          de la Fiscalía encima de ellas afirmaría una fecha que no es la suya. */}
+      {showSnapshot && <SnapshotBand />}
       <nav className="mt-3 flex gap-1 border-b border-border" aria-label="Secciones del observatorio">
         {OBSERVATORY_LINKS.map(({ to, label }) => (
           <Link
