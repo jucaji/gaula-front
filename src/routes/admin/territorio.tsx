@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useState } from 'react'
 import { z } from 'zod'
 import { AdminNav } from '@/design-system/patterns/AdminNav'
+import { DivipolaImportPanel } from '@/design-system/domain/DivipolaImportPanel'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
 import { Badge } from '@/design-system/primitives/Badge'
 import { Button } from '@/design-system/primitives/Button'
@@ -51,6 +52,7 @@ function AdminTerritoryPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const [panel, setPanel] = useState<Panel>(null)
+  const [importing, setImporting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -106,9 +108,14 @@ function AdminTerritoryPage() {
       <AdminNav />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-semibold text-text-primary">Catálogo territorial</h1>
-        <Button variant="primary" size="md" onClick={() => setPanel({ kind: 'create' })}>
-          Nuevo municipio
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" size="md" onClick={() => setImporting((previous) => !previous)}>
+            Cargar archivo del DANE
+          </Button>
+          <Button variant="primary" size="md" onClick={() => setPanel({ kind: 'create' })}>
+            Nuevo municipio
+          </Button>
+        </div>
       </div>
       <p className="mt-1 max-w-3xl text-sm text-text-secondary">
         Los municipios que ya se usaron en casos, llamadas, reportes o el observatorio no se borran: se retiran. Dejan
@@ -171,6 +178,8 @@ function AdminTerritoryPage() {
           {error}
         </p>
       )}
+
+      {importing && <DivipolaImportPanel onClose={() => setImporting(false)} />}
 
       {panel?.kind === 'create' && (
         <MunicipalityForm

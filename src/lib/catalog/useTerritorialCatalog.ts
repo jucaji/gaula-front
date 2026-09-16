@@ -173,3 +173,91 @@ export function useTerritorialCatalogMutations() {
 
   return { create, correct, retire, reactivate, remove, assignRouting }
 }
+
+// --- SPEC-0110: carga del archivo del DANE ---------------------------------
+
+export interface DivipolaPlan {
+  newDepartments: { code: string; name: string }[]
+  newMunicipalities: { code: string; departmentCode: string; name: string; latitude?: number | null; longitude?: number | null }[]
+  changed: {
+    code: string
+    currentName: string
+    newName: string
+    reactivates: boolean
+    fields: string[]
+  }[]
+  missing: { code: string; name: string; alreadyRetired: boolean }[]
+  errors: { rowNumber: number; raw: string; message: string }[]
+}
+
+export interface DivipolaImportView {
+  id: string
+  fileName: string
+  fileHash: string
+  cutoffDate?: string | null
+  source?: string | null
+  status: 'PREVIEWED' | 'APPLIED'
+  newCount: number
+  changedCount: number
+  missingCount: number
+  errorCount: number
+  appliedNew?: number | null
+  appliedChanged?: number | null
+  appliedRetired?: number | null
+  createdAt: string
+  expiresAt: string
+  appliedAt?: string | null
+  plan: DivipolaPlan
+}
+
+const DIVIPOLA = '/api/v1/admin/catalog/divipola'
+
+export function useDivipolaHistory() {
+  return useQuery({
+    queryKey: ['admin', 'catalog', 'divipola', 'imports'],
+    queryFn: () => customFetch<DivipolaImportView[]>(`${DIVIPOLA}/imports?limit=10`),
+    staleTime: 10_000,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
+/**
+ * SPEC-0110: mirar y aplicar son dos actos. La vista previa no escribe nada; al
+ * confirmar se envía el hash del archivo para que no se aplique el plan de otro.
+ */
+export function useDivipolaImport() {
+  const queryClient = useQueryClient()
+
+  const preview = useMutation({
+    mutationFn: ({ file, cutoffDate, source }: { file: File; cutoffDate?: string | undefined; source?: string | undefined }) => {
+      const form = new FormData()
+      form.append('file', file)
+      const params = new URLSearchParams()
+      if (cutoffDate) params.set('cutoffDate', cutoffDate)
+      if (source) params.set('source', source)
+      const query = params.toString()
+      return customFetch<DivipolaImportView>(`${DIVIPOLA}/preview${query ? `?${query}` : ''}`, {
+        method: 'POST',
+        body: form,
+      })
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'catalog', 'divipola', 'imports'] }),
+  })
+
+  const apply = useMutation({
+    mutationFn: ({ importId, fileHash, retireCodes }: { importId: string; fileHash: string; retireCodes: string[] }) =>
+      customFetch<DivipolaImportView>(`${DIVIPOLA}/${importId}/apply`, {
+        method: 'POST',
+        body: JSON.stringify({ fileHash, retireCodes, applyNew: true, applyChanged: true }),
+      }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: MUNICIPALITIES_KEY })
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'catalog', 'departments'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin', 'catalog', 'divipola', 'imports'] })
+      await queryClient.invalidateQueries({ queryKey: ['catalog'] })
+    },
+  })
+
+  return { preview, apply }
+}
