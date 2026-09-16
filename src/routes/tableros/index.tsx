@@ -1,5 +1,5 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { BarChart3, FileText, ShieldAlert, Users } from 'lucide-react'
+import { BarChart3, FileText, LineChart, ShieldAlert, Users } from 'lucide-react'
 import { ObservatoryNav } from '@/design-system/patterns/ObservatoryNav'
 import { useActiveSnapshot } from '@/lib/observatory/useActiveSnapshot'
 
@@ -42,6 +42,7 @@ const SECTIONS = [
  */
 function DashboardIndexPage() {
   const { data: snapshot } = useActiveSnapshot()
+  const { can } = Route.useRouteContext()
 
   return (
     <div className="flex h-full flex-col">
@@ -68,6 +69,24 @@ function DashboardIndexPage() {
             <span className="text-sm text-text-secondary">{description}</span>
           </Link>
         ))}
+        {can('READ', 'OFFICIAL_STATISTIC') && (
+          // SPEC-0809: otra fuente con su propio corte, por eso no va dentro de SECTIONS.
+          <Link
+            to="/tableros/cifras-oficiales/$indicador"
+            params={{ indicador: 'extorsion' }}
+            search={{}}
+            className="group flex flex-col gap-2 rounded-sm border border-border-strong bg-surface p-4 transition-colors duration-instant hover:border-accent"
+          >
+            <span className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <LineChart size={18} strokeWidth={1.5} className="text-accent" aria-hidden />
+              Cifras oficiales por delito
+            </span>
+            <span className="text-sm text-text-secondary">
+              Extorsión, secuestro y trata según Mindefensa: histórico, corrido del año, comparativo mensual y
+              territorio. Con su propio corte, distinto del de arriba.
+            </span>
+          </Link>
+        )}
       </div>
 
       <div className="mt-6 flex items-start gap-2 rounded-sm border border-border bg-surface-raised p-3">

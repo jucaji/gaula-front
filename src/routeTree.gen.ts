@@ -42,6 +42,7 @@ import { Route as RecursosMisionesIndexRouteImport } from './routes/recursos/mis
 import { Route as RecursosMisionesMissionIdRouteImport } from './routes/recursos/misiones/$missionId'
 import { Route as ReportesRevisionIndexRouteImport } from './routes/reportes/revision/index'
 import { Route as ReportesRevisionEmailIngestionIdRouteImport } from './routes/reportes/revision/$emailIngestionId'
+import { Route as TablerosCifrasOficialesIndicadorRouteImport } from './routes/tableros/cifras-oficiales.$indicador'
 import { Route as TablerosExtorsionIndexRouteImport } from './routes/tableros/extorsion.index'
 import { Route as TablerosExtorsionDepartmentRouteImport } from './routes/tableros/extorsion.$department'
 import { Route as TablerosSecuestroIndexRouteImport } from './routes/tableros/secuestro.index'
@@ -215,6 +216,12 @@ const ReportesRevisionEmailIngestionIdRoute =
     path: '/reportes/revision/$emailIngestionId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const TablerosCifrasOficialesIndicadorRoute =
+  TablerosCifrasOficialesIndicadorRouteImport.update({
+    id: '/tableros/cifras-oficiales/$indicador',
+    path: '/tableros/cifras-oficiales/$indicador',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const TablerosExtorsionIndexRoute = TablerosExtorsionIndexRouteImport.update({
   id: '/tableros/extorsion/',
   path: '/tableros/extorsion/',
@@ -269,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/recursos/misiones/$missionId': typeof RecursosMisionesMissionIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/tableros/cifras-oficiales/$indicador': typeof TablerosCifrasOficialesIndicadorRoute
   '/tableros/extorsion/$department': typeof TablerosExtorsionDepartmentRoute
   '/tableros/secuestro/$department': typeof TablerosSecuestroDepartmentRoute
   '/recursos/flota/': typeof RecursosFlotaIndexRoute
@@ -308,6 +316,7 @@ export interface FileRoutesByTo {
   '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/recursos/misiones/$missionId': typeof RecursosMisionesMissionIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/tableros/cifras-oficiales/$indicador': typeof TablerosCifrasOficialesIndicadorRoute
   '/tableros/extorsion/$department': typeof TablerosExtorsionDepartmentRoute
   '/tableros/secuestro/$department': typeof TablerosSecuestroDepartmentRoute
   '/recursos/flota': typeof RecursosFlotaIndexRoute
@@ -348,6 +357,7 @@ export interface FileRoutesById {
   '/recursos/flota/$vehicleId': typeof RecursosFlotaVehicleIdRoute
   '/recursos/misiones/$missionId': typeof RecursosMisionesMissionIdRoute
   '/reportes/revision/$emailIngestionId': typeof ReportesRevisionEmailIngestionIdRoute
+  '/tableros/cifras-oficiales/$indicador': typeof TablerosCifrasOficialesIndicadorRoute
   '/tableros/extorsion/$department': typeof TablerosExtorsionDepartmentRoute
   '/tableros/secuestro/$department': typeof TablerosSecuestroDepartmentRoute
   '/recursos/flota/': typeof RecursosFlotaIndexRoute
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/recursos/flota/$vehicleId'
     | '/recursos/misiones/$missionId'
     | '/reportes/revision/$emailIngestionId'
+    | '/tableros/cifras-oficiales/$indicador'
     | '/tableros/extorsion/$department'
     | '/tableros/secuestro/$department'
     | '/recursos/flota/'
@@ -428,6 +439,7 @@ export interface FileRouteTypes {
     | '/recursos/flota/$vehicleId'
     | '/recursos/misiones/$missionId'
     | '/reportes/revision/$emailIngestionId'
+    | '/tableros/cifras-oficiales/$indicador'
     | '/tableros/extorsion/$department'
     | '/tableros/secuestro/$department'
     | '/recursos/flota'
@@ -467,6 +479,7 @@ export interface FileRouteTypes {
     | '/recursos/flota/$vehicleId'
     | '/recursos/misiones/$missionId'
     | '/reportes/revision/$emailIngestionId'
+    | '/tableros/cifras-oficiales/$indicador'
     | '/tableros/extorsion/$department'
     | '/tableros/secuestro/$department'
     | '/recursos/flota/'
@@ -507,6 +520,7 @@ export interface RootRouteChildren {
   RecursosFlotaVehicleIdRoute: typeof RecursosFlotaVehicleIdRoute
   RecursosMisionesMissionIdRoute: typeof RecursosMisionesMissionIdRoute
   ReportesRevisionEmailIngestionIdRoute: typeof ReportesRevisionEmailIngestionIdRoute
+  TablerosCifrasOficialesIndicadorRoute: typeof TablerosCifrasOficialesIndicadorRoute
   TablerosExtorsionDepartmentRoute: typeof TablerosExtorsionDepartmentRoute
   TablerosSecuestroDepartmentRoute: typeof TablerosSecuestroDepartmentRoute
   RecursosFlotaIndexRoute: typeof RecursosFlotaIndexRoute
@@ -749,6 +763,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportesRevisionEmailIngestionIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tableros/cifras-oficiales/$indicador': {
+      id: '/tableros/cifras-oficiales/$indicador'
+      path: '/tableros/cifras-oficiales/$indicador'
+      fullPath: '/tableros/cifras-oficiales/$indicador'
+      preLoaderRoute: typeof TablerosCifrasOficialesIndicadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tableros/extorsion/': {
       id: '/tableros/extorsion/'
       path: '/tableros/extorsion'
@@ -811,6 +832,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecursosFlotaVehicleIdRoute: RecursosFlotaVehicleIdRoute,
   RecursosMisionesMissionIdRoute: RecursosMisionesMissionIdRoute,
   ReportesRevisionEmailIngestionIdRoute: ReportesRevisionEmailIngestionIdRoute,
+  TablerosCifrasOficialesIndicadorRoute: TablerosCifrasOficialesIndicadorRoute,
   TablerosExtorsionDepartmentRoute: TablerosExtorsionDepartmentRoute,
   TablerosSecuestroDepartmentRoute: TablerosSecuestroDepartmentRoute,
   RecursosFlotaIndexRoute: RecursosFlotaIndexRoute,

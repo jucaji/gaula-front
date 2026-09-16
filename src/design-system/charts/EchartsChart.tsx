@@ -13,6 +13,7 @@ export function EchartsChart({
   option,
   height = 320,
   ariaLabel,
+  onClick,
 }: {
   option: echarts.EChartsOption
   /**
@@ -21,6 +22,8 @@ export function EchartsChart({
    */
   height?: number | string
   ariaLabel: string
+  /** Clic sobre una marca. Siempre con una alternativa por teclado fuera de la gráfica (su tabla). */
+  onClick?: ((params: echarts.ECElementEvent) => void) | undefined
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<echarts.ECharts | null>(null)
@@ -47,6 +50,15 @@ export function EchartsChart({
     chartRef.current?.setOption({ backgroundColor: getVizSurface(theme), ...option }, { notMerge: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `theme` ya dispara la recreación de arriba
   }, [option])
+
+  useEffect(() => {
+    const chart = chartRef.current
+    if (!chart || !onClick) return
+    chart.on('click', onClick)
+    return () => {
+      chart.off('click', onClick)
+    }
+  }, [onClick, theme])
 
   return <div ref={containerRef} role="img" aria-label={ariaLabel} style={{ width: '100%', height }} />
 }

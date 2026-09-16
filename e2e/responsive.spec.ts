@@ -65,6 +65,7 @@ const RUTAS = [
   '/recursos/flota/66666666-6666-6666-6666-666666666666',
   '/tableros/extorsion/VALLE DEL CAUCA',
   '/tableros/secuestro/VALLE DEL CAUCA',
+  '/tableros/cifras-oficiales/extorsion',
   '/', '/casos', '/casos/nuevo', '/campo', '/recepcion', '/recepcion/llamadas',
   '/reportes', '/reportes/nuevo', '/reportes/revision', '/analitica', '/analitica/carga-147',
   '/observatorio/hechos', '/observatorio/cargue', '/observatorio/cifras-oficiales', '/tableros', '/tableros/extorsion',

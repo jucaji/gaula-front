@@ -63,6 +63,7 @@ export function IncidentMap({
   byDepartment,
   selectedDepartment,
   onSelectDepartment,
+  defaultView = 'puntos',
 }: {
   points: MapPoint[]
   total: number
@@ -76,13 +77,15 @@ export function IncidentMap({
   byDepartment: { key: string; count: number }[]
   selectedDepartment?: string | undefined
   onSelectDepartment: (department: string | undefined) => void
+  /** SPEC-0809: la ficha nacional sólo tiene cifras por departamento; no hay puntos que mostrar primero. */
+  defaultView?: 'puntos' | 'departamentos'
 }) {
   const theme = useResolvedTheme()
   // Puntos por defecto: es la vista que no exagera. La coropleta pinta el
   // departamento ENTERO del color de su conteo, y eso hace ver un hecho en
   // Leticia como si cubriera todo el Amazonas -- útil para comparar territorios,
   // engañoso para localizar. Por eso se elige, no se impone.
-  const [view, setView] = useState<'puntos' | 'departamentos'>('puntos')
+  const [view, setView] = useState<'puntos' | 'departamentos'>(defaultView)
   // HALLAZGO REAL (reportado por el cliente con una captura): en la vista de
   // municipios los círculos flotaban sobre un rectángulo negro. Sin base map ni
   // contorno, un punto en el vacío no dice DÓNDE queda -- que es lo único que un
@@ -470,7 +473,10 @@ export function IncidentMap({
 
       <div
         ref={containerRef}
-        role="img"
+        // `region` y no `img`: MapLibre mete controles enfocables dentro, y una imagen
+        // no puede contener nada interactivo (axe `nested-interactive`, hallazgo de
+        // SPEC-0809 — el defecto venía del tablero del observatorio).
+        role="region"
         aria-label={`Mapa con ${points.length} municipios con hechos`}
         className="mt-2 h-[420px] w-full rounded-sm border border-border-strong"
       />
