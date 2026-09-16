@@ -87,6 +87,12 @@ const RESOURCE_ROLES: Record<string, ResourcePolicy> = {
     READ: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER', 'PREVENTION_STAFF', 'SYSTEM_ADMIN'],
     CREATE: ['INTELLIGENCE_ANALYST', 'SYSTEM_ADMIN'],
   },
+  // SPEC-0810, V51: el backend exige el permiso. Explorar y ver lo publicado:
+  // analista y comandante; guardar y publicar: el analista.
+  OBSERVATORY_EXPLORER: {
+    READ: ['INTELLIGENCE_ANALYST', 'UNIT_COMMANDER'],
+    CREATE: ['INTELLIGENCE_ANALYST'],
+  },
   // SPEC-0506, y aquí el espejo NO copia a FLEET a propósito. La posición de
   // un vehículo viaja sobre otro resource_type porque docs/04 §2.4 dice que
   // ADMIN_STAFF administra la flota y NO ve la operación: si esta lista

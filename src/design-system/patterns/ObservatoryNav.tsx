@@ -4,6 +4,7 @@ import { SnapshotBand } from './SnapshotBand'
 const OBSERVATORY_LINKS = [
   { to: '/tableros', label: 'Tableros' },
   { to: '/observatorio/cifras-oficiales', label: 'Cifras oficiales' },
+  { to: '/observatorio/explorar', label: 'Explorar' },
   { to: '/observatorio/hechos', label: 'Hechos' },
   { to: '/observatorio/cargue', label: 'Cargue' },
 ] as const
