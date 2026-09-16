@@ -27,7 +27,11 @@ function formatPct(value: number | null | undefined): string {
  *       nunca se calla, porque quien mira no sabría que le falta algo.</li>
  * </ul>
  */
-export function IncidentAnalysisPanel({ analysis }: { analysis: IncidentAnalysis }) {
+export function IncidentAnalysisPanel({ analysis, unit = 'hechos' }: {
+  analysis: IncidentAnalysis
+  /** SPEC-0811: sobre cifras oficiales se cuentan víctimas, y el panel lo dice. */
+  unit?: 'hechos' | 'víctimas'
+}) {
   const theme = useResolvedTheme()
   const categorical = getCategoricalPalette(theme)
   const slot = (index: number) => categorical[index] ?? CATEGORICAL_LIGHT[0]
@@ -86,7 +90,7 @@ export function IncidentAnalysisPanel({ analysis }: { analysis: IncidentAnalysis
         <div className="text-2xs text-text-secondary">
           <p className="text-xs font-semibold text-text-primary">Análisis estadístico no disponible</p>
           <p>
-            {analysis.unavailableReason ?? 'Sin motivo informado.'} Las cifras de este tablero están completas: lo
+            {analysis.unavailableReason ?? 'Sin motivo informado.'} Las cifras de esta pantalla están completas: lo
             que falta es la explicación (tendencia, anomalías y proyección), no el dato.
           </p>
         </div>
@@ -118,7 +122,7 @@ export function IncidentAnalysisPanel({ analysis }: { analysis: IncidentAnalysis
         columns={[
           { header: 'Mes', cell: (row) => row.month },
           { header: 'Tipo', cell: (row) => row.kind },
-          { header: 'Hechos', cell: (row) => row.value.toFixed(1) },
+          { header: unit === 'víctimas' ? 'Víctimas' : 'Hechos', cell: (row) => row.value.toFixed(1) },
           { header: 'Banda', cell: (row) => row.band },
         ]}
         getRowKey={(row, index) => `${row.month}-${row.kind}-${index}`}
@@ -171,7 +175,7 @@ export function IncidentAnalysisPanel({ analysis }: { analysis: IncidentAnalysis
                 <div>
                   <p className="text-sm text-text-primary">
                     {anomaly.municipalityText} · {anomaly.month} ·{' '}
-                    <span className="font-mono">{anomaly.observed}</span> hechos
+                    <span className="font-mono">{anomaly.observed}</span> {unit}
                   </p>
                   <p className="text-2xs text-text-secondary">{anomaly.explanation}</p>
                 </div>
@@ -185,14 +189,14 @@ export function IncidentAnalysisPanel({ analysis }: { analysis: IncidentAnalysis
         <h2 className="text-sm font-semibold text-text-primary">Focos geográficos</h2>
         {analysis.hotspots.length === 0 ? (
           <p className="mt-2 text-sm text-text-secondary">
-            No hay focos: se necesitan municipios vecinos con hechos y con geometría cargada en el catálogo.
+            No hay focos: se necesitan municipios vecinos con {unit} y con geometría cargada en el catálogo.
           </p>
         ) : (
           <ul className="mt-2 space-y-1">
             {analysis.hotspots.map((hotspot) => (
               <li key={hotspot.clusterId} className="text-sm text-text-primary">
                 {hotspot.municipalities.join(' · ')}{' '}
-                <span className="font-mono text-2xs text-text-secondary">{hotspot.totalCount} hechos</span>
+                <span className="font-mono text-2xs text-text-secondary">{hotspot.totalCount} {unit}</span>
               </li>
             ))}
           </ul>

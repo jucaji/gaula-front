@@ -1,5 +1,6 @@
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { customFetch } from '@/api/client'
+import type { IncidentAnalysis } from './types'
 
 /** SPEC-0809: la ficha de un delito sobre las cifras oficiales de Mindefensa. */
 export type OfficialIndicator =
@@ -101,6 +102,24 @@ export function useCrimeSheet(indicator: OfficialIndicator, departmentCode: stri
     networkMode: 'always',
     retry: false,
     // Cambiar de periodo o de delito no desmonta la pantalla (defecto vivido en SPEC-0807).
+    placeholderData: keepPreviousData,
+  })
+}
+
+/**
+ * SPEC-0811: el análisis de la serie, en su propia consulta. Si el servicio de
+ * análisis está caído, la ficha ya se pintó completa; esto sólo agrega o explica.
+ */
+export function useCrimeSheetAnalysis(indicator: OfficialIndicator, departmentCode: string | undefined, enabled: boolean) {
+  const params = new URLSearchParams({ indicator })
+  if (departmentCode) params.set('departmentCode', departmentCode)
+  return useQuery({
+    queryKey: ['observatory', 'official-statistics', 'analysis', indicator, departmentCode ?? null],
+    queryFn: () => customFetch<IncidentAnalysis>(`${BASE}/sheet/analysis?${params.toString()}`),
+    enabled,
+    staleTime: 5 * 60_000,
+    networkMode: 'always',
+    retry: false,
     placeholderData: keepPreviousData,
   })
 }

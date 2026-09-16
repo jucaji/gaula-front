@@ -49,8 +49,18 @@ function sheet(department: { code: string; name: string } | null, period = 'YEAR
 
 const json = (body: unknown, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(body) })
 
-async function mockSheet(page: Page, { available = true } = {}) {
+const ANALYSIS = {
+  available: true, unavailableReason: null, snapshotId: '44444444-4444-4444-4444-444444444444',
+  trend: [{ month: '2026-05-01', observed: 1249, trend: 1200, seasonal: 20 }, { month: '2026-06-01', observed: 1168, trend: 1210, seasonal: -30 }],
+  variations: [{ label: 'Año 2026 contra 2025 (enero–junio)', current: 7165, previous: 5901, changePct: 21.4, lowerPct: 17.1, upperPct: 25.9, significant: true, explanation: 'La variación es distinguible del ruido esperable en conteos de este tamaño.' }],
+  anomalies: [{ municipalityCode: '19001', municipalityText: 'POPAYAN', month: '2026-06-01', observed: 30, expected: 8.2, zScore: 4.1, explanation: '30 víctimas frente a un promedio propio de 8.2.' }],
+  hotspots: [], forecast: [{ month: '2026-07-01', projected: 1180, lower: 1000, upper: 1360 }],
+  notes: ['Julio de 2026 no entra en el análisis: los datos llegan al 30 y el mes está incompleto.'],
+}
+
+async function mockSheet(page: Page, { available = true, analysis = ANALYSIS as Record<string, unknown> } = {}) {
   const requests: URLSearchParams[] = []
+  await page.route('**/api/v1/observatory/official-statistics/sheet/analysis?**', (route) => route.fulfill(json(analysis)))
   await page.route('**/api/v1/me', (route) => route.fulfill(json(COMMANDER)))
   await page.route('**/api/v1/catalog/departments/geometry', (route) => route.fulfill(json([])))
   await page.route('**/basemap/**', (route) => route.fulfill({ status: 404 }))
@@ -154,3 +164,22 @@ test('accesibilidad: sin violaciones serias en la ficha', async ({ page }) => {
   const serias = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
   expect(serias.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(' | ')}`)).toEqual([])
 })
+
+test('SPEC-0811: el análisis dice víctimas, termina en el último mes completo y lo explica', async ({ page }) => {
+  await mockSheet(page)
+  await page.goto('/tableros/cifras-oficiales/extorsion')
+
+  const section = page.getByRole('region', { name: 'Análisis de la serie' })
+  await expect(section.getByText('Julio de 2026 no entra en el análisis: los datos llegan al 30 y el mes está incompleto.')).toBeVisible()
+  await expect(section.getByText('Año 2026 contra 2025 (enero–junio)')).toBeVisible()
+  await expect(section.getByText(/POPAYAN · 2026-06-01 · 30 víctimas/)).toBeVisible()
+})
+
+test('SPEC-0811 CA-6: sin servicio de análisis la ficha está completa y lo dice', async ({ page }) => {
+  await mockSheet(page, { analysis: { available: false, unavailableReason: 'El servicio de análisis no está disponible.', trend: [], variations: [], anomalies: [], hotspots: [], forecast: [], notes: [] } })
+  await page.goto('/tableros/cifras-oficiales/extorsion')
+
+  await expect(page.getByText('Análisis estadístico no disponible')).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Variación del corrido del año' })).toBeVisible()
+})
+

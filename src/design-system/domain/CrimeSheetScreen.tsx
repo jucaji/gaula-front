@@ -4,6 +4,7 @@ import { Download } from 'lucide-react'
 import type * as echarts from 'echarts'
 import { EchartsChart } from '@/design-system/charts/EchartsChart'
 import { IncidentMap } from '@/design-system/charts/IncidentMap'
+import { IncidentAnalysisPanel } from '@/design-system/domain/IncidentAnalysisPanel'
 import { historyOption, monthlyOption, territoryOption, yearToDateOption } from '@/design-system/charts/crimeSheetOptions'
 import { ChartWithTable } from '@/design-system/patterns/ChartWithTable'
 import { EmptyState } from '@/design-system/patterns/EmptyState'
@@ -21,6 +22,7 @@ import {
   formatSigned,
   formatVictims,
   useCrimeSheet,
+  useCrimeSheetAnalysis,
   type CrimeSheet,
   type TerritoryPeriod,
   type Variation,
@@ -49,6 +51,7 @@ export function CrimeSheetScreen({ slug, departmentCode, period, canLoad, onDepa
   const [downloading, setDownloading] = useState(false)
   const [downloadError, setDownloadError] = useState<string | null>(null)
   const data = sheet.data
+  const analysis = useCrimeSheetAnalysis(indicator.code, departmentCode, data?.available === true)
 
   async function handleDownload() {
     setDownloading(true)
@@ -174,6 +177,17 @@ export function CrimeSheetScreen({ slug, departmentCode, period, canLoad, onDepa
             />
             <VariationPanel sheet={data} />
           </div>
+
+          <section aria-label="Análisis de la serie" className="flex flex-col gap-2">
+            <h2 className="text-base font-semibold text-text-primary">Análisis de la serie</h2>
+            <p className="max-w-3xl text-sm text-text-secondary">
+              Tendencia, variaciones con su margen, municipios que se salen de su propia historia, focos y proyección. Sólo
+              meses completos: el mes del corte no entra.
+            </p>
+            {analysis.isLoading && <p className="text-sm text-text-secondary">Calculando el análisis…</p>}
+            {analysis.isError && <p role="alert" className="text-sm text-critical">No se pudo consultar el análisis.</p>}
+            {analysis.data && <IncidentAnalysisPanel analysis={analysis.data} unit="víctimas" />}
+          </section>
 
           <TerritorySection sheet={data} period={period} onPeriodChange={onPeriodChange} onDepartmentChange={onDepartmentChange} />
 
